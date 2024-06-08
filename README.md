@@ -1,2 +1,2 @@
 # ecscala
-ECS framework for Scala projects.
+WIP. Come back in a month or two.
