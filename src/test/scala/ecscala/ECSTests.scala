@@ -35,7 +35,7 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
 
   class Comp2 extends Component
   class Comp3 extends Component
-  import ecscala.`type`.Types.t
+  import ecscalibur.`type`.Types.t
   it should "be able to correctly remove its components" in:
     given world: World = World()
     val entity = world.spawn

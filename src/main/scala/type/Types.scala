@@ -1,4 +1,4 @@
-package ecscala.`type`
+package ecscalibur.`type`
 
 object Types:
     import scala.reflect.ClassTag
