@@ -1,4 +1,4 @@
-package ecscala
+package ecscalibur
 
 import org.scalatest.*
 import org.scalatest.flatspec.*
