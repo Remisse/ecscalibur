@@ -5,14 +5,16 @@ import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 
 class ECSTests extends AnyFlatSpec with should.Matchers:
-  import ecscalibur.Worlds.*
+  import ecscalibur.core.*
+  import Worlds.*
+  import Entities.*
 
   "An entity" should "be created succesfully" in:
     given world: World = World()
     val entity: Entity = world.spawn
     world.isValid(entity) shouldBe true
 
-  import ecscalibur.Components.Component
+  import Components.Component
   class Comp1 extends Component
   it should "be able to have components" in:
     given world: World = World()

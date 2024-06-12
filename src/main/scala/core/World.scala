@@ -1,12 +1,11 @@
-package ecscalibur
-
-import ecscalibur.Components.Component
-import scala.reflect.ClassTag
+package ecscalibur.core
 
 object Worlds:
+  import scala.reflect.ClassTag
   import scala.collection.mutable.HashMap
   import scala.collection.mutable.ArrayBuffer
-  import ecscalibur.Components.Component
+  import Entities.Entity
+  import Components.Component
 
   trait World:
     def spawn: Entity
@@ -59,20 +58,3 @@ object Worlds:
 
     override inline def hasComponent[T <: Component](e: Entity)(using tag: ClassTag[T]): Boolean =
       componentTypes(e.id).contains(tag)
-
-  case class Entity(val id: Int):
-    inline def +=[T <: Component](c: T)(using world: World)(using tag: ClassTag[T]): Entity =
-      if has[T] then throw IllegalStateException(s"Entity $this already has $tag.")
-      world.addComponent(this, c)
-      this
-
-    inline def remove[T <: Component](using world: World)(using tag: ClassTag[T]): Entity =
-      if !has[T] then throw new IllegalStateException(s"Entity $this does not have $tag.")
-      world.removeComponent(this)
-      this
-
-    inline def -=[T <: Component](tag: ClassTag[T])(using world: World): Entity =
-      remove[T](using world)(using tag)
-
-    inline def has[T <: Component](using world: World)(using tag: ClassTag[T]): Boolean =
-      world.hasComponent[T](this)
