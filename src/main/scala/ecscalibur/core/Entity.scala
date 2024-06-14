@@ -7,16 +7,16 @@ import Worlds.World
 
 object Entities:
   case class Entity(val id: Int):
-    inline def +=[T <: Component](c: T)(using world: World): Entity =
+    inline infix def +=[T <: Component](c: T)(using world: World): Entity =
       world.addComponent(this, c)
       this
 
-    inline def remove(id: ComponentId)(using world: World): Entity =
+    inline infix def remove(id: ComponentId)(using world: World): Entity =
       world.removeComponent(this, id)
       this
 
-    inline def -=(id: ComponentId)(using world: World): Entity =
+    inline infix def -=(id: ComponentId)(using world: World): Entity =
       remove(id)(using world)
 
-    inline def has(id: ComponentId)(using world: World): Boolean =
+    inline infix def has(id: ComponentId)(using world: World): Boolean =
       world.hasComponent(this, id)
