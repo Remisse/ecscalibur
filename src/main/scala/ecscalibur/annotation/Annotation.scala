@@ -16,25 +16,25 @@ class component extends MacroAnnotation:
         import scala.util.hashing.MurmurHash3
         import core.Components.Component
 
+        def ensureClassExtendsComponent(cls: Symbol)(using Quotes): Unit =
+          cls.typeRef.asType match
+            case '[Component] => ()
+            case _            => report.error(s"$name does not implement the Component trait.")
+
         def recreateIdField(cls: Symbol, rhs: Term)(using Quotes): ValDef =
           val idSym = cls.fieldMember("id")
           val idOverrideSym = Symbol.newVal(cls, "id", idSym.info, Flags.Override, Symbol.noSymbol)
           ValDef(idOverrideSym, Some(rhs))
 
         val cls = definition.symbol
+        ensureClassExtendsComponent(cls)
         val newRhs = Literal(IntConstant(MurmurHash3.stringHash(cls.typeRef.toString())))
-        cls.typeRef.asType match
-          case '[Component] => ()
-          case _            => report.error(s"$name does not implement the Component trait.")
         val newClsDef = ClassDef(cls, parents, recreateIdField(cls, newRhs) :: body)
 
         if companion.isEmpty then
           report.error(s"$name should define a companion object extending Companion.")
         val compSym = companion.head.symbol
-        compSym.typeRef.asType match
-          case '[Component] => ()
-          case _ =>
-            report.error(s"Companion object ${compSym.name} does not implement the Component trait.")
+        ensureClassExtendsComponent(compSym)
         val compClsDef = companion.head match
           case ClassDef(name, ctr, parents, selfOpt, body) =>
             ClassDef(compSym, parents, recreateIdField(compSym, newRhs) :: body)
