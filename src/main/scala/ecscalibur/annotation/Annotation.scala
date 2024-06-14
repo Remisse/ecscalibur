@@ -3,7 +3,9 @@ package ecscalibur.annotation
 import scala.annotation.MacroAnnotation
 import scala.quoted.*
 import ecscalibur.core
-import scala.annotation.experimental
+import ecscalibur.id.IdGenerator
+
+private[annotation] val idGenerator = IdGenerator()
 
 class component extends MacroAnnotation:
   def transform(using Quotes)(
@@ -13,7 +15,6 @@ class component extends MacroAnnotation:
     import quotes.reflect.*
     definition match
       case ClassDef(name, ctr, parents, selfOpt, body) =>
-        import scala.util.hashing.MurmurHash3
         import core.Components.Component
 
         def ensureClassExtendsComponent(cls: Symbol)(using Quotes): Unit =
@@ -26,9 +27,10 @@ class component extends MacroAnnotation:
           val idOverrideSym = Symbol.newVal(cls, "id", idSym.info, Flags.Override, Symbol.noSymbol)
           ValDef(idOverrideSym, Some(rhs))
 
+        val newRhs = Literal(IntConstant(idGenerator.next))
+
         val cls = definition.symbol
         ensureClassExtendsComponent(cls)
-        val newRhs = Literal(IntConstant(MurmurHash3.stringHash(cls.typeRef.toString())))
         val newClsDef = ClassDef(cls, parents, recreateIdField(cls, newRhs) :: body)
 
         if companion.isEmpty then
