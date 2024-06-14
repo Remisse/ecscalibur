@@ -32,7 +32,7 @@ class component extends MacroAnnotation:
         val newClsDef = ClassDef(cls, parents, recreateIdField(cls, newRhs) :: body)
 
         if companion.isEmpty then
-          report.error(s"$name should define a companion object extending Companion.")
+          report.error(s"$name should define a companion object extending Component.")
         val compSym = companion.head.symbol
         ensureClassExtendsComponent(compSym)
         val compClsDef = companion.head match
