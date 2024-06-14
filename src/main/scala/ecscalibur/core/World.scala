@@ -1,8 +1,6 @@
 package ecscalibur.core
 
 object Worlds:
-  import scala.reflect.ClassTag
-  import scala.collection.mutable.HashMap
   import scala.collection.mutable.ArrayBuffer
   import Entities.Entity
   import Components.Component
@@ -33,12 +31,14 @@ object Worlds:
     override inline def isValid(entityId: Int): Boolean = idGenerator.isValid(entityId)
 
     override inline def addComponent[T <: Component](e: Entity, c: T) =
-      if hasComponent(e, c.id) then throw IllegalStateException(s"Entity $this already has a component of type ${c.getClass}.")
+      if hasComponent(e, c.id) then
+        throw IllegalStateException(s"Entity $this already has a component of type ${c.getClass}.")
       components(e.id) += c
 
     override inline def removeComponent(e: Entity, id: ComponentId): Unit =
-      val i = findComponentIdx(e, id) 
-      if i == -1 then throw new IllegalStateException(s"Entity $this does not have a component of type ID $id.")
+      val i = findComponentIdx(e, id)
+      if i == -1 then
+        throw new IllegalStateException(s"Entity $this does not have a component of type ID $id.")
       components(e.id).remove(i)
 
     override inline def hasComponent(e: Entity, id: ComponentId): Boolean =
@@ -46,4 +46,3 @@ object Worlds:
 
     private inline def findComponentIdx(e: Entity, id: ComponentId): Int =
       components(e.id).indexWhere(_.id == id)
-

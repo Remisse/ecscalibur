@@ -1,6 +1,5 @@
 package ecscalibur.core
 
-import scala.reflect.ClassTag
 import Components.Component
 import Components.ComponentId
 import Worlds.World

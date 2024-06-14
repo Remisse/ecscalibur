@@ -4,7 +4,6 @@ import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 import ecscalibur.annotation.component
-import scala.annotation.experimental
 
 class ComponentTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.core.*

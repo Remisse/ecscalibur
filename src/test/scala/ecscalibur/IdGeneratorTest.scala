@@ -11,7 +11,7 @@ class IdGeneratorTests extends AnyFlatSpec with should.Matchers:
     val gen = IdGenerator()
     val cons = 0 to 9
     val ids = cons.map(_ => gen.next)
-    ids should contain allElementsOf(cons)
+    ids should contain allElementsOf (cons)
 
   it should "recognize all IDs it has generated" in:
     val gen = IdGenerator()
