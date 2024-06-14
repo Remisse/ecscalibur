@@ -25,7 +25,7 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
     given world: World = World()
     val entity = world.spawn
     entity += Comp1()
-    entity.has(+Comp1) shouldBe true
+    entity has ~Comp1 shouldBe true
 
   it should "not have multiple occurrences of the same component type" in:
     given world: World = World()
@@ -36,7 +36,7 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
   it should "not have a component that was never explicitly added to it" in:
     given world: World = World()
     val entity = world.spawn
-    entity.has(+Comp1) shouldBe false
+    entity has ~Comp1 shouldBe false
 
   @component
   class Comp2 extends Component
@@ -50,10 +50,10 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
     given world: World = World()
     val entity = world.spawn
     entity += Comp1() += Comp2() += Comp3()
-    entity -= +Comp1 -= +Comp3
-    (!entity.has(+Comp1) && entity.has(+Comp2) && !entity.has(+Comp3)) shouldBe true
+    entity -= ~Comp1 -= ~Comp3
+    !(entity has ~Comp1) && (entity has ~Comp2) && !(entity has ~Comp3) shouldBe true
 
   it should "throw when attemping to remove a non-existing component" in:
     given world: World = World()
     val entity = world.spawn
-    an[IllegalStateException] should be thrownBy (entity -= +Comp1)
+    an[IllegalStateException] should be thrownBy (entity -= ~Comp1)

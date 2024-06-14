@@ -14,4 +14,4 @@ object Components:
 
   trait Component:
     val id: ComponentId = noId
-    def unary_+ = id
+    def unary_~ = id

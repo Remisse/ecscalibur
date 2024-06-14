@@ -38,5 +38,5 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     val c11 = Comp1()
     c11.id shouldBe Comp1.id
     val c12 = Comp1()
-    +c11 shouldBe +c12 // Equivalent to 'c11.id shouldBe c12.id'.
-    +Comp1 shouldNot equal(+Comp2)
+    ~c11 shouldBe ~c12 // Equivalent to 'c11.id shouldBe c12.id'.
+    ~Comp1 shouldNot equal(~Comp2)
