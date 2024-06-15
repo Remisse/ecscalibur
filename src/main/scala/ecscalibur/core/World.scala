@@ -9,7 +9,6 @@ object Worlds:
   trait World:
     def spawn: Entity
     def isValid(e: Entity): Boolean
-    def isValid(entityId: Int): Boolean
     def addComponent[T <: Component](e: Entity, c: T): Unit
     def removeComponent(e: Entity, componentId: ComponentId): Unit
     def hasComponent(e: Entity, componentId: ComponentId): Boolean
@@ -27,8 +26,7 @@ object Worlds:
       if !components.contains(id) then components += ArrayBuffer.empty
       Entity(id)
 
-    override inline def isValid(e: Entity): Boolean = isValid(e.id)
-    override inline def isValid(entityId: Int): Boolean = idGenerator.isValid(entityId)
+    override inline def isValid(e: Entity): Boolean = idGenerator.isValid(e.id)
 
     override inline def addComponent[T <: Component](e: Entity, c: T) =
       if hasComponent(e, c.id) then

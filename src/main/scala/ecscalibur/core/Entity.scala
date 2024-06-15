@@ -5,17 +5,21 @@ import Components.ComponentId
 import Worlds.World
 
 object Entities:
-  case class Entity(val id: Int):
+  opaque type Entity = Int
+
+  object Entity:
+    def apply(id: Int): Entity = id
+
+  extension (e: Entity)
+    inline def id: Int = e
+
     inline infix def +=[T <: Component](c: T)(using world: World): Entity =
-      world.addComponent(this, c)
-      this
+      world.addComponent(e, c)
+      e
 
-    inline infix def remove(id: ComponentId)(using world: World): Entity =
-      world.removeComponent(this, id)
-      this
+    inline infix def -=(compId: ComponentId)(using world: World): Entity =
+      world.removeComponent(e, compId)
+      e
 
-    inline infix def -=(id: ComponentId)(using world: World): Entity =
-      remove(id)(using world)
-
-    inline infix def has(id: ComponentId)(using world: World): Boolean =
-      world.hasComponent(this, id)
+    inline infix def has(compId: ComponentId)(using world: World): Boolean =
+      world.hasComponent(e, compId)
