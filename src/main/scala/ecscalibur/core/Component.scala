@@ -23,6 +23,9 @@ object Components:
 
     private[Annotations] val idGenerator = AtomicReference(IdGenerator())
 
+    /**
+      * Assigns a unique type ID to classes extending {@code Component}.
+      */
     class component extends MacroAnnotation:
       def transform(using Quotes)(
           definition: quotes.reflect.Definition,
@@ -46,7 +49,6 @@ object Components:
               ValDef(idOverrideSym, Some(rhs))
 
             val newRhs = Literal(IntConstant(idGenerator.getAcquire().next))
-
             val cls = definition.symbol
             ensureClassExtendsComponent(cls)
             val newClsDef = ClassDef(cls, parents, recreateIdField(cls, newRhs) :: body)
