@@ -1,5 +1,7 @@
 package ecscalibur.core
 
+import ecscalibur.exception.MissingAnnotationException
+
 object Components:
   /** Type representing unique component IDs.
     */
@@ -9,7 +11,7 @@ object Components:
   trait Component:
     val _id: ComponentId = noId
     inline def id = if _id != noId then _id
-    else throw IllegalStateException(s"$getClass must be annotated with @component.")
+    else throw MissingAnnotationException(s"$getClass must be annotated with @component.")
     inline def unary_~ = id
 
   object Annotations:

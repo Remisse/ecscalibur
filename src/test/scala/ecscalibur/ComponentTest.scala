@@ -3,6 +3,7 @@ package ecscalibur
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
+import ecscalibur.exception.MissingAnnotationException
 
 class ComponentTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.core.*
@@ -13,7 +14,7 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
   object NotAnnotated extends Component
 
   "A component class" should "be annotated with @component" in:
-    an[IllegalStateException] shouldBe thrownBy(~NotAnnotated)
+    a[MissingAnnotationException] shouldBe thrownBy(~NotAnnotated)
 
   it should "always extend Component" in:
     """
