@@ -49,8 +49,11 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
   it should "be able to correctly remove its components" in:
     given world: World = World()
     val entity = world.spawn
-    entity += Comp1() += Comp2() += Comp3()
-    entity -= ~Comp1 -= ~Comp3
+    entity += Comp1() 
+      += Comp2() 
+      += Comp3()
+    entity -= ~Comp1 
+      -= ~Comp3
     !(entity has ~Comp1) && (entity has ~Comp2) && !(entity has ~Comp3) shouldBe true
 
   it should "throw when attemping to remove a non-existing component" in:
