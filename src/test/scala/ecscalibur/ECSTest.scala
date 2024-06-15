@@ -15,7 +15,7 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
     world.isValid(entity) shouldBe true
 
   import Components.*
-  import ecscalibur.annotation.component
+  import Annotations.component
 
   @component
   class Comp1 extends Component

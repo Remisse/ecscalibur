@@ -3,26 +3,40 @@ package ecscalibur
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
-import ecscalibur.annotation.component
 
 class ComponentTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.core.*
   import Components.*
+  import Annotations.component
 
-  // TODO Need to find a way to test if component classes are annotated with @component
+  class NotAnnotated extends Component
+  object NotAnnotated extends Component
 
-  "A component class" should "always extend Component" in:
-    "@component class BadComponent" shouldNot compile
+  "A component class" should "be annotated with @component" in:
+    an[IllegalStateException] shouldBe thrownBy(~NotAnnotated)
+
+  it should "always extend Component" in:
+    """
+    import ecscalibur.core.Components.Annotations.component
+    @component class BadComponent
+    """ shouldNot compile
 
   it should "always define a companion object" in:
-    "@component class BadComponent extends Component" shouldNot compile
+    """
+    import ecscalibur.core.Components.*
+    import Annotations.component
+    @component
+    class BadComponent extends Component
+    """ shouldNot compile
 
-  // TODO Does not run
-  // it should "have a companion object extending Component" in:
-  //   """
-  //   @component
-  //   class BadComponent extends Component
-  //   object BadComponent""" shouldNot compile
+  it should "have a companion object extending Component" in:
+    """
+    import ecscalibur.core.Components.*
+    import Annotations.component
+    @component 
+    class BadComponent extends Component
+    object BadComponent extends Component
+    """ should compile
 
   @component
   class Comp1 extends Component
