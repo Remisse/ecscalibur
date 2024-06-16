@@ -35,3 +35,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     archetype.contains(C1) shouldBe true
     archetype.contains(C2, C1) shouldBe true
     archetype.contains(C3) shouldBe false
+
+  it should "have a signature made of distinct component types only" in:
+    val archetype = Archetype(C1, C1, C2)    
+    archetype.hasSignature(C1, C2) shouldBe true

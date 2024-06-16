@@ -15,7 +15,7 @@ object Archetypes:
       ArchetypeImpl(types)
 
     private class ArchetypeImpl(types: Seq[ComponentType]) extends Archetype:
-      val signature: Array[ComponentType] = types.toArray.sorted
+      val signature: Array[ComponentType] = types.distinct.toArray.sorted
       override inline def hasSignature(types: ComponentType*): Boolean =
         signature.sameElements(types.toArray.sorted)
 
