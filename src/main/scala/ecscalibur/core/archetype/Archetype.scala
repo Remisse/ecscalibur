@@ -11,11 +11,13 @@ object Archetypes:
 
   object Archetype:
     def apply(types: ComponentType*): Archetype =
-      require(!types.isEmpty)
-      ArchetypeImpl(types)
+      require(!types.isEmpty, "Given signature is empty.")
+      val distinct = types.distinct
+      require(distinct.length == types.length, "Given signature has duplicate component types.")
+      ArchetypeImpl(distinct)
 
     private class ArchetypeImpl(types: Seq[ComponentType]) extends Archetype:
-      val signature: Array[ComponentType] = types.distinct.toArray.sorted
+      val signature: Array[ComponentType] = types.toArray.sorted
       override inline def hasSignature(types: ComponentType*): Boolean =
         signature.sameElements(types.toArray.sorted)
 
