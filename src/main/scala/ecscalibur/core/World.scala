@@ -29,7 +29,7 @@ object Worlds:
 
     override inline def addComponent[T <: Component](e: Entity, c: T) =
       if hasComponent(e, c.id) then
-        throw IllegalStateException(s"Entity $this already has a component of type ${c.getClass}.")
+        throw IllegalArgumentException(s"Entity $this already has a component of type ${c.getClass}.")
       components(e.id) += c
 
     private inline def hasComponent(e: Entity, id: ComponentId): Boolean =
@@ -38,7 +38,7 @@ object Worlds:
     override inline def removeComponent(e: Entity, compType: ComponentType): Unit =
       val i = findComponentIdx(e, ~compType)
       if i == -1 then
-        throw new IllegalStateException(s"Entity $this does not have a component of type ${compType.getClass}.")
+        throw new IllegalArgumentException(s"Entity $this does not have a component of type ${compType.getClass}.")
       components(e.id).remove(i)
 
     override inline def hasComponent(e: Entity, compType: ComponentType): Boolean =

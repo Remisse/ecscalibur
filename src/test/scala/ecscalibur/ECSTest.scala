@@ -31,7 +31,7 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
     given world: World = World()
     val entity = world.spawn
     entity += Comp1()
-    an[IllegalStateException] should be thrownBy (entity += Comp1())
+    an[IllegalArgumentException] should be thrownBy (entity += Comp1())
 
   it should "not have a component that was never explicitly added to it" in:
     given world: World = World()
@@ -60,4 +60,4 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
   it should "throw when attemping to remove a non-existing component" in:
     given world: World = World()
     val entity = world.spawn
-    an[IllegalStateException] should be thrownBy (entity -= Comp1)
+    an[IllegalArgumentException] should be thrownBy (entity -= Comp1)
