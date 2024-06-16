@@ -17,32 +17,20 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     a[MissingAnnotationException] shouldBe thrownBy(~NotAnnotated)
 
   it should "always extend Component" in:
-    """
-    import ecscalibur.core.Components.Annotations.component
-    @component class BadComponent
-    """ shouldNot compile
+    "@component class BadComponent" shouldNot compile
 
   it should "always define a companion object" in:
-    """
-    import ecscalibur.core.Components.*
-    import Annotations.component
-    @component
-    class BadComponent extends Component
-    """ shouldNot compile
+    "@component class BadComponent extends Component" shouldNot compile
 
   it should "have a companion object extending ComponentType" in:
     // Compilation silently fails if object BadComponent extends nothing or
     // something other than Component (why?).
     """
-    import ecscalibur.core.Components.*
-    import Annotations.component
     @component 
     class BadComponent extends Component
     object BadComponent extends Component
     """ shouldNot compile
     """
-    import ecscalibur.core.Components.*
-    import Annotations.component
     @component 
     class C extends Component
     object C extends ComponentType
@@ -58,9 +46,19 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
 
   it should "have a unique type ID" in:
     Comp1.id shouldNot be(Components.nil)
-    val c11 = Comp1()
-    c11.id shouldBe Comp1.id
-    c11 isA Comp1 shouldBe true // Equivalent to the above.
-    val c12 = Comp1()
-    ~c11 shouldBe ~c12 // Equivalent to 'c11.id shouldBe c12.id'.
-    ~Comp1 shouldNot equal(~Comp2)
+    ~Comp1 shouldNot equal(~Comp2) // Equivalent to Comp1.id shouldNot equal(Comp2.id)
+
+  "A component instance" should "have the same type ID as its class" in:
+    val c1 = Comp1()
+    c1.id shouldBe Comp1.id
+    c1 isA Comp1 shouldBe true // Equivalent to the above.
+
+  it should "have the same type ID as another instance of the same type" in:
+    val c1 = Comp1()
+    val c2 = Comp1()
+    ~c1 shouldBe ~c2
+
+  it should "have a different type ID when compared to an instance of a different type" in:
+    val c1 = Comp1()
+    val c2 = Comp2()
+    ~c1 shouldNot be(~c2)
