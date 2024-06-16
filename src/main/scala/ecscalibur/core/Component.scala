@@ -23,6 +23,11 @@ object Components:
     else throw MissingAnnotationException(s"$getClass must be annotated with @component.")
     inline def unary_~ = id
 
+  object TypeOrdering:
+    given Ordering[ComponentType] with
+      def compare(x: ComponentType, y: ComponentType): Int = ~x - ~y
+  export TypeOrdering.given_Ordering_ComponentType
+
   object Annotations:
     import scala.annotation.MacroAnnotation
     import scala.quoted.*
