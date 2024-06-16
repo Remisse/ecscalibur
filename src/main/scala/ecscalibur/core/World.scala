@@ -3,15 +3,14 @@ package ecscalibur.core
 object Worlds:
   import scala.collection.mutable.ArrayBuffer
   import Entities.Entity
-  import Components.Component
-  import Components.ComponentId
+  import Components.*
 
   trait World:
     def spawn: Entity
     def isValid(e: Entity): Boolean
     def addComponent[T <: Component](e: Entity, c: T): Unit
-    def removeComponent(e: Entity, componentId: ComponentId): Unit
-    def hasComponent(e: Entity, componentId: ComponentId): Boolean
+    def removeComponent(e: Entity, compType: ComponentType): Unit
+    def hasComponent(e: Entity, compType: ComponentType): Boolean
 
   object World:
     def apply(): World = WorldImpl()
@@ -33,14 +32,17 @@ object Worlds:
         throw IllegalStateException(s"Entity $this already has a component of type ${c.getClass}.")
       components(e.id) += c
 
-    override inline def removeComponent(e: Entity, id: ComponentId): Unit =
-      val i = findComponentIdx(e, id)
+    private inline def hasComponent(e: Entity, id: ComponentId): Boolean =
+      findComponentIdx(e, id) != -1
+
+    override inline def removeComponent(e: Entity, compType: ComponentType): Unit =
+      val i = findComponentIdx(e, ~compType)
       if i == -1 then
-        throw new IllegalStateException(s"Entity $this does not have a component of type ID $id.")
+        throw new IllegalStateException(s"Entity $this does not have a component of type ${compType.getClass}.")
       components(e.id).remove(i)
 
-    override inline def hasComponent(e: Entity, id: ComponentId): Boolean =
-      findComponentIdx(e, id) != -1
+    override inline def hasComponent(e: Entity, compType: ComponentType): Boolean =
+      findComponentIdx(e, ~compType) != -1
 
     private inline def findComponentIdx(e: Entity, id: ComponentId): Int =
       components(e.id).indexWhere(_.id == id)

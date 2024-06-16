@@ -1,12 +1,14 @@
 package ecscalibur.core
 
-import Components.Component
-import Components.ComponentId
+import Components.*
 import Worlds.World
 
 object Entities:
   opaque type Entity = Int
 
+  /**
+    * Factory for [[ecscalibur.core.Entities.Entity]].
+    */
   object Entity:
     def apply(id: Int): Entity = id
 
@@ -17,9 +19,12 @@ object Entities:
       world.addComponent(e, c)
       e
 
-    inline infix def -=(compId: ComponentId)(using world: World): Entity =
-      world.removeComponent(e, compId)
+    inline infix def -=(compType: ComponentType)(using world: World): Entity =
+      world.removeComponent(e, compType)
       e
 
-    inline infix def has(compId: ComponentId)(using world: World): Boolean =
-      world.hasComponent(e, compId)
+    inline infix def has(compType: ComponentType)(using world: World): Boolean =
+      world.hasComponent(e, compType)
+
+    inline infix def has(compTypes: ComponentType*)(using world: World): Boolean =
+      compTypes forall has
