@@ -6,6 +6,7 @@ import org.scalatest.matchers.*
 import ecscalibur.core.Components.*
 import ecscalibur.core.Components.Annotations.component
 import ecscalibur.core.archetype.Archetypes.Archetype
+import ecscalibur.core.Entities.Entity
 
 class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   @component
@@ -43,19 +44,15 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   case class WithValue(val x: Int) extends Component
   object WithValue extends ComponentType
 
-  import ecscalibur.core.Worlds.World
-
   it should "correctly store entities and their components" in:
-    given world: World = World()
-    val e1 = world.spawn
+    val e1 = Entity(0)
     val archetype = Archetype(C1, C2)
     archetype.add(e1, Array(C1(), C2()))
     archetype.contains(e1) shouldBe true
 
   it should "correctly return any component values associated to its entities" in:
-    given world: World = World()
-    val e1 = world.spawn
-    val e2 = world.spawn
+    val e1 = Entity(0)
+    val e2 = Entity(1) 
     val archetype = Archetype(WithValue, C2)
     val c1 = WithValue(5)
     val c2 = C2()
@@ -68,23 +65,20 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     archetype.get(e2, C2) shouldBe c2
 
   it should "not accept entities that do not satisfy its signature" in:
-    given world: World = World()
-    val e1 = world.spawn
+    val e1 = Entity(0)
     val archetype = Archetype(WithValue, C2)
     an[IllegalArgumentException] shouldBe thrownBy(archetype.add(e1, Array(C2())))
     an[IllegalArgumentException] shouldBe thrownBy(archetype.add(e1, Array(WithValue(1), C2(), C3())))
 
   it should "correctly remove stored entities" in:
-    given world: World = World()
-    val e1 = world.spawn
+    val e1 = Entity(0)
     val archetype = Archetype(C1)
     archetype.add(e1, Array(C1()))
     archetype.remove(e1)
     archetype.contains(e1) shouldBe false
   
   it should "not return component values associated to deleted entities" in:
-    given world: World = World()
-    val e1 = world.spawn
+    val e1 = Entity(0)
     val c1 = WithValue(1)
     val archetype = Archetype(WithValue)
     archetype.add(e1, Array(c1))
