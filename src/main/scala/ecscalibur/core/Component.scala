@@ -15,6 +15,11 @@ object Components:
 
     inline def id: ComponentId = if _id != nil then _id
     else throw MissingAnnotationException(s"$getClass must be annotated with @component.")
+    /**
+      * Equivalent to 'tpe'.
+      *
+      * @return the type ID of this component.
+      */
     @targetName("typeId")
     inline def unary_~ : ComponentId = id
 
