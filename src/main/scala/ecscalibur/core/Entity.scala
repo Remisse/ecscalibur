@@ -10,7 +10,7 @@ object Entities:
   /**
     * Factory for [[ecscalibur.core.Entities.Entity]].
     */
-  object Entity:
+  private[core] object Entity:
     def apply(id: Int): Entity = id
 
   extension (e: Entity)
