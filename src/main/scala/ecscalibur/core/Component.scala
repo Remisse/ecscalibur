@@ -62,7 +62,8 @@ object Components:
 
             def recreateIdField(cls: Symbol, rhs: Term)(using Quotes): ValDef =
               val fieldName = "_id"
-              val idSym = cls.fieldMember(fieldName)
+              // Works as long as '_id' is non-private (even protected is fine).
+              val idSym = cls.fieldMember(fieldName) 
               val idOverrideSym =
                 Symbol.newVal(cls, fieldName, idSym.info, Flags.Override, Symbol.noSymbol)
               ValDef(idOverrideSym, Some(rhs))
