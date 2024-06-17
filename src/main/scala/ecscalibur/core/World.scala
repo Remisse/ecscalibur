@@ -28,7 +28,7 @@ object Worlds:
     override inline def isValid(e: Entity): Boolean = idGenerator.isValid(e.id)
 
     override inline def addComponent[T <: Component](e: Entity, c: T) =
-      if hasComponent(e, c.id) then
+      if hasComponent(e, c.tpe) then
         throw IllegalArgumentException(s"Entity $this already has a component of type ${c.getClass}.")
       components(e.id) += c
 
@@ -45,4 +45,4 @@ object Worlds:
       findComponentIdx(e, ~compType) != -1
 
     private inline def findComponentIdx(e: Entity, id: ComponentId): Int =
-      components(e.id).indexWhere(_.id == id)
+      components(e.id).indexWhere(_.tpe == id)

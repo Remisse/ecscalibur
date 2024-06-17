@@ -45,12 +45,13 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
   object Comp2 extends ComponentType
 
   it should "have a unique type ID" in:
-    Comp1.id shouldNot be(Components.nil)
-    ~Comp1 shouldNot equal(~Comp2) // Equivalent to Comp1.id shouldNot equal(Comp2.id)
+    Comp1.tpe shouldNot be(Components.nil)
+    // Equivalent to 'Comp1.tpe shouldNot equal(Comp2.tpe)'.
+    ~Comp1 shouldNot equal(~Comp2)
 
   "A component instance" should "have the same type ID as its class" in:
     val c1 = Comp1()
-    c1.id shouldBe Comp1.id
+    c1.tpe shouldBe Comp1.tpe
     c1 isA Comp1 shouldBe true // Equivalent to the above.
 
   it should "have the same type ID as another instance of the same type" in:

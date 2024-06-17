@@ -11,9 +11,9 @@ object Components:
   val nil: ComponentId = -1
 
   private[Components] trait ComponentInternal:
-    protected val _id: ComponentId = nil
+    protected val _typeId: ComponentId = nil
 
-    inline def id: ComponentId = if _id != nil then _id
+    inline def tpe: ComponentId = if _typeId != nil then _typeId
     else throw MissingAnnotationException(s"$getClass must be annotated with @component.")
     /**
       * Equivalent to 'tpe'.
@@ -21,19 +21,19 @@ object Components:
       * @return the type ID of this component.
       */
     @targetName("typeId")
-    inline def unary_~ : ComponentId = id
+    inline def unary_~ : ComponentId = tpe
 
   trait Component extends ComponentInternal:
-    inline infix def isA(tpe: ComponentType): Boolean = id == tpe.id
+    inline infix def isA(compType: ComponentType): Boolean = tpe == compType.tpe
 
   trait ComponentType extends ComponentInternal:
     override def equals(other: Any): Boolean = other match
-      case o: ComponentType => id == o.id
+      case o: ComponentType => tpe == o.tpe
       case _                => false
 
   object TypeOrdering:
     given Ordering[ComponentType] with
-      def compare(x: ComponentType, y: ComponentType): Int = ~x - ~y
+      def compare(t1: ComponentType, t2: ComponentType): Int = ~t1 - ~t2
   export TypeOrdering.given_Ordering_ComponentType
 
   object Annotations:
@@ -66,8 +66,8 @@ object Components:
                   )
 
             def recreateIdField(cls: Symbol, rhs: Term)(using Quotes): ValDef =
-              val fieldName = "_id"
-              // Works as long as '_id' is non-private (even protected is fine).
+              val fieldName = "_typeId"
+              // Works as long as this field is non-private (even protected is fine).
               val idSym = cls.fieldMember(fieldName) 
               val idOverrideSym =
                 Symbol.newVal(cls, fieldName, idSym.info, Flags.Override, Symbol.noSymbol)
