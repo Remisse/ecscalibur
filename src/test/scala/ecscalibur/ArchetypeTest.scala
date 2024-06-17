@@ -52,7 +52,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
 
   it should "correctly return any component values associated to its entities" in:
     val e1 = Entity(0)
-    val e2 = Entity(1) 
+    val e2 = Entity(1)
     val archetype = Archetype(WithValue, C2)
     val c1 = WithValue(5)
     val c2 = C2()
@@ -61,14 +61,16 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val returned = archetype.get(e1, WithValue) match
       case c: WithValue => c
       case _            => throw new IllegalStateException()
-    returned shouldBe c1 
+    returned shouldBe c1
     archetype.get(e2, C2) shouldBe c2
 
   it should "not accept entities that do not satisfy its signature" in:
     val e1 = Entity(0)
     val archetype = Archetype(WithValue, C2)
     an[IllegalArgumentException] shouldBe thrownBy(archetype.add(e1, Array(C2())))
-    an[IllegalArgumentException] shouldBe thrownBy(archetype.add(e1, Array(WithValue(1), C2(), C3())))
+    an[IllegalArgumentException] shouldBe thrownBy(
+      archetype.add(e1, Array(WithValue(1), C2(), C3()))
+    )
 
   it should "correctly remove stored entities" in:
     val e1 = Entity(0)
@@ -76,11 +78,11 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     archetype.add(e1, Array(C1()))
     archetype.remove(e1)
     archetype.contains(e1) shouldBe false
-  
+
   it should "not return component values associated to deleted entities" in:
     val e1 = Entity(0)
     val c1 = WithValue(1)
     val archetype = Archetype(WithValue)
     archetype.add(e1, Array(c1))
     archetype.remove(e1)
-    an[IllegalArgumentException] shouldBe thrownBy (archetype.get(e1, WithValue))
+    an[IllegalArgumentException] shouldBe thrownBy(archetype.get(e1, WithValue))
