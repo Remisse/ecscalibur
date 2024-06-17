@@ -67,15 +67,14 @@ object Components:
             val newRhs = Literal(IntConstant(idGenerator.getAcquire().next))
             val cls = definition.symbol
             ensureExtends[Component](cls)
-            val newClsDef = ClassDef(cls, parents, recreateIdField(cls, newRhs) :: body)
+            val newClsDef = ClassDef.copy(definition)(name, ctr, parents, selfOpt, recreateIdField(cls, newRhs) :: body)
 
-            if companion.isEmpty then
-              report.error(s"$name should define a companion object extending Component.")
+            if companion.isEmpty then report.error(s"$name should define a companion object.")
             val compCls = companion.head.symbol
             ensureExtends[ComponentType](compCls)
             val newCompClsDef = companion.head match
               case ClassDef(name, ctr, parents, selfOpt, body) =>
-                ClassDef(compCls, parents, recreateIdField(compCls, newRhs) :: body)
+                ClassDef.copy(companion.head)(name, ctr, parents, selfOpt, recreateIdField(compCls, newRhs) :: body)
               case _ => report.errorAndAbort("impossible")
 
             List(newClsDef, newCompClsDef)
