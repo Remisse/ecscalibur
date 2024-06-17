@@ -2,11 +2,21 @@ package ecscalibur.core
 
 import ecscalibur.exception.MissingAnnotationException
 
+import scala.annotation.targetName
+
 object Components:
   /** Type representing unique component IDs.
     */
   type ComponentId = Int
   val nil: ComponentId = -1
+
+  private[Components] trait ComponentInternal:
+    protected val _id: ComponentId = nil
+
+    inline def id: ComponentId = if _id != nil then _id
+    else throw MissingAnnotationException(s"$getClass must be annotated with @component.")
+    @targetName("typeId")
+    inline def unary_~ : ComponentId = id
 
   trait Component extends ComponentInternal:
     inline infix def isA(tpe: ComponentType): Boolean = id == tpe.id
@@ -15,13 +25,6 @@ object Components:
     override def equals(other: Any): Boolean = other match
       case o: ComponentType => id == o.id
       case _                => false
-
-  private[Components] trait ComponentInternal:
-    val _id: ComponentId = nil
-
-    inline def id = if _id != nil then _id
-    else throw MissingAnnotationException(s"$getClass must be annotated with @component.")
-    inline def unary_~ = id
 
   object TypeOrdering:
     given Ordering[ComponentType] with
