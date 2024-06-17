@@ -52,8 +52,9 @@ private[core] object Archetypes:
         val newEntityIdx = idGenerator.next
         entityIndexes += e -> newEntityIdx
         for c <- comps do
-          if newEntityIdx >= components(~c).length then components(~c) += c
-          else components(~c).update(newEntityIdx, c)
+          val compArray = components(~c)
+          if newEntityIdx >= compArray.length then compArray += c
+          else compArray.update(newEntityIdx, c)
 
       override inline def contains(e: Entity): Boolean = idGenerator.isValid(entityIndexes(e))
 
@@ -65,7 +66,7 @@ private[core] object Archetypes:
         idGenerator.erase(idx)
 
       override inline def get[T <: Component](e: Entity, comp: ComponentType)(using
-          tag: ClassTag[T]
+          ClassTag[T]
       ): T =
         require(contains(e), "Failed to find the given entity.")
         require(handles(comp), "Given type is not part of this archetype's signature.")
