@@ -7,6 +7,7 @@ import ecscalibur.id.IdGenerator
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.immutable.*
+import scala.reflect.ClassTag
 
 private[core] object Archetypes:
   trait Archetype:
@@ -15,7 +16,7 @@ private[core] object Archetypes:
     def add(e: Entity, comps: Array[Component]): Unit
     def contains(e: Entity): Boolean
     def remove(e: Entity): Unit
-    def get(e: Entity, comp: ComponentType): Component
+    def get[T <: Component](e: Entity, comp: ComponentType)(using ClassTag[T]): T
 
   object Archetype:
     def apply(types: ComponentType*): Archetype =
@@ -56,19 +57,19 @@ private[core] object Archetypes:
 
       override inline def contains(e: Entity): Boolean = idGenerator.isValid(entityIndexes(e))
 
-      override def remove(e: Entity): Unit =
+      override inline def remove(e: Entity): Unit =
         inline val errorMsg = "Attempted to remove an entity not stored in this archetype."
         require(entityIndexes.contains(e), errorMsg)
         val idx = entityIndexes(e)
         require(idGenerator.isValid(idx), errorMsg)
         idGenerator.erase(idx)
 
-      override inline def get(e: Entity, comp: ComponentType): Component =
+      override inline def get[T <: Component](e: Entity, comp: ComponentType)(using
+          tag: ClassTag[T]
+      ): T =
         require(contains(e), "Failed to find the given entity.")
         require(handles(comp), "Given type is not part of this archetype's signature.")
-        components(~comp)(entityIndexes(e))
-
-  import ecscalibur.core.Components.Annotations.component
-  @component
-  private[Archetypes] class NilComponent extends Component
-  private[Archetypes] object NilComponent extends ComponentType
+        components(~comp)(entityIndexes(e)) match
+          case c: T => c
+          case _ =>
+            throw new MatchError("Type parameter does not correspond to the given component type.")

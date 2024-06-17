@@ -58,11 +58,9 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val c2 = C2()
     archetype.add(e1, Array(c1, c2))
     archetype.add(e2, Array(c2, c1))
-    val returned = archetype.get(e1, WithValue) match
-      case c: WithValue => c
-      case _            => throw new IllegalStateException()
-    returned shouldBe c1
-    archetype.get(e2, C2) shouldBe c2
+    archetype.get[WithValue](e1, WithValue) shouldBe c1
+    archetype.get[C2](e2, C2) shouldBe c2
+    a[MatchError] shouldBe thrownBy (archetype.get[C2](e2, WithValue))
 
   it should "not accept entities that do not satisfy its signature" in:
     val e1 = Entity(0)
@@ -85,4 +83,4 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val archetype = Archetype(WithValue)
     archetype.add(e1, Array(c1))
     archetype.remove(e1)
-    an[IllegalArgumentException] shouldBe thrownBy(archetype.get(e1, WithValue))
+    an[IllegalArgumentException] shouldBe thrownBy(archetype.get[WithValue](e1, WithValue))
