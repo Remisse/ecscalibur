@@ -8,7 +8,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.immutable.*
 
-object Archetypes:
+private[core] object Archetypes:
   trait Archetype:
     def hasSignature(types: ComponentType*): Boolean
     def handles(types: ComponentType*): Boolean
