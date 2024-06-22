@@ -42,7 +42,7 @@ object Queries:
 
     inline def filterIds(id: ComponentId): Boolean = all.isNil || all.underlying.contains(id)
     inline def matches(s: Signature): Boolean =
-      (all.isNil || all.underlying.forall(s.underlying.contains)) &&
+      (all.isNil || s.containsAll(all)) &&
         (none.isNil || !s.containsAny(none)) &&
         (any.isNil || s.containsAny(any))
 
