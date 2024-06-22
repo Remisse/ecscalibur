@@ -58,5 +58,3 @@ object Signatures:
       extension [T <: WithType](types: Array[T])
         @targetName("typesToSignature")
         inline def toSignature = Signature(types)
-
-  export Signature.Extensions.*
