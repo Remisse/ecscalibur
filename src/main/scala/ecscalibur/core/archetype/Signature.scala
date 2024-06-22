@@ -9,6 +9,8 @@ object Signatures:
 
     inline infix def containsAny(other: Signature): Boolean = other.underlying.exists(underlying.contains)
 
+    inline infix def containsAll(other: Signature): Boolean = other.underlying.forall(underlying.contains)
+
     inline def isNil: Boolean = underlying.isEmpty
 
     override def equals(other: Any): Boolean = other match
