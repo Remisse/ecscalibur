@@ -16,10 +16,10 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
   "A component class" must "be annotated with @component" in:
     a[MissingAnnotationError] shouldBe thrownBy(~NotAnnotated)
 
-  it should "always extend Component" in:
+  it must "extend Component" in:
     "@component class BadComponent" shouldNot compile
 
-  it should "always define a companion object" in:
+  it must "define a companion object" in:
     "@component class BadComponent extends Component" shouldNot compile
 
   it should "have a companion object extending ComponentType" in:
