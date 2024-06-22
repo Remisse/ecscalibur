@@ -63,3 +63,14 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     val c1 = Comp1()
     val c2 = Comp2()
     ~c1 shouldNot be(~c2)
+
+  @component
+  class CompExtended extends Comp1
+  object CompExtended extends ComponentType
+
+  "A subclass of a component class" should "have a different type ID from that of its superclass" in:
+    ~CompExtended shouldNot equal(~Comp1)
+    val c1 = Comp1()
+    val c1ex = CompExtended()
+    ~c1 shouldNot equal(~c1ex)
+    c1ex isA Comp1 shouldBe false
