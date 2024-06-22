@@ -5,12 +5,31 @@ ThisBuild / scalaVersion := "3.5.0-RC1"
 lazy val root = (project in file("."))
   .settings(
     name := "ECScalibur",
-    // add scala test
+
+    // Test libraries
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.18" % Test,
     // libraryDependencies += "org.scalamock" %% "scalamock" % "6.0.0" % Test,
+
     scalacOptions ++= Seq(
-      "-Xcheck-macros", 
-      "-Ycheck:all", 
+      "-deprecation",
       "-experimental",
+      "-feature",
+      "-language:experimental.macros",
+      "-language:higherKinds",
+      "-language:implicitConversions",
+      "-unchecked",
+      "-Wsafe-init",
+      "-Wunused:implicits",
+      "-Wunused:explicits",
+      "-Wunused:imports",
+      "-Wunused:locals",
+      "-Wunused:params",
+      "-Wunused:privates",
+      "-Wvalue-discard",
+      //"-Xfatal-warnings",
+      "-Xcheck-macros", 
+      "-Xkind-projector",
+      "-Ycheck:all", 
+      "-Yexplicit-nulls",
       ),
   )
