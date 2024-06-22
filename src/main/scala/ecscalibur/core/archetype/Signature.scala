@@ -51,6 +51,8 @@ object Signature:
 
       inline infix def containsAny(other: Signature): Boolean = other.exists(s.contains)
 
+      inline def isNil: Boolean = s.isEmpty
+
     extension (ids: ComponentId*)
       @targetName("idsToSignature")
       inline def toSignature = Signature(ids*)
