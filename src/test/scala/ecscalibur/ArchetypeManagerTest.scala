@@ -82,13 +82,10 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   it should "remove components from an existing entity" in:
     val am = ArchetypeManager()
     val entity = Entity(0)
-    am.addEntity(entity, CSeq(C1(), C2()))
-    am.addComponents(entity, CSeq(Value(1)))
-    am.iterateReading(Queries.all(Value)): (e, comps) =>
-      given CSeq = comps
-      val v = <<[Value]
-      v isA Value shouldBe true
-      val _ = v.x shouldBe 1
+    am.addEntity(entity, CSeq(C1(), C2(), Value(0)))
+    am.removeComponents(entity, C1, Value)
+    am.iterateReading(any(C1, Value)): (_, _) =>
+      throw IllegalStateException("Unreachable")
 
   it should "not allow to remove non-existing components from an entity" in:
     val am = ArchetypeManager()
