@@ -30,8 +30,8 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val archetype = Archetype(C1, C2)
     archetype.signature shouldBe Signature(C1, C2)
     archetype.signature shouldBe Signature(C2, C1)
-    archetype.signature shouldNot be (Signature(C1))
-    archetype.signature shouldNot be (Signature(C1, C2, C3))
+    archetype.signature shouldNot be(Signature(C1))
+    archetype.signature shouldNot be(Signature(C1, C2, C3))
 
   it should "report which component types it owns" in:
     val archetype = Archetype(C1, C2)
@@ -71,15 +71,15 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val e1 = Entity(0)
     val archetype = Archetype(Value, C1, C2)
     val wv = Value(3)
-    val c1 = C1() 
+    val c1 = C1()
     val c2 = C2()
     archetype.add(e1, CSeq(wv, c1, c2))
-    archetype.remove(e1).underlying should contain allOf(wv, c1, c2)
+    archetype.remove(e1).underlying should contain allOf (wv, c1, c2)
 
   it should "correctly soft-remove entities" in:
     val e1 = Entity(0)
     val archetype = Archetype(C1)
-    val c1 = C1() 
+    val c1 = C1()
     archetype.add(e1, CSeq(c1))
     archetype.softRemove(e1)
     archetype.contains(e1) shouldBe false
@@ -88,13 +88,12 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val arch = Archetype(Value, C2)
     val (v1, v2) = (Value(1), Value(2))
     val toAdd: Map[Entity, CSeq] = Map(
-      Entity(0) -> CSeq(v1, C2()), Entity(1) -> CSeq(v2, C2())
+      Entity(0) -> CSeq(v1, C2()),
+      Entity(1) -> CSeq(v2, C2())
     )
     for (entity, comps) <- toAdd do arch.add(entity, comps)
     var sum = 0
-    arch.readAll(
-      _ == ~Value, 
-      (e, comps) =>
+    arch.readAll(_ == ~Value, (e, comps) =>
         val c = comps.get[Value]
         an[IllegalArgumentException] shouldBe thrownBy(comps.get[C1])
         sum += c.x
@@ -107,16 +106,12 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val wv = Value(5)
     val editedWv = Value(0)
     arch.add(e1, CSeq(wv, C2()))
-    arch.writeAll(
-      _ == ~Value, 
-      (e, comps) =>
+    arch.writeAll(_ == ~Value, (e, comps) =>
         given CSeq = comps
         val c = <<[Value] // Equivalent to comps.get[Value]
         c shouldBe wv
         CSeq(editedWv)
     )
-    arch.readAll(
-      _ == ~Value, 
-      (e, comps) =>
+    arch.readAll(_ == ~Value, (e, comps) =>
         val _ = comps.get[Value] shouldBe editedWv
     )
