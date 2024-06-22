@@ -9,6 +9,7 @@ import ecscalibur.core.archetype.ArchetypeManagers.ArchetypeManager
 import ecscalibur.core.archetype.Queries
 import ecscalibur.core.Components.CSeqs.CSeq
 import ecscalibur.core.Components.CSeqs.<<
+import ecscalibur.core.archetype.Queries.*
 
 class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   @component
@@ -48,15 +49,16 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       Entity(1) -> CSeq(Value(2), C1(), C2())
     )
     for (entity, comps) <- toAdd do am.addEntity(entity, comps)
-    val editedValue = Value(0)
+    val editedValue = Value(3)
+    var sum = 0
     am.iterateWriting(Queries.all(Value)): (_, _) =>
       CSeq(editedValue)
     am.iterateReading(Queries.all(Value)): (_, comps) =>
       given CSeq = comps
-      val v = <<[Value]
-      val _ = v shouldBe editedValue
+      sum += <<[Value].x
+    sum shouldBe editedValue.x * toAdd.size
 
-  it should "not allow to add the same entity multiple times" in:
+  it should "not add the same entity multiple times" in:
     val am = ArchetypeManager()
     val entity = Entity(0)
     am.addEntity(entity, CSeq(C1()))
@@ -73,7 +75,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       v isA Value shouldBe true
       val _ = v.x shouldBe 1
 
-  it should "not allow to add the same component to an entity that already has it" in:
+  it should "not add the same component to an entity that already has it" in:
     val am = ArchetypeManager()
     val entity = Entity(0)
     am.addEntity(entity, CSeq(C1()))
@@ -87,7 +89,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     am.iterateReading(any(C1, Value)): (_, _) =>
       throw IllegalStateException("Unreachable")
 
-  it should "not allow to remove non-existing components from an entity" in:
+  it should "not remove non-existing components from an entity" in:
     val am = ArchetypeManager()
     val entity = Entity(0)
     am.addEntity(entity, CSeq(C1()))
@@ -98,7 +100,5 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     val entity = Entity(0)
     am.addEntity(entity, CSeq(C1()))
     am.delete(entity)
-    var entityCount = 0
-    am.iterateReading(Queries.all(C1)): (e, comps) =>
-      entityCount += 1
-    entityCount shouldBe 0
+    am.iterateReading(Queries.all(C1)): (_, _) =>
+      throw IllegalStateException("Unreachable")
