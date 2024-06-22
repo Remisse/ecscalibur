@@ -1,7 +1,5 @@
 package ecscalibur.core
-
-import ecscalibur.exception.MissingAnnotationException
-
+import ecscalibur.error.MissingAnnotationError
 import scala.annotation.targetName
 
 object Components:
@@ -10,25 +8,26 @@ object Components:
   type ComponentId = Int
   val nil: ComponentId = -1
 
-  private[Components] trait ComponentInternal:
+  sealed trait WithType:
     protected val _typeId: ComponentId = nil
 
-    inline def tpe: ComponentId = if _typeId != nil then _typeId
-    else throw MissingAnnotationException(s"$getClass must be annotated with @component.")
-    /**
-      * Equivalent to 'tpe'.
+    inline def typeId: ComponentId = if _typeId != nil then _typeId
+    else throw MissingAnnotationError(s"$getClass must be annotated with @component.")
+
+    /** Equivalent to 'typeId'.
       *
-      * @return the type ID of this component.
+      * @return
+      *   the type ID of this component.
       */
     @targetName("typeId")
-    inline def unary_~ : ComponentId = tpe
+    inline def unary_~ : ComponentId = typeId
 
-  trait Component extends ComponentInternal:
-    inline infix def isA(compType: ComponentType): Boolean = tpe == compType.tpe
+  trait Component extends WithType:
+    inline infix def isA(compType: ComponentType): Boolean = typeId == compType.typeId
 
-  trait ComponentType extends ComponentInternal:
+  trait ComponentType extends WithType:
     override def equals(other: Any): Boolean = other match
-      case o: ComponentType => tpe == o.tpe
+      case o: ComponentType => typeId == o.typeId
       case _                => false
 
   object TypeOrdering:
