@@ -3,6 +3,7 @@ package ecscalibur.core.archetype
 import ecscalibur.core.Entities.Entity
 import ecscalibur.core.Components.{Component, ComponentType}
 import ecscalibur.core.archetype.Archetypes.Archetype
+import Signatures.Signature
 import Signature.Extensions.*
 import ecscalibur.core.archetype.Queries.*
 import ecscalibur.core.Components.CSeqs.CSeq

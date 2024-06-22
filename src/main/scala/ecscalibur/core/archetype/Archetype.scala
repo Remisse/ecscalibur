@@ -10,6 +10,8 @@ import scala.collection.immutable.*
 import scala.reflect.ClassTag
 import scala.annotation.targetName
 import ecscalibur.core.Components.CSeqs.CSeq
+import Signatures.Signature
+import Signature.Extensions.*
 
 private[core] object Archetypes:
   trait Archetype:
@@ -44,7 +46,7 @@ private[core] object Archetypes:
       override def add(e: Entity, entityComponents: CSeq): Unit =
         require(!contains(e), "Attempted to readd an already existing entity.")
         require(
-          _signature sameAs Signature(entityComponents.toTypes),
+          _signature == Signature(entityComponents.toTypes),
           "Given component types do not correspond to this archetype's signature."
         )
         val newEntityIdx: Int = assignIndexToEntity(e)
@@ -92,13 +94,13 @@ private[core] object Archetypes:
           val editedComponents: CSeq = f(e, inputComps)
           val returnedSignature = editedComponents.underlying.toSignature
           require(
-            returnedSignature sameAs inputIds.toSignature,
+            returnedSignature == inputIds.toSignature,
             s"Unexpected components returned.\nExpected: ${inputIds.mkString}\nFound: ${returnedSignature.underlying.mkString}"
           )
           for c <- editedComponents.underlying do components(c.typeId).update(entityIndexes(e), c)
 
       override def equals(x: Any): Boolean = x match
-        case a: Archetype => _signature sameAs a.signature
+        case a: Archetype => _signature == a.signature
         case _            => false
 
-      override def hashCode(): Int = _signature.hashCode()
+      override def hashCode(): Int = _signature.hashCode

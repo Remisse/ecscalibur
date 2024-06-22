@@ -6,7 +6,7 @@ import org.scalatest.matchers.*
 import Components.*
 import Annotations.component
 import ecscalibur.core.archetype.Archetypes.Archetype
-import ecscalibur.core.archetype.Signature
+import ecscalibur.core.archetype.Signatures.Signature
 import ecscalibur.core.Entities.Entity
 import ecscalibur.core.Components.CSeqs.{CSeq, <<}
 

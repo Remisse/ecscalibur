@@ -4,6 +4,7 @@ export Queries.*
 export Queries.Query.fromBuilder
 object Queries:
   import ecscalibur.core.Components.ComponentType
+  import Signatures.Signature
 
   inline def all(types: ComponentType*): QueryBuilder = QueryBuilder(_all = Signature(types*))
   inline def none(types: ComponentType*): QueryBuilder = QueryBuilder(_none = Signature(types*))
