@@ -5,49 +5,45 @@ export Queries.Query.fromBuilder
 object Queries:
   import ecscalibur.core.Components.ComponentType
 
-  inline def all(types: ComponentType*): QueryBuilder = QueryBuilder(_all = types.toArray)
-  inline def none(types: ComponentType*): QueryBuilder = QueryBuilder(_none = types.toArray)
-  inline def any(types: ComponentType*): QueryBuilder = QueryBuilder(_any = types.toArray)
+  inline def all(types: ComponentType*): QueryBuilder = QueryBuilder(_all = Signature(types*))
+  inline def none(types: ComponentType*): QueryBuilder = QueryBuilder(_none = Signature(types*))
+  inline def any(types: ComponentType*): QueryBuilder = QueryBuilder(_any = Signature(types*))
 
   class QueryBuilder(
-    private[Queries] var _all: Array[ComponentType] = Array.empty,
-    private[Queries] var _none: Array[ComponentType] = Array.empty,
-    private[Queries] var _any: Array[ComponentType] = Array.empty
+    private[Queries] var _all: Signature = Signature.nil,
+    private[Queries] var _none: Signature = Signature.nil,
+    private[Queries] var _any: Signature = Signature.nil 
   ):
     infix def all(types: ComponentType*): QueryBuilder = 
       ensureFieldIsEmpty(_all, "all")
-      _all = types.toArray
+      _all = Signature(types*)
       this
 
     infix def none(types: ComponentType*): QueryBuilder = 
       ensureFieldIsEmpty(_none, "none")
-      _none = types.toArray
+      _none = Signature(types*) 
       this
 
     infix def any(types: ComponentType*): QueryBuilder =
       ensureFieldIsEmpty(_any, "any")
-      _any = types.toArray
+      _any = Signature(types*)
       this
 
-    private inline def ensureFieldIsEmpty(field: Array[ComponentType], fieldName: String) = 
-      require(field.isEmpty, s"Called $fieldName multiple times.")
+    private inline def ensureFieldIsEmpty(field: Signature, methodName: String) = 
+      require(field.isNil, s"Called $methodName multiple times.")
 
   final class Query(
-      private val all: Array[ComponentType],
-      private val none: Array[ComponentType],
-      private val any: Array[ComponentType]
+      private val all: Signature,
+      private val none: Signature,
+      private val any: Signature 
   ):
     import ecscalibur.core.Components.ComponentId
 
-    private val allCache: Signature = if all.isEmpty then Signature.nil else all.toSignature
-    private val noneCache: Signature = if none.isEmpty then Signature.nil else none.toSignature
-    private val anyCache: Signature = if any.isEmpty then Signature.nil else any.toSignature
-    private val allTypes = all.map(_.typeId)
-
-    inline def testAll(id: ComponentId): Boolean = allTypes.isEmpty || allTypes.contains(id)
-    inline def test(s: Signature): Boolean =
-      (all.isEmpty || allCache.isPartOf(s)) && (none.isEmpty || !noneCache.isPartOf(s)) && 
-      (any.isEmpty || s.containsAny(anyCache))
+    inline def filterIds(id: ComponentId): Boolean = all.isNil || all.underlying.contains(id)
+    inline def matches(s: Signature): Boolean =
+      (all.isNil || all.underlying.forall(s.underlying.contains)) && 
+      (none.isNil || !s.containsAny(none)) && 
+      (any.isNil || s.containsAny(none))
   
   object Query:
     given fromBuilder: Conversion[QueryBuilder, Query] = (qb: QueryBuilder) => Query(qb._all, qb._none, qb._any)
