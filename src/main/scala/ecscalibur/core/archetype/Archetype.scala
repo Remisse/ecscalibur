@@ -42,7 +42,7 @@ private[core] object Archetypes:
         Signature(types*) isPartOf _signature
 
       override def add(e: Entity, entityComponents: CSeq): Unit =
-        require(!entityIndexes.contains(e), "Attempted to readd an already existing entity.")
+        require(!contains(e), "Attempted to readd an already existing entity.")
         require(
           _signature sameAs Signature(entityComponents.toTypes),
           "Given component types do not correspond to this archetype's signature."
@@ -61,11 +61,11 @@ private[core] object Archetypes:
         else entityIndexes.update(newEntityIdx, e)
         newEntityIdx
 
-      override inline def contains(e: Entity): Boolean = idGenerator.isValid(entityIndexes(e))
+      override inline def contains(e: Entity): Boolean = entityIndexes.contains(e) && idGenerator.isValid(entityIndexes(e))
 
       override def remove(e: Entity): CSeq =
         inline val errorMsg = "Attempted to remove an entity not stored in this archetype."
-        require(entityIndexes.contains(e), errorMsg)
+        require(contains(e), errorMsg)
         val idx = entityIndexes(e)
         idGenerator.erase(idx) match
           case false => throw new IllegalArgumentException(errorMsg)
@@ -73,20 +73,20 @@ private[core] object Archetypes:
 
       override def softRemove(e: Entity): Unit =
         inline val errorMsg = "Attempted to remove an entity not stored in this archetype."
-        require(entityIndexes.contains(e), errorMsg)
+        require(contains(e), errorMsg)
         val idx = entityIndexes(e)
         val _ = idGenerator.erase(idx)
 
       override def readAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => Unit) =
         val filteredComps = components.filter((id, _) => predicate(id))
-        for e <- entityIndexes do
+        for e <- entityIndexes if contains(e) do
           val inputComps = CSeq(filteredComps.map((_, comps) => comps(e)))
           f(e, inputComps)
 
       override def writeAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => CSeq) =
         val filteredComps = components.filter((id, _) => predicate(id))
         val inputIds = filteredComps.map((id, _) => id).toArray
-        for e <- entityIndexes do
+        for e <- entityIndexes if contains(e) do
           val inputComps = CSeq(filteredComps.map((_, comps) => comps(e)))
           val editedComponents: CSeq = f(e, inputComps)
           val returnedSignature = editedComponents.underlying.toSignature
