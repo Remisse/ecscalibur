@@ -23,26 +23,20 @@ object Signatures:
     val nil: Signature = new Signature(Array.empty[ComponentId])
 
     @targetName("fromIds")
-    def apply(ids: ComponentId*): Signature =
-      require(ids.nonEmpty, "Failed to make signature: empty sequence.")
-      val res = ids.distinct.sorted
-      require(res.length == ids.length, "Duplicate types found.")
-      new Signature(res.toArray)
-
-    @targetName("fromIds")
     def apply(ids: Array[ComponentId]): Signature =
       require(ids.nonEmpty, "Failed to make signature: empty sequence.")
       val res = ids.distinct.sorted
       require(res.length == ids.length, "Duplicate types found.")
       new Signature(res)
 
-    @targetName("fromTypes")
-    def apply[T <: WithType](types: T*): Signature =
-      apply(types.map(_.typeId).toArray)
+    @targetName("fromIds")
+    inline def apply(ids: ComponentId*): Signature = apply(ids.toArray)
 
     @targetName("fromTypes")
-    def apply[T <: WithType](types: Array[T]): Signature =
-      apply(types.map(_.typeId))
+    inline def apply[T <: WithType](types: T*): Signature = apply(types.map(_.typeId).toArray)
+
+    @targetName("fromTypes")
+    inline def apply[T <: WithType](types: Array[T]): Signature = apply(types.map(_.typeId))
 
     object Extensions:
       extension (ids: ComponentId*)
