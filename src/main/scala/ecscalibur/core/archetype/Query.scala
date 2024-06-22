@@ -44,7 +44,7 @@ object Queries:
     inline def matches(s: Signature): Boolean =
       (all.isNil || all.underlying.forall(s.underlying.contains)) &&
         (none.isNil || !s.containsAny(none)) &&
-        (any.isNil || s.containsAny(none))
+        (any.isNil || s.containsAny(any))
 
   object Query:
     given fromBuilder: Conversion[QueryBuilder, Query] = (qb: QueryBuilder) =>
