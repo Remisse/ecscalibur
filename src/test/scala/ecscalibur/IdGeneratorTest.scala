@@ -30,8 +30,8 @@ class IdGeneratorTests extends AnyFlatSpec with should.Matchers:
 
   it should "prioritize the reuse of previously erased IDs" in:
     val gen = IdGenerator()
-    val id1 = gen.next
-    val id2 = gen.next
-    gen.erase(id1)
+    val id = gen.next
+    val _ = gen.next
+    gen.erase(id)
     val reused = gen.next
-    id1 shouldBe reused
+    id shouldBe reused
