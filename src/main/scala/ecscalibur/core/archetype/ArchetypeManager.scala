@@ -56,12 +56,13 @@ object ArchetypeManagers:
     override def removeComponents(e: Entity, compTypes: ComponentType*): Unit =
       ensureEntityIsValid(e)
       require(
-        Signature(compTypes*) isPartOf signaturesByEntity(e),
+        signaturesByEntity(e).containsAll(Signature(compTypes*)),
         "Given component types are not part of the given entity's signature."
       )
       val entityComps: CSeq = archetypes(signaturesByEntity(e)).remove(e)
       signaturesByEntity.remove(e)
-      newEntityToArchetype(e, CSeq(entityComps.underlying.filterNot(compTypes.contains)))
+      val filteredComps = CSeq(entityComps.underlying.filterNot(c => compTypes.map(~_).contains(~c)))
+      newEntityToArchetype(e, filteredComps)
 
     override def delete(e: Entity): Unit =
       ensureEntityIsValid(e)
