@@ -8,71 +8,96 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.immutable.*
 import scala.reflect.ClassTag
+import scala.annotation.targetName
+import ecscalibur.core.Components.CSeqs.CSeq
 
 private[core] object Archetypes:
   trait Archetype:
-    def hasSignature(types: ComponentType*): Boolean
+    def signature: Signature
     def handles(types: ComponentType*): Boolean
-    def add(e: Entity, entityComponents: Array[Component]): Unit
+    def add(e: Entity, entityComponents: CSeq): Unit
     def contains(e: Entity): Boolean
-    def remove(e: Entity): Unit
-    def get[T <: Component](e: Entity, compType: ComponentType)(using ClassTag[T]): T
+    def remove(e: Entity): CSeq
+    def softRemove(e: Entity): Unit
+    def readAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => Unit): Unit
+    def writeAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => CSeq): Unit
 
   object Archetype:
-    def apply(types: ComponentType*): Archetype =
-      require(types.nonEmpty, "Given signature is empty.")
-      val distinct = types.distinct
-      require(distinct.length == types.length, "Given signature has duplicate component types.")
-      ArchetypeImpl(distinct)
+    @targetName("fromTypes")
+    def apply(types: ComponentType*): Archetype = apply(Signature(types*))
+    @targetName("fromSignature")
+    def apply(signature: Signature): Archetype = ArchetypeImpl(signature)
 
-    private class ArchetypeImpl(types: Seq[ComponentType]) extends Archetype:
-      private val signature: Array[ComponentId] = types.map(~_).toArray.sorted
-      private val entityIndexes: mutable.HashMap[Entity, Int] = mutable.HashMap.empty
+    private class ArchetypeImpl(inSignature: Signature) extends Archetype:
+      private val _signature: Signature = inSignature
+      private val entityIndexes: ArrayBuffer[Entity] = ArrayBuffer.empty
       private val components: Map[ComponentId, ArrayBuffer[Component]] =
-        signature.view.map(t => t -> ArrayBuffer.empty[Component]).to(HashMap)
+        _signature.underlying.map(t => t -> ArrayBuffer.empty[Component]).to(HashMap)
       private val idGenerator: IdGenerator = IdGenerator()
 
-      override inline def hasSignature(types: ComponentType*): Boolean =
-        require(types.nonEmpty, "Given signature to test is empty.")
-        hasSignatureInternal(types.map(_.tpe))
+      override inline def signature: Signature = _signature
 
-      private inline def hasSignatureInternal(ids: Seq[ComponentId]): Boolean =
-        signature.sameElements(ids.sorted)
-
-      override inline def handles(types: ComponentType*): Boolean =
+      override def handles(types: ComponentType*): Boolean =
         require(types.nonEmpty, "Given type sequence is empty.")
-        signature.containsSlice(types.map(_.tpe).sorted)
+        Signature(types*) isPartOf _signature
 
-      override inline def add(e: Entity, entityComponents: Array[Component]): Unit =
+      override def add(e: Entity, entityComponents: CSeq): Unit =
         require(!entityIndexes.contains(e), "Attempted to readd an already existing entity.")
         require(
-          hasSignatureInternal(entityComponents.map(_.tpe)),
+          _signature sameAs Signature(entityComponents.toTypes),
           "Given component types do not correspond to this archetype's signature."
         )
-        val newEntityIdx = idGenerator.next
-        entityIndexes += e -> newEntityIdx
-        for 
-          c <- entityComponents 
-          compArray = components(c.tpe)
+        val newEntityIdx: Int = assignIndexToEntity(e)
+        for
+          c <- entityComponents.underlying
+          compArray = components(c.typeId)
         do
           if newEntityIdx >= compArray.length then compArray += c
           else compArray.update(newEntityIdx, c)
 
+      private inline def assignIndexToEntity(e: Entity): Int =
+        val newEntityIdx = idGenerator.next
+        if (newEntityIdx >= entityIndexes.length) then entityIndexes += e
+        else entityIndexes.update(newEntityIdx, e)
+        newEntityIdx
+
       override inline def contains(e: Entity): Boolean = idGenerator.isValid(entityIndexes(e))
 
-      override inline def remove(e: Entity): Unit =
+      override def remove(e: Entity): CSeq =
         inline val errorMsg = "Attempted to remove an entity not stored in this archetype."
         require(entityIndexes.contains(e), errorMsg)
         val idx = entityIndexes(e)
-        require(idGenerator.isValid(idx), errorMsg)
-        idGenerator.erase(idx)
+        idGenerator.erase(idx) match
+          case false => throw new IllegalArgumentException(errorMsg)
+          case _     => CSeq(components.map((_, comps) => comps(idx)))
 
-      override inline def get[T <: Component](e: Entity, comp: ComponentType)(using
-          ClassTag[T]
-      ): T =
-        require(contains(e), "Failed to find the given entity.")
-        require(handles(comp), "Given type is not part of this archetype's signature.")
-        components(~comp)(entityIndexes(e)) match
-          case c: T => c
-          case _ =>
-            throw new MatchError("Type parameter does not correspond to the given component type.")
+      override def softRemove(e: Entity): Unit =
+        inline val errorMsg = "Attempted to remove an entity not stored in this archetype."
+        require(entityIndexes.contains(e), errorMsg)
+        val idx = entityIndexes(e)
+        val _ = idGenerator.erase(idx)
+
+      override def readAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => Unit) =
+        val filteredComps = components.filter((id, _) => predicate(id))
+        for e <- entityIndexes do
+          val inputComps = CSeq(filteredComps.map((_, comps) => comps(e)))
+          f(e, inputComps)
+
+      override def writeAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => CSeq) =
+        val filteredComps = components.filter((id, _) => predicate(id))
+        val inputIds = filteredComps.map((id, _) => id).toArray
+        for e <- entityIndexes do
+          val inputComps = CSeq(filteredComps.map((_, comps) => comps(e)))
+          val editedComponents: CSeq = f(e, inputComps)
+          val returnedSignature = editedComponents.underlying.toSignature
+          require(
+            returnedSignature sameAs inputIds.toSignature,
+            s"Unexpected components returned.\nExpected: ${inputIds.mkString}\nFound: ${returnedSignature.underlying.mkString}"
+          )
+          for c <- editedComponents.underlying do components(c.typeId).update(entityIndexes(e), c)
+
+      override def equals(x: Any): Boolean = x match
+        case a: Archetype => _signature sameAs a.signature
+        case _            => false
+
+      override def hashCode(): Int = _signature.hashCode()
