@@ -45,10 +45,9 @@ object Components:
       inline def underlying: Array[Component] = l
       inline def toTypes: Array[ComponentId] = l.map(_.typeId)
       inline def get[T <: Component: ClassTag]: T =
-        val idx = l.indexWhere {
+        val idx = l.indexWhere:
           case t: T => true
           case _    => false
-        }
         if idx == -1 then
           throw IllegalArgumentException(s"No component of class ${summon[ClassTag[T]]} found.")
         l(idx).asInstanceOf[T]
