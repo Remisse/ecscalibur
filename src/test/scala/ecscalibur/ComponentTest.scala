@@ -11,7 +11,7 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
   import Annotations.component
 
   class NotAnnotated extends Component
-  object NotAnnotated extends Component
+  object NotAnnotated extends ComponentType
 
   "A component class" must "be annotated with @component" in:
     a[MissingAnnotationError] shouldBe thrownBy(~NotAnnotated)
