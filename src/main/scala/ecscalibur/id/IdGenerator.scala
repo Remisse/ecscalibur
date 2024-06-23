@@ -13,21 +13,20 @@ private class IdGeneratorImpl extends IdGenerator:
   import scala.collection.mutable.ArrayBuffer
   private val erasedIds = ArrayBuffer.empty[Int]
 
-  override inline def next: Int =
-    var id: Int = -1
+  override def next: Int =
+    var res: Int = -1
     erasedIds.length match
       case 0 =>
-        id = highestAvailableIdx
+        res = highestAvailableIdx
         highestAvailableIdx = highestAvailableIdx + 1
-      case _ => id = erasedIds.remove(0)
-    id
-
-  override inline def erase(id: Int): Boolean =
-    var res = false
-    if isValid(id) then
-      erasedIds += id
-      res = true
+      case _ => res = erasedIds.remove(erasedIds.length - 1)
     res
 
-  override inline def isValid(id: Int): Boolean =
+  override def erase(id: Int): Boolean =
+    if isValid(id) then
+      erasedIds += id
+      return true
+    false
+
+  override def isValid(id: Int): Boolean =
     id < highestAvailableIdx && !erasedIds.contains(id)
