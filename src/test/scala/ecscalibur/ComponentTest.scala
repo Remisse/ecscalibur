@@ -4,10 +4,9 @@ import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 import error.MissingAnnotationError
+import ecscalibur.core.{Annotations, Component, ComponentType}
 
 class ComponentTest extends AnyFlatSpec with should.Matchers:
-  import core.Components
-  import Components.*
   import Annotations.component
 
   class NotAnnotated extends Component
@@ -45,7 +44,7 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
   object Comp2 extends ComponentType
 
   it should "have a unique type ID" in:
-    Comp1.typeId shouldNot be(Components.nil)
+    Comp1.typeId shouldNot be(ComponentType.nil)
     // Equivalent to 'Comp1.typeId shouldNot equal(Comp2.typeId)'.
     ~Comp1 shouldNot equal(~Comp2)
 

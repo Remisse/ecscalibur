@@ -2,14 +2,10 @@ package ecscalibur.core
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.*
-import ecscalibur.core.Components.{Annotations, Component, ComponentType}
 import Annotations.component
-import ecscalibur.core.Entities.Entity
-import ecscalibur.core.archetype.ArchetypeManagers.ArchetypeManager
-import ecscalibur.core.archetype.Queries
-import ecscalibur.core.Components.CSeqs.CSeq
-import ecscalibur.core.Components.CSeqs.<<
-import ecscalibur.core.archetype.Queries.*
+import ecscalibur.core.archetype.any
+import archetype.ArchetypeManager
+import ecscalibur.core.CSeqs.{CSeq, <<}
 
 class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   @component
@@ -33,7 +29,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     )
     for (entity, comps) <- toAdd do am.addEntity(entity, comps)
     var sum = 0
-    am.iterateReading(Queries.all(Value, C2)): (e, comps) =>
+    am.iterateReading(archetype.all(Value, C2)): (e, comps) =>
       given CSeq = comps
       val (v, c) = (<<[Value], <<[C2])
       v isA Value shouldBe true
@@ -51,9 +47,9 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     for (entity, comps) <- toAdd do am.addEntity(entity, comps)
     val editedValue = Value(3)
     var sum = 0
-    am.iterateWriting(Queries.all(Value)): (_, _) =>
+    am.iterateWriting(archetype.all(Value)): (_, _) =>
       CSeq(editedValue)
-    am.iterateReading(Queries.all(Value)): (_, comps) =>
+    am.iterateReading(archetype.all(Value)): (_, comps) =>
       given CSeq = comps
       sum += <<[Value].x
     sum shouldBe editedValue.x * toAdd.size
@@ -69,7 +65,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     val entity = Entity(0)
     am.addEntity(entity, CSeq(C1(), C2()))
     am.addComponents(entity, CSeq(Value(1)))
-    am.iterateReading(Queries.all(Value)): (e, comps) =>
+    am.iterateReading(archetype.all(Value)): (e, comps) =>
       given CSeq = comps
       val v = <<[Value]
       v isA Value shouldBe true
@@ -87,7 +83,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     am.addEntity(entity, CSeq(C1(), C2(), Value(0)))
     am.removeComponents(entity, C1, Value)
     am.iterateReading(any(C1, Value)): (_, _) =>
-      throw IllegalStateException("Unreachable")
+      throw IllegalStateException("Unexpected")
 
   it should "not remove non-existing components from an entity" in:
     val am = ArchetypeManager()
@@ -100,5 +96,5 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     val entity = Entity(0)
     am.addEntity(entity, CSeq(C1()))
     am.delete(entity)
-    am.iterateReading(Queries.all(C1)): (_, _) =>
-      throw IllegalStateException("Unreachable")
+    am.iterateReading(archetype.all(C1)): (_, _) =>
+      throw IllegalStateException("Unexpected")
