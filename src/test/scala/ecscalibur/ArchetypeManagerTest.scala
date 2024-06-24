@@ -2,10 +2,11 @@ package ecscalibur.core
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.*
-import Annotations.component
+import component.*
+import CSeq.Extensions.*
+import component.Annotations.component
 import ecscalibur.core.archetype.any
 import archetype.ArchetypeManager
-import ecscalibur.core.CSeqs.{CSeq, <<}
 
 class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   @component

@@ -1,6 +1,6 @@
 package ecscalibur.core.archetype
 
-import ecscalibur.core.{ComponentId, WithType}
+import ecscalibur.core.component.{ComponentId, WithType}
 import scala.annotation.targetName
 
 case class Signature private (val underlying: Array[ComponentId]):

@@ -4,7 +4,7 @@ import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 import error.MissingAnnotationError
-import ecscalibur.core.{Annotations, Component, ComponentType}
+import core.component.*
 
 class ComponentTest extends AnyFlatSpec with should.Matchers:
   import Annotations.component

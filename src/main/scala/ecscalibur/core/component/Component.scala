@@ -1,4 +1,5 @@
-package ecscalibur.core
+package ecscalibur.core.component
+
 import ecscalibur.error.MissingAnnotationError
 import scala.annotation.targetName
 
@@ -30,28 +31,6 @@ trait ComponentType extends WithType:
 
 object ComponentType:
   val nil: ComponentId = -1
-
-object CSeqs:
-  import scala.reflect.ClassTag
-
-  opaque type CSeq = Array[Component]
-  inline def <<[T <: Component: ClassTag](using l: CSeq): T = l.get[T]
-
-  object CSeq:
-    def apply(comps: Component*): CSeq = comps.toArray
-    def apply(comps: Array[Component]): CSeq = comps
-    def apply(comps: Iterable[Component]): CSeq = comps.toArray
-
-  extension (l: CSeq)
-    inline def underlying: Array[Component] = l
-    inline def toTypes: Array[ComponentId] = l.map(_.typeId)
-    inline def get[T <: Component: ClassTag]: T =
-      val idx = l.indexWhere:
-        case t: T => true
-        case _    => false
-      if idx == -1 then
-        throw IllegalArgumentException(s"No component of class ${summon[ClassTag[T]]} found.")
-      l(idx).asInstanceOf[T]
 
 export TypeOrdering.given
 object TypeOrdering:

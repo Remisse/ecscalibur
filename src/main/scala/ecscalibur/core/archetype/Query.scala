@@ -1,6 +1,6 @@
 package ecscalibur.core.archetype
 
-import ecscalibur.core.ComponentType
+import ecscalibur.core.component.ComponentType
 
 inline def all(types: ComponentType*): QueryBuilder = QueryBuilder(_all = Signature(types*))
 inline def none(types: ComponentType*): QueryBuilder = QueryBuilder(_none = Signature(types*))
@@ -34,7 +34,7 @@ final class Query(
     private val none: Signature,
     private val any: Signature
 ):
-  import ecscalibur.core.ComponentId
+  import ecscalibur.core.component.ComponentId
 
   inline def filterIds(id: ComponentId): Boolean = all.isNil || all.underlying.contains(id)
   inline def matches(s: Signature): Boolean =

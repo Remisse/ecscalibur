@@ -11,7 +11,7 @@ object IdGenerator:
 private class IdGeneratorImpl extends IdGenerator:
   private var highestAvailableIdx = 0
   import scala.collection.mutable
-  private val erasedIds = mutable.HashSet.empty[Int]
+  private val erasedIds = mutable.TreeSet.empty[Int]
 
   override def next: Int =
     var res: Int = -1

@@ -1,6 +1,7 @@
 package ecscalibur.core
 
 import scala.collection.mutable.ArrayBuffer
+import component.{ComponentType, ComponentId, Component}
 
 trait World:
   def spawn: Entity

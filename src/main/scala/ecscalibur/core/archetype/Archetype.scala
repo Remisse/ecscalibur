@@ -1,6 +1,7 @@
 package ecscalibur.core.archetype
 
-import ecscalibur.core.{Component, ComponentId, ComponentType}
+import ecscalibur.core.component.*
+import CSeq.Extensions.*
 import ecscalibur.core.Entity
 import ecscalibur.id.IdGenerator
 
@@ -9,7 +10,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.immutable.*
 import scala.reflect.ClassTag
 import scala.annotation.targetName
-import ecscalibur.core.CSeqs.CSeq
 
 private[core] object Archetypes:
   trait Archetype:

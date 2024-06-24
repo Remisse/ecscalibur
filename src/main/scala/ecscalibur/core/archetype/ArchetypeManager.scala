@@ -1,9 +1,9 @@
 package ecscalibur.core.archetype
 
 import ecscalibur.core.Entity
-import ecscalibur.core.{Component, ComponentType}
+import ecscalibur.core.component.{ComponentType, CSeq}
+import CSeq.Extensions.*
 import ecscalibur.core.archetype.Archetypes.Archetype
-import ecscalibur.core.CSeqs.CSeq
 
 trait ArchetypeManager:
   def addEntity(e: Entity, components: CSeq): Unit
@@ -18,7 +18,7 @@ object ArchetypeManager:
 
 private class ArchetypeManagerImpl extends ArchetypeManager:
   import scala.collection.mutable
-  import ecscalibur.core.ComponentId
+  import ecscalibur.core.component.ComponentId
 
   private val archetypes: mutable.Map[Signature, Archetype] = mutable.HashMap.empty
   private val signaturesByEntity: mutable.Map[Entity, Signature] = mutable.HashMap.empty

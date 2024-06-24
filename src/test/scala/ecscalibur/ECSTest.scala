@@ -3,6 +3,7 @@ package ecscalibur
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
+import core.component.Annotations
 
 class ECSTests extends AnyFlatSpec with should.Matchers:
   import ecscalibur.core.*
@@ -12,8 +13,8 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
     val entity: Entity = world.spawn
     world.isValid(entity) shouldBe true
 
-  import ecscalibur.core.{Component, ComponentType}
-  import Annotations.component
+  import core.component.{Component, ComponentType}
+  import core.component.Annotations.component
 
   @component
   class Comp1 extends Component
