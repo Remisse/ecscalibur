@@ -30,7 +30,7 @@ private[core] object Archetypes:
 
     private class ArchetypeImpl(inSignature: Signature) extends Archetype:
       private val _signature: Signature = inSignature
-      private val entityIndexes: mutable.Map[Entity, Int] = mutable.HashMap.empty
+      private val compIndexesByEntity: mutable.Map[Entity, Int] = mutable.HashMap.empty
       private val components: Map[ComponentId, ArrayBuffer[Component]] =
         _signature.underlying.map(t => t -> ArrayBuffer.empty[Component]).to(HashMap)
       private val idGenerator: IdGenerator = IdGenerator()
@@ -58,36 +58,36 @@ private[core] object Archetypes:
       private inline def assignIndexToEntity(e: Entity): Int =
         require(!contains(e))
         val newEntityIdx = idGenerator.next
-        entityIndexes += e -> newEntityIdx
+        compIndexesByEntity += e -> newEntityIdx
         newEntityIdx
 
       override inline def contains(e: Entity): Boolean = 
-        entityIndexes.contains(e) && idGenerator.isValid(entityIndexes(e))
+        compIndexesByEntity.contains(e) && idGenerator.isValid(compIndexesByEntity(e))
 
       inline val removalErrorMsg = "Attempted to remove an entity not stored in this archetype."
 
       override def remove(e: Entity): CSeq =
         require(contains(e), removalErrorMsg)
-        val idx = entityIndexes(e)
+        val idx = compIndexesByEntity(e)
         idGenerator.erase(idx) match
           case false => throw new IllegalArgumentException(removalErrorMsg)
           case _     => CSeq(components.map((_, comps) => comps(idx)))
 
       override def softRemove(e: Entity) =
         require(contains(e), removalErrorMsg)
-        val idx = entityIndexes(e)
+        val idx = compIndexesByEntity(e)
         val _ = idGenerator.erase(idx)
 
       override def readAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => Unit) =
         val filteredComps = components.filter((id, _) => predicate(id))
-        for (e, idx) <- entityIndexes if contains(e) do
+        for (e, idx) <- compIndexesByEntity if contains(e) do
           val inputComps = CSeq(filteredComps.map((_, comps) => comps(idx)))
           f(e, inputComps)
 
       override def writeAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => CSeq) =
         val filteredComps = components.filter((id, _) => predicate(id))
         val inputIds = filteredComps.map((id, _) => id).toArray
-        for (e, idx) <- entityIndexes if contains(e) do
+        for (e, idx) <- compIndexesByEntity if contains(e) do
           val inputComps = CSeq(filteredComps.map((_, comps) => comps(idx)))
           val editedComponents: CSeq = f(e, inputComps)
           val returnedSignature = editedComponents.underlying.toSignature
@@ -95,7 +95,7 @@ private[core] object Archetypes:
             returnedSignature == inputIds.toSignature,
             s"Unexpected components returned.\nExpected: ${inputIds.mkString}\nFound: ${returnedSignature.underlying.mkString}"
           )
-          for c <- editedComponents.underlying do components(c.typeId).update(entityIndexes(e), c)
+          for c <- editedComponents.underlying do components(c.typeId).update(compIndexesByEntity(e), c)
 
       override def equals(x: Any): Boolean = x match
         case a: Archetype => _signature == a.signature
