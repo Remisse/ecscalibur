@@ -4,6 +4,7 @@ import ecscalibur.core.Entity
 import ecscalibur.core.component.{ComponentType, CSeq}
 import CSeq.Extensions.*
 import ecscalibur.core.archetype.Archetypes.Archetype
+import ecscalibur.core.util.array.*
 
 trait ArchetypeManager:
   def addEntity(e: Entity, components: CSeq): Unit
@@ -42,7 +43,7 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
     require(components.underlying.nonEmpty, "Component list is empty.")
     val currentSignature = signaturesByEntity(e)
     require(
-      !components.underlying.exists(c => currentSignature.underlying.contains(~c)),
+      !components.underlying.aExists(c => currentSignature.underlying.aContains(~c)),
       "Given entity already has one or more of the given components."
     )
     val existing: CSeq = archetypes(signaturesByEntity(e)).remove(e)
