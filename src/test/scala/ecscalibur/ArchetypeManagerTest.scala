@@ -56,7 +56,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       sum += <<[Value].x
     sum shouldBe editedValue.x * toAdd.size
 
-  it should "not add the same entity multiple times" in:
+  it should "not add the same entity more than once" in:
     val am = ArchetypeManager()
     val entity = Entity(0)
     am.addEntity(entity, CSeq(C1()))
@@ -73,7 +73,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       v isA Value shouldBe true
       val _ = v.x shouldBe 1
 
-  it should "not add the same component to an entity that already has it" in:
+  it should "not add the same component to an entity more than once" in:
     val am = ArchetypeManager()
     val entity = Entity(0)
     am.addEntity(entity, CSeq(C1()))
