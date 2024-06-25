@@ -14,13 +14,12 @@ import scala.annotation.targetName
 private[core] object Archetypes:
   trait Archetype:
     def signature: Signature
-    def handles(types: ComponentType*): Boolean
     def add(e: Entity, entityComponents: CSeq): Unit
     def contains(e: Entity): Boolean
     def remove(e: Entity): CSeq
     def softRemove(e: Entity): Unit
-    def readAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => Unit): Unit
-    def writeAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => CSeq): Unit
+    def readAll(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => Unit): Unit
+    def writeAll(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => CSeq): Unit
 
   object Archetype:
     @targetName("fromTypes")
@@ -29,17 +28,15 @@ private[core] object Archetypes:
     def apply(signature: Signature): Archetype = ArchetypeImpl(signature)
 
     private class ArchetypeImpl(inSignature: Signature) extends Archetype:
+      import ecscalibur.core.util.array.*
+
       private val _signature: Signature = inSignature
       private val compIndexesByEntity: mutable.Map[Entity, Int] = mutable.HashMap.empty
       private val components: Map[ComponentId, ArrayBuffer[Component]] =
-        _signature.underlying.map(t => t -> ArrayBuffer.empty[Component]).to(HashMap)
+        _signature.underlying.aMap(t => t -> ArrayBuffer.empty[Component]).to(HashMap)
       private val idGenerator: IdGenerator = IdGenerator()
 
       override inline def signature: Signature = _signature
-
-      override def handles(types: ComponentType*): Boolean =
-        require(types.nonEmpty, "Given type sequence is empty.")
-        Signature(types*) isPartOf _signature
 
       override def add(e: Entity, entityComponents: CSeq): Unit =
         require(!contains(e), "Attempted to readd an already existing entity.")
@@ -47,19 +44,12 @@ private[core] object Archetypes:
           _signature == Signature(entityComponents.toTypes),
           "Given component types do not correspond to this archetype's signature."
         )
-        val newEntityIdx: Int = assignIndexToEntity(e)
-        for
-          c <- entityComponents.underlying
-          compArray = components(c.typeId)
-        do
-          if newEntityIdx >= compArray.length then compArray += c
-          else compArray.update(newEntityIdx, c)
-
-      private inline def assignIndexToEntity(e: Entity): Int =
-        require(!contains(e))
         val newEntityIdx = idGenerator.next
         compIndexesByEntity += e -> newEntityIdx
-        newEntityIdx
+        entityComponents.underlying.aForeach: (c: Component) =>
+          val compBuffer = components(c.typeId)
+          if newEntityIdx >= compBuffer.length then compBuffer += c
+          else compBuffer(newEntityIdx) = c
 
       override inline def contains(e: Entity): Boolean = 
         compIndexesByEntity.contains(e) && idGenerator.isValid(compIndexesByEntity(e))
@@ -78,13 +68,13 @@ private[core] object Archetypes:
         val idx = compIndexesByEntity(e)
         val _ = idGenerator.erase(idx)
 
-      override def readAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => Unit) =
+      override def readAll(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => Unit) =
         val filteredComps = components.filter((id, _) => predicate(id))
         for (e, idx) <- compIndexesByEntity if contains(e) do
           val inputComps = CSeq(filteredComps.map((_, comps) => comps(idx)))
           f(e, inputComps)
 
-      override def writeAll(predicate: ComponentId => Boolean, f: (Entity, CSeq) => CSeq) =
+      override def writeAll(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => CSeq) =
         val filteredComps = components.filter((id, _) => predicate(id))
         val inputIds = filteredComps.map((id, _) => id).toArray
         for (e, idx) <- compIndexesByEntity if contains(e) do
@@ -95,7 +85,8 @@ private[core] object Archetypes:
             returnedSignature == inputIds.toSignature,
             s"Unexpected components returned.\nExpected: ${inputIds.mkString}\nFound: ${returnedSignature.underlying.mkString}"
           )
-          for c <- editedComponents.underlying do components(c.typeId).update(compIndexesByEntity(e), c)
+          editedComponents.underlying.aForeach: (c) =>
+            components(c.typeId)(compIndexesByEntity(e)) = c
 
       override def equals(x: Any): Boolean = x match
         case a: Archetype => _signature == a.signature

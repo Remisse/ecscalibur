@@ -32,12 +32,6 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     archetype.signature shouldNot be(Signature(C1))
     archetype.signature shouldNot be(Signature(C1, C2, C3))
 
-  it should "report which component types it owns" in:
-    val archetype = Archetype(C1, C2)
-    archetype.handles(C1) shouldBe true
-    archetype.handles(C2, C1) shouldBe true
-    archetype.handles(C3) shouldBe false
-
   it should "have a signature made of distinct component types only" in:
     an[IllegalArgumentException] shouldBe thrownBy(Archetype(C1, C1, C2))
 
@@ -92,11 +86,10 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     )
     for (entity, comps) <- toAdd do arch.add(entity, comps)
     var sum = 0
-    arch.readAll(_ == ~Value, (e, comps) =>
-        val c = comps.get[Value]
-        an[IllegalArgumentException] shouldBe thrownBy(comps.get[C1])
-        sum += c.x
-    )
+    arch.readAll(_ == ~Value): (e, comps) =>
+      val c = comps.get[Value]
+      an[IllegalArgumentException] shouldBe thrownBy(comps.get[C1])
+      sum += c.x
     sum shouldBe (v1.x + v2.x)
 
   it should "correctly iterate over all selected entities and components in RW mode" in:
@@ -105,12 +98,10 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val wv = Value(5)
     val editedWv = Value(0)
     arch.add(e1, CSeq(wv, C2()))
-    arch.writeAll(_ == ~Value, (e, comps) =>
-        given CSeq = comps
-        val c = <<[Value] // Equivalent to comps.get[Value]
-        c shouldBe wv
-        CSeq(editedWv)
-    )
-    arch.readAll(_ == ~Value, (e, comps) =>
-        val _ = comps.get[Value] shouldBe editedWv
-    )
+    arch.writeAll(_ == ~Value): (e, comps) =>
+      given CSeq = comps
+      val c = <<[Value] // Equivalent to comps.get[Value]
+      c shouldBe wv
+      CSeq(editedWv)
+    arch.readAll(_ == ~Value): (e, comps) =>
+      val _ = comps.get[Value] shouldBe editedWv

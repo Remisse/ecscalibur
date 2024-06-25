@@ -68,12 +68,12 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
 
   override def iterateReading(query: Query)(f: (Entity, CSeq) => Unit): Unit =
     archetypes foreach:
-      case (s, arch) if query.matches(s) => arch.readAll(query.filterIds, f)
+      case (s, arch) if query.matches(s) => arch.readAll(query.filterIds)(f)
       case _                          => ()
 
   override def iterateWriting(query: Query)(f: (Entity, CSeq) => CSeq): Unit =
     archetypes foreach:
-      case (s, arch) if query.matches(s) => arch.writeAll(query.filterIds, f)
+      case (s, arch) if query.matches(s) => arch.writeAll(query.filterIds)(f)
       case _                          => ()
 
   private inline def ensureEntityIsValid(e: Entity): Unit =
