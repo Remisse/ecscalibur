@@ -7,6 +7,7 @@ import CSeq.Extensions.*
 import component.Annotations.component
 import ecscalibur.core.archetype.any
 import archetype.ArchetypeManager
+import ecscalibur.testutil.shouldNotBeExecuted
 
 class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   @component
@@ -84,7 +85,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     am.addEntity(entity, CSeq(C1(), C2(), Value(0)))
     am.removeComponents(entity, C1, Value)
     am.iterateReading(any(C1, Value)): (_, _) =>
-      throw IllegalStateException("Unexpected")
+      shouldNotBeExecuted
 
   it should "not remove non-existing components from an entity" in:
     val am = ArchetypeManager()
@@ -98,4 +99,4 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     am.addEntity(entity, CSeq(C1()))
     am.delete(entity)
     am.iterateReading(archetype.all(C1)): (_, _) =>
-      throw IllegalStateException("Unexpected")
+      shouldNotBeExecuted
