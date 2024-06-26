@@ -20,7 +20,7 @@
  * 
  * Changes made to this file:
  * - moved to a different package 
- * - replaced some Scala 2 constructs with Scala 3 alternatives
+ * - replaced some Scala 2 constructs with their respective Scala 3 alternatives
  * - removed the following dependencies: 
  *   - org.apache.spark.annotation.DeveloperApi
  *   - org.apache.spark.internal.Logging
