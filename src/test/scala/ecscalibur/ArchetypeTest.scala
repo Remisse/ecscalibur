@@ -11,23 +11,26 @@ import ecscalibur.core.archetype.Signature
 import ecscalibur.core.archetype.Archetypes.Fragment
 import ecscalibur.util.sizeOf.sizeOf
 
-@component
-class C1 extends Component
-object C1 extends ComponentType
+object ArchetypeTest:
+  @component
+  class C1 extends Component
+  object C1 extends ComponentType
 
-@component
-class C2 extends Component
-object C2 extends ComponentType
+  @component
+  class C2 extends Component
+  object C2 extends ComponentType
 
-@component
-class C3 extends Component
-object C3 extends ComponentType
+  @component
+  class C3 extends Component
+  object C3 extends ComponentType
 
-@component
-case class Value(val x: Int) extends Component
-object Value extends ComponentType
+  @component
+  case class Value(val x: Int) extends Component
+  object Value extends ComponentType
 
 class ArchetypeTest extends AnyFlatSpec with should.Matchers:
+  import ArchetypeTest.*
+
   inline val DefaultFragmentSizeBytes = 16384
   inline val KindaSmallFragmentSizeBytes = 64
   inline val ExtremelySmallFragmentSizeBytes = 1

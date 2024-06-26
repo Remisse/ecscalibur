@@ -6,11 +6,26 @@ import org.scalatest.matchers.*
 import error.MissingAnnotationError
 import core.component.*
 
-class ComponentTest extends AnyFlatSpec with should.Matchers:
+object ComponentTest:
   import Annotations.component
 
   class NotAnnotated extends Component
   object NotAnnotated extends ComponentType
+
+  @component
+  class Comp1 extends Component
+  object Comp1 extends ComponentType
+
+  @component
+  class Comp2 extends Component
+  object Comp2 extends ComponentType
+
+  @component
+  class CompExtended extends Comp1
+  object CompExtended extends ComponentType
+
+class ComponentTest extends AnyFlatSpec with should.Matchers:
+  import ComponentTest.NotAnnotated
 
   "A component class" must "be annotated with @component" in:
     a[MissingAnnotationError] shouldBe thrownBy(~NotAnnotated)
@@ -35,13 +50,7 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     object C extends ComponentType
     """ should compile
 
-  @component
-  class Comp1 extends Component
-  object Comp1 extends ComponentType
-
-  @component
-  class Comp2 extends Component
-  object Comp2 extends ComponentType
+  import ComponentTest.{Comp1, Comp2}
 
   it should "have a unique type ID" in:
     Comp1.typeId shouldNot be(ComponentType.Nil)
@@ -63,9 +72,7 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     val c2 = Comp2()
     ~c1 shouldNot be(~c2)
 
-  @component
-  class CompExtended extends Comp1
-  object CompExtended extends ComponentType
+  import ComponentTest.CompExtended
 
   "A subclass of a component class" should "have a different type ID from that of its superclass" in:
     ~CompExtended shouldNot equal(~Comp1)

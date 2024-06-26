@@ -5,6 +5,22 @@ import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 import core.component.Annotations
 
+object ECSTests:
+  import core.component.{Component, ComponentType}
+  import core.component.Annotations.component
+
+  @component
+  class Comp1 extends Component
+  object Comp1 extends ComponentType
+
+  @component
+  class Comp2 extends Component
+  object Comp2 extends ComponentType
+
+  @component
+  class Comp3 extends Component
+  object Comp3 extends ComponentType
+
 class ECSTests extends AnyFlatSpec with should.Matchers:
   import ecscalibur.core.*
 
@@ -13,12 +29,7 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
     val entity: Entity = world.spawn
     world.isValid(entity) shouldBe true
 
-  import core.component.{Component, ComponentType}
-  import core.component.Annotations.component
-
-  @component
-  class Comp1 extends Component
-  object Comp1 extends ComponentType
+  import ECSTests.Comp1
 
   it should "be able to have components" in:
     given world: World = World()
@@ -37,13 +48,7 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
     val entity = world.spawn
     entity has Comp1 shouldBe false
 
-  @component
-  class Comp2 extends Component
-  object Comp2 extends ComponentType
-
-  @component
-  class Comp3 extends Component
-  object Comp3 extends ComponentType
+  import ECSTests.{Comp2, Comp3}
 
   it should "be able to correctly remove its components" in:
     given world: World = World()

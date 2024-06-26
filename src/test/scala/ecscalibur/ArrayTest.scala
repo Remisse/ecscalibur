@@ -6,8 +6,11 @@ import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 import ecscalibur.testutil.shouldNotBeExecuted
 
-class ArrayTest extends AnyFlatSpec with should.Matchers:
+object ArrayTest:
   case class Num(n: Int)
+
+class ArrayTest extends AnyFlatSpec with should.Matchers:
+  import ArrayTest.Num
 
   val Min = 0
   val Max = 100

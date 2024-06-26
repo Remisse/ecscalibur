@@ -9,7 +9,7 @@ import ecscalibur.core.archetype.any
 import archetype.ArchetypeManager
 import ecscalibur.testutil.shouldNotBeExecuted
 
-class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
+object ArchetypeManagerTest:
   @component
   case class Value(x: Int) extends Component
   object Value extends ComponentType
@@ -21,6 +21,9 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   @component
   class C2 extends Component
   object C2 extends ComponentType
+
+class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
+  import ArchetypeManagerTest.{Value, C1, C2}
 
   "An archetype manager" should "correctly add new entities and iterate over them" in:
     val am = ArchetypeManager()
