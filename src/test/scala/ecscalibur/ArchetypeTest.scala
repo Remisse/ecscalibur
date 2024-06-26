@@ -114,7 +114,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
       c shouldBe wv
       >>(editedWv)
     arch.iterate(_ == ~Value): (e, comps) =>
-      val _ = comps.get[Value] shouldBe editedWv
+      comps.get[Value] shouldBe editedWv
       /
 
   it should "correctly perform load balancing when fragments reach their limit" in:

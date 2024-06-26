@@ -76,7 +76,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       given CSeq = comps
       val v = <<[Value]
       v isA Value shouldBe true
-      val _ = v.x shouldBe 1
+      v.x shouldBe 1
       /
 
   it should "not add the same component to an entity more than once" in:
