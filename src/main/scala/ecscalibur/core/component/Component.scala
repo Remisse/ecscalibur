@@ -8,9 +8,9 @@ import scala.annotation.targetName
 type ComponentId = Int
 
 sealed trait WithType:
-  protected val _typeId: ComponentId = ComponentType.nil
+  protected val _typeId: ComponentId = ComponentType.Nil
 
-  inline def typeId: ComponentId = if _typeId != ComponentType.nil then _typeId
+  inline def typeId: ComponentId = if _typeId != ComponentType.Nil then _typeId
   else throw MissingAnnotationError(s"$getClass must be annotated with @component.")
 
   /** Equivalent to 'typeId'.
@@ -30,7 +30,7 @@ trait ComponentType extends WithType:
     case _                => false
 
 object ComponentType:
-  val nil: ComponentId = -1
+  val Nil: ComponentId = -1
 
 export TypeOrdering.given
 object TypeOrdering:

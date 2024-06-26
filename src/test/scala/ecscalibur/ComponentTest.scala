@@ -44,7 +44,7 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
   object Comp2 extends ComponentType
 
   it should "have a unique type ID" in:
-    Comp1.typeId shouldNot be(ComponentType.nil)
+    Comp1.typeId shouldNot be(ComponentType.Nil)
     // Equivalent to 'Comp1.typeId shouldNot equal(Comp2.typeId)'.
     ~Comp1 shouldNot equal(~Comp2)
 
