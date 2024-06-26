@@ -1,7 +1,7 @@
 package ecscalibur.core.archetype
 
 import ecscalibur.core.component.ComponentType
-import ecscalibur.core.util.array.aContains
+import ecscalibur.util.array.aContains
 
 inline def all(types: ComponentType*): QueryBuilder = QueryBuilder(_all = Signature(types*))
 inline def none(types: ComponentType*): QueryBuilder = QueryBuilder(_none = Signature(types*))

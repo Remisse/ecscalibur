@@ -4,7 +4,7 @@ import ecscalibur.core.Entity
 import ecscalibur.core.component.{ComponentType, CSeq}
 import CSeq.Extensions.*
 import ecscalibur.core.archetype.Archetypes.Archetype
-import ecscalibur.core.util.array.*
+import ecscalibur.util.array.*
 
 trait ArchetypeManager:
   def addEntity(e: Entity, components: CSeq): Unit

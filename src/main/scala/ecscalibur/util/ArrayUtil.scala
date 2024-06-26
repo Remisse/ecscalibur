@@ -1,4 +1,4 @@
-package ecscalibur.core.util
+package ecscalibur.util
 
 import scala.reflect.ClassTag
 

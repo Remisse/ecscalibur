@@ -4,7 +4,7 @@ opaque type CSeq = Array[Component]
 
 import CSeq.Extensions.get
 import scala.reflect.ClassTag
-import ecscalibur.core.util.array.*
+import ecscalibur.util.array.*
 inline def <<[T <: Component: ClassTag](using l: CSeq): T = l.get[T]
 
 object CSeq:
