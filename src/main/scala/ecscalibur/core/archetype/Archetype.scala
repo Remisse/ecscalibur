@@ -170,7 +170,7 @@ private[core] object Archetypes:
             i += 1
           val editedComponents: CSeq = f(e, CSeq(inputComps))
           val returnedSignature =
-            if editedComponents.underlying.isEmpty then Signature.nil
+            if editedComponents.underlying.isEmpty then Signature.Nil
             else editedComponents.underlying.toSignature
           val inputIds = filteredComps.map(a => a(0).typeId).toArray
           require(

@@ -8,9 +8,9 @@ inline def none(types: ComponentType*): QueryBuilder = QueryBuilder(_none = Sign
 inline def any(types: ComponentType*): QueryBuilder = QueryBuilder(_any = Signature(types*))
 
 class QueryBuilder(
-    private[core] var _all: Signature = Signature.nil,
-    private[core] var _none: Signature = Signature.nil,
-    private[core] var _any: Signature = Signature.nil
+    private[core] var _all: Signature = Signature.Nil,
+    private[core] var _none: Signature = Signature.Nil,
+    private[core] var _any: Signature = Signature.Nil
 ):
   infix def all(types: ComponentType*): QueryBuilder =
     ensureFieldIsEmpty(_all, "all")

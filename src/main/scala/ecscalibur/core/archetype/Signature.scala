@@ -21,7 +21,7 @@ case class Signature private (val underlying: Array[ComponentId]):
 
 export Signature.Extensions.*
 object Signature:
-  val nil: Signature = new Signature(Array.empty[ComponentId])
+  val Nil: Signature = new Signature(Array.empty[ComponentId])
 
   @targetName("fromIds")
   def apply(ids: Array[ComponentId]): Signature =
