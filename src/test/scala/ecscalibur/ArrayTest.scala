@@ -1,6 +1,6 @@
 package ecscalibur
 
-import ecscalibur.core.util.array.*
+import ecscalibur.util.array.*
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
