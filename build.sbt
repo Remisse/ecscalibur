@@ -31,6 +31,6 @@ lazy val root = (project in file("."))
       "-Xcheck-macros", 
       "-Xkind-projector",
       "-Ycheck:all", 
-      "-Yexplicit-nulls",
+      //"-Yexplicit-nulls",
       ),
   )
