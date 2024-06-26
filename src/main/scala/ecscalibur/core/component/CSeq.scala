@@ -14,6 +14,9 @@ object CSeq:
 
   object Extensions:
     extension (l: CSeq)
+      inline def apply(i: Int): Component = l(i)
+      inline def update(i: Int, c: Component) = l.update(i, c)
+
       inline def underlying: Array[Component] = l
       inline def toTypes: Array[ComponentId] = l.aMap(_.typeId)
       inline def get[T <: Component: ClassTag]: T =
