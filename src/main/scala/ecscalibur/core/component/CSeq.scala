@@ -5,9 +5,14 @@ opaque type CSeq = Array[Component]
 import CSeq.Extensions.get
 import scala.reflect.ClassTag
 import ecscalibur.util.array.*
+
+inline def / : CSeq = CSeq.empty
 inline def <<[T <: Component: ClassTag](using l: CSeq): T = l.get[T]
+inline def >>(components: Component*): CSeq = CSeq(components*)
 
 object CSeq:
+  def empty = CSeq(Array.empty[Component])
+
   def apply(comps: Component*): CSeq = comps.toArray
   def apply(comps: Array[Component]): CSeq = comps
   def apply(comps: Iterable[Component]): CSeq = comps.toArray
