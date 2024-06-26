@@ -48,21 +48,21 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   it should "correctly store entities and their components" in:
     val e1 = Entity(0)
     val archetype = Aggregate(DefaultFragmentSizeBytes, C1, C2)
-    archetype.add(e1, CSeq(C1(), C2()))
+    archetype.add(e1, >>(C1(), C2()))
     archetype.contains(e1) shouldBe true
 
   it should "not accept entities that do not satisfy its signature" in:
     val e1 = Entity(0)
     val archetype = Aggregate(DefaultFragmentSizeBytes, Value, C2)
-    an[IllegalArgumentException] should be thrownBy (archetype.add(e1, CSeq(C2())))
+    an[IllegalArgumentException] should be thrownBy (archetype.add(e1, >>(C2())))
     an[IllegalArgumentException] should be thrownBy (
-      archetype.add(e1, CSeq(Value(1), C2(), C3()))
+      archetype.add(e1, >>(Value(1), C2(), C3()))
     )
 
   it should "correctly remove stored entities" in:
     val e1 = Entity(0)
     val archetype = Aggregate(DefaultFragmentSizeBytes, C1)
-    archetype.add(e1, CSeq(C1()))
+    archetype.add(e1, >>(C1()))
     archetype.remove(e1)
     archetype.contains(e1) shouldBe false
 
@@ -72,14 +72,14 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val wv = Value(3)
     val c1 = C1()
     val c2 = C2()
-    archetype.add(e1, CSeq(wv, c1, c2))
+    archetype.add(e1, >>(wv, c1, c2))
     archetype.remove(e1).underlying should contain allOf (wv, c1, c2)
 
   it should "correctly soft-remove entities" in:
     val e1 = Entity(0)
     val archetype = Aggregate(DefaultFragmentSizeBytes, C1)
     val c1 = C1()
-    archetype.add(e1, CSeq(c1))
+    archetype.add(e1, >>(c1))
     archetype.softRemove(e1)
     archetype.contains(e1) shouldBe false
 
@@ -87,15 +87,16 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val arch = Aggregate(DefaultFragmentSizeBytes, Value, C2)
     val (v1, v2) = (Value(1), Value(2))
     val toAdd: Map[Entity, CSeq] = Map(
-      Entity(0) -> CSeq(v1, C2()),
-      Entity(1) -> CSeq(v2, C2())
+      Entity(0) -> >>(v1, C2()),
+      Entity(1) -> >>(v2, C2())
     )
     for (entity, comps) <- toAdd do arch.add(entity, comps)
     var sum = 0
-    arch.readAll(_ == ~Value): (e, comps) =>
+    arch.iterate(_ == ~Value): (e, comps) =>
       val c = comps.get[Value]
       an[IllegalArgumentException] should be thrownBy (comps.get[C1])
       sum += c.x
+      /
     sum shouldBe (v1.x + v2.x)
 
   it should "correctly iterate over all selected entities and components in RW mode" in:
@@ -103,14 +104,15 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val e1 = Entity(0)
     val wv = Value(5)
     val editedWv = Value(0)
-    arch.add(e1, CSeq(wv, C2()))
-    arch.writeAll(_ == ~Value): (e, comps) =>
+    arch.add(e1, >>(wv, C2()))
+    arch.iterate(_ == ~Value): (e, comps) =>
       given CSeq = comps
-      val c = <<[Value] // Equivalent to comps.get[Value]
+      val c = <<[Value]
       c shouldBe wv
-      CSeq(editedWv)
-    arch.readAll(_ == ~Value): (e, comps) =>
+      >>(editedWv)
+    arch.iterate(_ == ~Value): (e, comps) =>
       val _ = comps.get[Value] shouldBe editedWv
+      /
 
   it should "correctly perform load balancing when fragments reach their limit" in:
     // sizeOf incorrectly reports sizes greater than 4900 bytes for classes

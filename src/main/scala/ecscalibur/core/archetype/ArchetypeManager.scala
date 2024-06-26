@@ -11,8 +11,7 @@ trait ArchetypeManager:
   def addComponents(e: Entity, components: CSeq): Unit
   def removeComponents(e: Entity, compTypes: ComponentType*): Unit
   def delete(e: Entity): Unit
-  def iterateReading(query: Query)(f: (Entity, CSeq) => Unit): Unit
-  def iterateWriting(query: Query)(f: (Entity, CSeq) => CSeq): Unit
+  def iterate(query: Query)(f: (Entity, CSeq) => CSeq): Unit
 
 object ArchetypeManager:
   def apply(): ArchetypeManager = ArchetypeManagerImpl()
@@ -66,14 +65,9 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
     archetypes(signaturesByEntity(e)).softRemove(e)
     val _ = signaturesByEntity.remove(e)
 
-  override def iterateReading(query: Query)(f: (Entity, CSeq) => Unit): Unit =
+  override def iterate(query: Query)(f: (Entity, CSeq) => CSeq): Unit =
     archetypes foreach:
-      case (s, arch) if query.matches(s) => arch.readAll(query.filterIds)(f)
-      case _                          => ()
-
-  override def iterateWriting(query: Query)(f: (Entity, CSeq) => CSeq): Unit =
-    archetypes foreach:
-      case (s, arch) if query.matches(s) => arch.writeAll(query.filterIds)(f)
+      case (s, arch) if query.matches(s) => arch.iterate(query.filterIds)(f)
       case _                          => ()
 
   private inline def ensureEntityIsValid(e: Entity): Unit =

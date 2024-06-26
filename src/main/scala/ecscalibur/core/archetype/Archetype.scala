@@ -10,6 +10,7 @@ import scala.annotation.targetName
 import scala.collection.mutable
 import scala.collection.immutable.*
 import scala.reflect.ClassTag
+import scala.annotation.tailrec
 
 private[core] object Archetypes:
   trait Archetype private[archetype] (val signature: Signature):
@@ -17,8 +18,7 @@ private[core] object Archetypes:
     def contains(e: Entity): Boolean
     def remove(e: Entity): CSeq
     def softRemove(e: Entity): Unit
-    def readAll(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => Unit): Unit
-    def writeAll(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => CSeq): Unit
+    def iterate(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => CSeq): Unit
 
   object Archetype:
     // TODO Make this parameter configurable
@@ -94,11 +94,8 @@ private[core] object Archetypes:
         if (fr.isEmpty && fr != _fragments.head) 
           _fragments = _fragments.filterNot(_ == fr)
 
-      override def readAll(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => Unit) =
-        _fragments.foreach(fr => fr.readAll(predicate)(f))
-
-      override def writeAll(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => CSeq) =
-        _fragments.foreach(fr => fr.writeAll(predicate)(f))
+      override def iterate(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => CSeq) =
+        _fragments.foreach(fr => fr.iterate(predicate)(f))
 
       override def equals(x: Any): Boolean = x match
         case a: Archetype => signature == a.signature
@@ -152,30 +149,26 @@ private[core] object Archetypes:
         entityIndexes -= e
         idx
 
-      override def readAll(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => Unit) =
-        val filteredComps = components.filter((id, _) => predicate(id))
-        for (e, idx) <- entityIndexes do
-          val inputComps = CSeq(filteredComps.map((_, comps) => comps(idx)))
-          f(e, inputComps)
-
-      // TODO RefRW as with DOTS
-      override def writeAll(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => CSeq) =
+      override def iterate(predicate: ComponentId => Boolean)(f: (Entity, CSeq) => CSeq) =
         val filteredComps = components.collect { case (id, a) if predicate(id) => a }
         for (e, idx) <- entityIndexes do
-          // TODO Rewrite this using recursion
           val inputComps = Array.ofDim[Component](filteredComps.size)
-          var i = 0
-          filteredComps.foreach: a =>
-            inputComps(i) = a(idx)
-            i += 1
+
+          @tailrec
+          def gatherComponentsOfEntity(i: Int, comps: Iterable[CSeq]): Unit = i match
+            case -1 => ()
+            case _ =>
+              inputComps(i) = comps.head(idx)
+              gatherComponentsOfEntity(i - 1, comps.tail)
+
+          gatherComponentsOfEntity(inputComps.length - 1, filteredComps)
           val editedComponents: CSeq = f(e, CSeq(inputComps))
           val returnedSignature =
             if editedComponents.underlying.isEmpty then Signature.Nil
             else editedComponents.underlying.toSignature
-          val inputIds = filteredComps.map(a => a(0).typeId).toArray
+          val inputIds = inputComps.aMap(~_)
           require(
-            // TODO Replace this equality check with 'containsAll' and delete 'readAll'
-            returnedSignature == Signature(inputIds),
+            returnedSignature.isNil || Signature(inputIds).containsAll(returnedSignature),
             s"Unexpected components returned.\nExpected: ${inputIds.mkString}\nFound: ${returnedSignature.underlying.mkString}"
           )
           editedComponents.underlying.aForeach: (c) =>
