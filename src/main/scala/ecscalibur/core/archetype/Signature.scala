@@ -1,8 +1,8 @@
 package ecscalibur.core.archetype
 
 import ecscalibur.core.component.{ComponentId, WithType}
-import scala.annotation.targetName
 import ecscalibur.util.array.*
+import scala.annotation.targetName
 
 case class Signature private (val underlying: Array[ComponentId]):
   inline infix def isPartOf(other: Signature): Boolean = other.underlying.aContainsSlice(underlying)

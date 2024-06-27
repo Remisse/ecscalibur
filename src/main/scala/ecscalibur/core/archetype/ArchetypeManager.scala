@@ -1,17 +1,18 @@
 package ecscalibur.core.archetype
 
 import ecscalibur.core.Entity
-import ecscalibur.core.component.{ComponentType, CSeq}
-import CSeq.Extensions.*
 import ecscalibur.core.archetype.Archetypes.Archetype
+import ecscalibur.core.component.{ComponentType, CSeq}
 import ecscalibur.util.array.*
+
+import CSeq.Extensions.*
 
 trait ArchetypeManager:
   def addEntity(e: Entity, components: CSeq): Unit
   def addComponents(e: Entity, components: CSeq): Unit
   def removeComponents(e: Entity, compTypes: ComponentType*): Unit
   def delete(e: Entity): Unit
-  def iterate(query: Query)(f: (Entity, CSeq) => CSeq): Unit
+  def iterate(query: Query)(f: (Entity, CSeq) => Unit): Unit
 
 object ArchetypeManager:
   def apply(): ArchetypeManager = ArchetypeManagerImpl()
@@ -65,10 +66,10 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
     archetypes(signaturesByEntity(e)).softRemove(e)
     val _ = signaturesByEntity.remove(e)
 
-  override def iterate(query: Query)(f: (Entity, CSeq) => CSeq): Unit =
+  override def iterate(query: Query)(f: (Entity, CSeq) => Unit): Unit =
     archetypes foreach:
-      case (s, arch) if query.matches(s) => arch.iterate(query.filterIds)(f)
-      case _                          => ()
+      case (s, arch) if query.matches(s) => arch.iterate(query.isSelected, query.isRw)(f)
+      case _                             => ()
 
   private inline def ensureEntityIsValid(e: Entity): Unit =
     require(signaturesByEntity.contains(e), "Given entity does not exist.")

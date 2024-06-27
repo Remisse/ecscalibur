@@ -3,7 +3,7 @@ package ecscalibur.util
 import ecscalibur.core.component.{ComponentId, Component}
 import ecscalibur.util.spark.SizeEstimator
 
-object sizeOf:
+object sizeof:
   private var cache: Map[ComponentId, Long] = Map.empty
 
   def sizeOf(c: Component): Long = 

@@ -1,5 +1,7 @@
 package ecscalibur.core
 
+import ecscalibur.error.IllegalTypeParameterException
+import ecscalibur.util.sizeof.sizeOf
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
@@ -16,99 +18,97 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   inline val KindaSmallFragmentSizeBytes = 64
   inline val ExtremelySmallFragmentSizeBytes = 1
 
-  "An archetype Aggregate with no signature" should "throw when created" in:
-    an[IllegalArgumentException] should be thrownBy (Aggregate(DefaultFragmentSizeBytes))
+  "An Aggregate archetype with no signature" should "throw when created" in:
+    an[IllegalArgumentException] should be thrownBy (Aggregate()(DefaultFragmentSizeBytes))
 
   "An Aggregate archetype" should "be identified by the component classes it holds" in:
-    val archetype = Aggregate(DefaultFragmentSizeBytes, C1, C2)
+    val archetype = Aggregate(C1, C2)(DefaultFragmentSizeBytes)
     archetype.signature shouldBe Signature(C1, C2)
     archetype.signature shouldBe Signature(C2, C1)
     archetype.signature shouldNot be(Signature(C1))
     archetype.signature shouldNot be(Signature(C1, C2, C3))
 
   it should "have a signature made of distinct component types only" in:
-    an[IllegalArgumentException] shouldBe thrownBy(Aggregate(DefaultFragmentSizeBytes, C1, C1, C2))
+    an[IllegalArgumentException] shouldBe thrownBy(Aggregate(C1, C1, C2)(DefaultFragmentSizeBytes))
 
   it should "correctly store entities and their components" in:
     val e1 = Entity(0)
-    val archetype = Aggregate(DefaultFragmentSizeBytes, C1, C2)
-    archetype.add(e1, >>(C1(), C2()))
+    val archetype = Aggregate(C1, C2)(DefaultFragmentSizeBytes)
+    archetype.add(e1, CSeq(C1(), C2()))
     archetype.contains(e1) shouldBe true
 
   it should "not accept entities that do not satisfy its signature" in:
     val e1 = Entity(0)
-    val archetype = Aggregate(DefaultFragmentSizeBytes, Value, C2)
-    an[IllegalArgumentException] should be thrownBy (archetype.add(e1, >>(C2())))
+    val archetype = Aggregate(Value, C2)(DefaultFragmentSizeBytes)
+    an[IllegalArgumentException] should be thrownBy (archetype.add(e1, CSeq(C2())))
     an[IllegalArgumentException] should be thrownBy (
-      archetype.add(e1, >>(Value(1), C2(), C3()))
+      archetype.add(e1, CSeq(Value(1), C2(), C3()))
     )
 
   it should "correctly remove stored entities" in:
     val e1 = Entity(0)
-    val archetype = Aggregate(DefaultFragmentSizeBytes, C1)
-    archetype.add(e1, >>(C1()))
+    val archetype = Aggregate(C1)(DefaultFragmentSizeBytes)
+    archetype.add(e1, CSeq(C1()))
     archetype.remove(e1)
     archetype.contains(e1) shouldBe false
 
   it should "return all components of an entity when that entity is removed" in:
     val e1 = Entity(0)
-    val archetype = Aggregate(DefaultFragmentSizeBytes, Value, C1, C2)
+    val archetype = Aggregate(Value, C1, C2)(DefaultFragmentSizeBytes)
     val wv = Value(3)
     val c1 = C1()
     val c2 = C2()
-    archetype.add(e1, >>(wv, c1, c2))
+    archetype.add(e1, CSeq(wv, c1, c2))
     archetype.remove(e1).underlying should contain allOf (wv, c1, c2)
 
   it should "correctly soft-remove entities" in:
     val e1 = Entity(0)
-    val archetype = Aggregate(DefaultFragmentSizeBytes, C1)
+    val archetype = Aggregate(C1)(DefaultFragmentSizeBytes)
     val c1 = C1()
-    archetype.add(e1, >>(c1))
+    archetype.add(e1, CSeq(c1))
     archetype.softRemove(e1)
     archetype.contains(e1) shouldBe false
 
   it should "correctly iterate over all selected entities and components in read-only mode" in:
-    val arch = Aggregate(DefaultFragmentSizeBytes, Value, C2)
+    val arch = Aggregate(Value, C2)(DefaultFragmentSizeBytes)
     val (v1, v2) = (Value(1), Value(2))
     val toAdd: Map[Entity, CSeq] = Map(
-      Entity(0) -> >>(v1, C2()),
-      Entity(1) -> >>(v2, C2())
+      Entity(0) -> CSeq(v1, C2()),
+      Entity(1) -> CSeq(v2, C2())
     )
     for (entity, comps) <- toAdd do arch.add(entity, comps)
     var sum = 0
-    arch.iterate(_ == ~Value): (e, comps) =>
-      val c = comps.get[Value]
-      an[IllegalArgumentException] should be thrownBy (comps.get[C1])
+    arch.iterate(isSelected = _ == ~Value, isRw = _ => false): (e, comps) =>
+      val c = comps.readonly[Value]
+      an[IllegalTypeParameterException] should be thrownBy (comps.readwrite[C1])
       sum += c.x
-      /
     sum shouldBe (v1.x + v2.x)
 
   it should "correctly iterate over all selected entities and components in RW mode" in:
-    val arch = Aggregate(DefaultFragmentSizeBytes, Value, C2)
+    val arch = Aggregate(Value, C2)(DefaultFragmentSizeBytes)
     val e1 = Entity(0)
     val wv = Value(5)
     val editedWv = Value(0)
-    arch.add(e1, >>(wv, C2()))
-    arch.iterate(_ == ~Value): (e, comps) =>
+    arch.add(e1, CSeq(wv, C2()))
+    arch.iterate(_ == ~Value, _ == ~Value): (e, comps) =>
       given CSeq = comps
-      val c = <<[Value]
-      c shouldBe wv
-      >>(editedWv)
-    arch.iterate(_ == ~Value): (e, comps) =>
-      comps.get[Value] shouldBe editedWv
-      /
+      val c = >>[Value]
+      c.component shouldBe wv
+      c <== editedWv
+    arch.iterate(_ == ~Value, _ => false): (e, comps) =>
+      val _ = comps.readonly[Value] shouldBe editedWv
 
   it should "correctly perform load balancing when fragments reach their limit" in:
     // sizeOf incorrectly reports sizes greater than 4900 bytes for classes
     // declared within test classes.
-    val arch = Aggregate(KindaSmallFragmentSizeBytes, Value)
+    val arch = Aggregate(Value)(KindaSmallFragmentSizeBytes)
     val components = CSeq(Value(0))
     inline val numberOfEntities = 1000
     for i <- (0 until numberOfEntities) do
       noException should be thrownBy (arch.add(Entity(i), components))
 
   it should "correctly return its Fragments" in:
-    val arch = Aggregate(KindaSmallFragmentSizeBytes, C1)
+    val arch = Aggregate(C1)(KindaSmallFragmentSizeBytes)
     arch.fragments.isEmpty shouldBe true
     val c = C1()
     inline val numberOfEntities = 1000
@@ -117,7 +117,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     arch.fragments.size shouldBe expectedNumberOfFragments
 
   it should "remove all empty Fragments but one" in:
-    val arch = Aggregate(KindaSmallFragmentSizeBytes, C1)
+    val arch = Aggregate(C1)(KindaSmallFragmentSizeBytes)
     val c = C1()
     inline val numberOfEntities = 1000
     val entities = (0 until numberOfEntities).map(Entity(_))
@@ -126,7 +126,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     arch.fragments.size shouldBe 1
 
   it should "throw if the size of a component is greather than the maximum size limit" in:
-    val arch = Aggregate(ExtremelySmallFragmentSizeBytes, Value)
+    val arch = Aggregate(Value)(ExtremelySmallFragmentSizeBytes)
     val components = CSeq(Value(0))
     an[IllegalStateException] should be thrownBy (arch.add(Entity(0), components))
 
