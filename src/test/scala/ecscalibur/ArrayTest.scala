@@ -1,21 +1,18 @@
 package ecscalibur
 
+import ecscalibur.testutil.shouldNotBeExecuted
 import ecscalibur.util.array.*
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
-import ecscalibur.testutil.shouldNotBeExecuted
-
-object ArrayTest:
-  case class Num(n: Int)
 
 class ArrayTest extends AnyFlatSpec with should.Matchers:
-  import ArrayTest.Num
+  import ecscalibur.testutil.testclasses.IntWrapper
 
   val Min = 0
   val Max = 100
   def intArray: Array[Int] = (Min until Max).toArray
-  def numArray: Array[Num] = intArray.map(n => Num(n)).toArray
+  def numArray: Array[IntWrapper] = intArray.map(n => IntWrapper(n)).toArray
 
   "aForeach" should "work correctly" in:
     val a = intArray

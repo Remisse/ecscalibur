@@ -3,23 +3,6 @@ package ecscalibur
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
-import core.component.Annotations
-
-object ECSTests:
-  import core.component.{Component, ComponentType}
-  import core.component.Annotations.component
-
-  @component
-  class Comp1 extends Component
-  object Comp1 extends ComponentType
-
-  @component
-  class Comp2 extends Component
-  object Comp2 extends ComponentType
-
-  @component
-  class Comp3 extends Component
-  object Comp3 extends ComponentType
 
 class ECSTests extends AnyFlatSpec with should.Matchers:
   import ecscalibur.core.*
@@ -29,39 +12,40 @@ class ECSTests extends AnyFlatSpec with should.Matchers:
     val entity: Entity = world.spawn
     world.isValid(entity) shouldBe true
 
-  import ECSTests.Comp1
+  import ecscalibur.testutil.testclasses
+  import testclasses.C1
 
   it should "be able to have components" in:
     given world: World = World()
     val entity = world.spawn
-    entity += Comp1()
-    entity has Comp1 shouldBe true
+    entity += C1()
+    entity has C1 shouldBe true
 
   it should "not have multiple occurrences of the same component type" in:
     given world: World = World()
     val entity = world.spawn
-    entity += Comp1()
-    an[IllegalArgumentException] should be thrownBy (entity += Comp1())
+    entity += C1()
+    an[IllegalArgumentException] should be thrownBy (entity += C1())
 
   it should "not have a component that was never explicitly added to it" in:
     given world: World = World()
     val entity = world.spawn
-    entity has Comp1 shouldBe false
+    entity has C1 shouldBe false
 
-  import ECSTests.{Comp2, Comp3}
+  import testclasses.{C2, C3}
 
   it should "be able to correctly remove its components" in:
     given world: World = World()
     val entity = world.spawn
-    entity += Comp1()
-      += Comp2()
-      += Comp3()
-    entity -= Comp1
-      -= Comp3
-    entity.has(Comp1, Comp2, Comp3) shouldBe false
-    !(entity has Comp1) && (entity has Comp2) && !(entity has Comp3) shouldBe true
+    entity += C1()
+      += C2()
+      += C3()
+    entity -= C1
+      -= C3
+    entity.has(C1, C2, C3) shouldBe false
+    !(entity has C1) && (entity has C2) && !(entity has C3) shouldBe true
 
   it should "throw when attemping to remove a non-existing component" in:
     given world: World = World()
     val entity = world.spawn
-    an[IllegalArgumentException] should be thrownBy (entity -= Comp1)
+    an[IllegalArgumentException] should be thrownBy (entity -= C1)

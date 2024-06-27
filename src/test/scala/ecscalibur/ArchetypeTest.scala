@@ -3,35 +3,16 @@ package ecscalibur.core
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
+
 import component.*
 import CSeq.Extensions.*
-import component.Annotations.component
-import ecscalibur.core.archetype.Archetypes.Aggregate
-import ecscalibur.core.archetype.Signature
-import ecscalibur.core.archetype.Archetypes.Fragment
-import ecscalibur.util.sizeOf.sizeOf
-
-object ArchetypeTest:
-  @component
-  class C1 extends Component
-  object C1 extends ComponentType
-
-  @component
-  class C2 extends Component
-  object C2 extends ComponentType
-
-  @component
-  class C3 extends Component
-  object C3 extends ComponentType
-
-  @component
-  case class Value(val x: Int) extends Component
-  object Value extends ComponentType
+import archetype.Signature
+import archetype.Archetypes.{Aggregate, Fragment}
 
 class ArchetypeTest extends AnyFlatSpec with should.Matchers:
-  import ArchetypeTest.*
+  import ecscalibur.testutil.testclasses.*
+  import archetype.Archetypes.Archetype.DefaultFragmentSizeBytes
 
-  inline val DefaultFragmentSizeBytes = 16384
   inline val KindaSmallFragmentSizeBytes = 64
   inline val ExtremelySmallFragmentSizeBytes = 1
 

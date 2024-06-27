@@ -2,28 +2,13 @@ package ecscalibur.core
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.*
+
 import component.*
 import CSeq.Extensions.*
-import component.Annotations.component
-import ecscalibur.core.archetype.any
 import archetype.ArchetypeManager
-import ecscalibur.testutil.shouldNotBeExecuted
-
-object ArchetypeManagerTest:
-  @component
-  case class Value(x: Int) extends Component
-  object Value extends ComponentType
-
-  @component
-  class C1 extends Component
-  object C1 extends ComponentType
-
-  @component
-  class C2 extends Component
-  object C2 extends ComponentType
 
 class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
-  import ArchetypeManagerTest.{Value, C1, C2}
+  import ecscalibur.testutil.testclasses.{Value, C1, C2}
 
   "An archetype manager" should "correctly add new entities and iterate over them" in:
     val am = ArchetypeManager()

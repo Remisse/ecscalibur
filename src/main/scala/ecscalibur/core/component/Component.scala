@@ -1,31 +1,59 @@
 package ecscalibur.core.component
 
-import ecscalibur.error.MissingAnnotationError
-import scala.annotation.targetName
+import ecscalibur.error.IllegalDefinitionException
 
 /** Type representing unique component IDs.
   */
 type ComponentId = Int
 
-sealed trait WithType:
-  protected val _typeId: ComponentId = ComponentType.Nil
-
-  inline def typeId: ComponentId = if _typeId != ComponentType.Nil then _typeId
-  else throw MissingAnnotationError(s"$getClass must be annotated with @component.")
+trait WithType:
+  def typeId: ComponentId
 
   /** Equivalent to 'typeId'.
     *
     * @return
     *   the type ID of this component.
     */
-  @targetName("typeId")
-  inline def unary_~ : ComponentId = typeId
+  final inline def unary_~ = typeId
 
-trait Component extends WithType:
-  inline infix def isA(compType: ComponentType): Boolean = typeId == compType.typeId
+trait Component(using companion: ComponentType) extends WithType:
+  private var verified = false
+
+  final override def typeId: ComponentId =
+    if !verified then verifyGiven
+    companion.typeId
+
+  final inline infix def isA(compType: ComponentType): Boolean = typeId == compType.typeId
+
+  import ecscalibur.util.companionNameOf
+  private inline def verifyGiven =
+    if (!CompIdFactory.contains(companionNameOf(getClass)))
+      throw IllegalDefinitionException(
+        s"${getClass.getName} either does not define a companion object or has passed a different one as given to the constructor of Component."
+      )
+    verified = true
+
+private[component] object CompIdFactory:
+  import ecscalibur.id.IdGenerator
+  private val idGen = IdGenerator()
+  private var idsByClass = Map.empty[String, ComponentId]
+
+  inline def generateId(cls: Class[? <: ComponentType]): ComponentId =
+    val className = cls.getName
+    if (idsByClass.contains(className)) throw IllegalStateException()
+    val res = idGen.next
+    idsByClass = idsByClass + (className -> res)
+    res
+
+  inline def contains(className: String) = idsByClass.contains(className)
+  inline def getCached(className: String): ComponentId = idsByClass(className)
 
 trait ComponentType extends WithType:
-  override def equals(other: Any): Boolean = other match
+  private val _typeId: ComponentId = CompIdFactory.generateId(getClass)
+
+  final override def typeId: ComponentId = _typeId
+
+  final override def equals(other: Any): Boolean = other match
     case o: ComponentType => typeId == o.typeId
     case _                => false
 
@@ -35,69 +63,4 @@ object ComponentType:
 export TypeOrdering.given
 object TypeOrdering:
   given Ordering[ComponentType] with
-    override def compare(t1: ComponentType, t2: ComponentType): Int = ~t1 - ~t2
-
-object Annotations:
-  import scala.annotation.MacroAnnotation
-  import scala.quoted.*
-  import ecscalibur.core
-  import ecscalibur.id.IdGenerator
-  import java.util.concurrent.atomic.AtomicReference
-
-  private[Annotations] val idGenerator = AtomicReference(IdGenerator())
-
-  /** Assigns a unique type ID to classes extending [[Component]].
-    */
-  final class component extends MacroAnnotation:
-    def transform(using Quotes)(
-        definition: quotes.reflect.Definition,
-        companion: Option[quotes.reflect.Definition]
-    ): List[quotes.reflect.Definition] =
-      import quotes.reflect.*
-
-      def ensureExtends[T](cls: Symbol)(using Quotes, Type[T]): Unit =
-        cls.typeRef.asType match
-          case '[T] => ()
-          case _    => report.error(s"${cls.toString} must extend ${TypeRepr.of[T].show}.")
-
-      def recreateIdField(cls: Symbol, rhs: Term)(using Quotes): ValDef =
-        val fieldName = "_typeId"
-        // Works as long as this field is non-private (even protected is fine).
-        val idSym = cls.fieldMember(fieldName)
-        val idOverrideSym =
-          Symbol.newVal(cls, fieldName, idSym.info, Flags.Override, Symbol.noSymbol)
-        ValDef(idOverrideSym, Some(rhs))
-
-      definition match
-        case ClassDef(name, ctr, parents, selfOpt, body) =>
-          val newRhs = Literal(IntConstant(idGenerator.getAcquire().next))
-          val cls = definition.symbol
-          ensureExtends[Component](cls)
-          val newClsDef = ClassDef.copy(definition)(
-            name,
-            ctr,
-            parents,
-            selfOpt,
-            recreateIdField(cls, newRhs) :: body
-          )
-
-          val newCompClsDef = companion match
-            case None => report.errorAndAbort(s"$name should define a companion object.")
-            case Some(companionDef) =>
-              val compCls = companionDef.symbol
-              ensureExtends[ComponentType](compCls)
-              companionDef match
-                case ClassDef(name, ctr, parents, selfOpt, body) =>
-                  ClassDef.copy(companionDef)(
-                    name,
-                    ctr,
-                    parents,
-                    selfOpt,
-                    recreateIdField(compCls, newRhs) :: body
-                  )
-                case _ => report.errorAndAbort("impossible")
-
-          List(newClsDef, newCompClsDef)
-        case _ =>
-          report.error("Annotation only supports classes.")
-          List(definition)
+    override def compare(t1: ComponentType, t2: ComponentType): Int = t1.typeId - t2.typeId
