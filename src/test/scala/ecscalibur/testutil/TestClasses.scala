@@ -12,6 +12,15 @@ object testclasses:
   class C3 extends Component(using C3)
   object C3 extends ComponentType
 
+  class C4 extends Component(using C4)
+  object C4 extends ComponentType
+
+  class C5 extends Component(using C5)
+  object C5 extends ComponentType
+
+  class C6 extends Component(using C6)
+  object C6 extends ComponentType
+
   case class Value(x: Int) extends Component(using Value)
   object Value extends ComponentType
 

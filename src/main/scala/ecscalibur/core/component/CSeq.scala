@@ -3,12 +3,12 @@ package ecscalibur.core.component
 opaque type CSeq = Array[Component]
 
 import CSeq.Extensions.{readonly, readwrite}
-import scala.reflect.ClassTag
 import ecscalibur.util.array.*
 import ecscalibur.error.IllegalTypeParameterException
+import izumi.reflect.Tag
 
-inline def <<[T <: Component: ClassTag](using l: CSeq): T = l.readonly[T]
-inline def >>[T <: Component: ClassTag](using l: CSeq): Ref[T] = l.readwrite[T]
+inline def <<[T <: Component: Tag](using l: CSeq): T = l.readonly[T]
+inline def >>[T <: Component: Tag](using l: CSeq): Rw[T] = l.readwrite[T]
 
 object CSeq:
   def empty = CSeq(Array.empty[Component])
@@ -27,14 +27,13 @@ object CSeq:
 
       inline def toTypes: Array[ComponentId] = l.aMap(_.typeId)
 
-      inline def readonly[T <: Component: ClassTag]: T =
-        val idx = l.aIndexWhere:
-          case _: T => true
-          case _    => false
+      def readonly[T <: Component: Tag]: T =
+        val typeParamId = shallowId[T]
+        val idx = l.aIndexWhere(_.typeId == typeParamId)
         if idx == -1 then
           throw IllegalTypeParameterException(
-            s"No component of class ${summon[ClassTag[T]]} found."
+            s"No component of class ${summon[Tag[T]]} found."
           )
         l(idx).asInstanceOf[T]
 
-      inline def readwrite[T <: Component: ClassTag]: Ref[T] = l.readonly[Ref[T]]
+      def readwrite[T <: Component: Tag]: Rw[T] = l.readonly[T].asInstanceOf[Rw[T]]

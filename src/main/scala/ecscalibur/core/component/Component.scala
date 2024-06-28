@@ -1,12 +1,14 @@
 package ecscalibur.core.component
 
 import ecscalibur.error.IllegalDefinitionException
+import izumi.reflect.Tag
+import ecscalibur.util.{companionNameOf, companionNameOf1K}
 
 /** Type representing unique component IDs.
   */
 type ComponentId = Int
 
-trait WithType:
+sealed trait WithType:
   def typeId: ComponentId
 
   /** Equivalent to 'typeId'.
@@ -19,34 +21,18 @@ trait WithType:
 trait Component(using companion: ComponentType) extends WithType:
   private var verified = false
 
-  final override def typeId: ComponentId =
-    if !verified then verifyGiven
+  import ecscalibur.util.companionNameOf
+  override def typeId: ComponentId =
+    if (!verified)
+      val expectedCompanionName = companionNameOf(getClass)
+      if (expectedCompanionName != companion.getClass.getName)
+        throw IllegalDefinitionException(
+          s"${getClass.getName}: expected given companion of class $expectedCompanionName, got ${companion.getClass.getName}."
+        )
+      verified = true
     companion.typeId
 
   final inline infix def isA(compType: ComponentType): Boolean = typeId == compType.typeId
-
-  import ecscalibur.util.companionNameOf
-  private inline def verifyGiven =
-    if (!CompIdFactory.contains(companionNameOf(getClass)))
-      throw IllegalDefinitionException(
-        s"${getClass.getName} either does not define a companion object or has passed a different one as given to the constructor of Component."
-      )
-    verified = true
-
-private[component] object CompIdFactory:
-  import ecscalibur.id.IdGenerator
-  private val idGen = IdGenerator()
-  private var idsByClass = Map.empty[String, ComponentId]
-
-  inline def generateId(cls: Class[? <: ComponentType]): ComponentId =
-    val className = cls.getName
-    if (idsByClass.contains(className)) throw IllegalStateException()
-    val res = idGen.next
-    idsByClass = idsByClass + (className -> res)
-    res
-
-  inline def contains(className: String) = idsByClass.contains(className)
-  inline def getCached(className: String): ComponentId = idsByClass(className)
 
 trait ComponentType extends WithType:
   private val _typeId: ComponentId = CompIdFactory.generateId(getClass)
@@ -57,6 +43,20 @@ trait ComponentType extends WithType:
     case o: ComponentType => typeId == o.typeId
     case _                => false
 
+private[component] object CompIdFactory:
+  import ecscalibur.id.IdGenerator
+  private val idGen = IdGenerator()
+  private var idsByClass = Map.empty[String, ComponentId]
+
+  inline def generateId(cls: Class[?]): ComponentId = generateId(cls.getName)
+
+  inline def generateId(clsName: String): ComponentId =
+    if (idsByClass.contains(clsName)) idsByClass(clsName)
+    else
+      val res = idGen.next
+      idsByClass = idsByClass + (clsName-> res)
+      res
+
 object ComponentType:
   val Nil: ComponentId = -1
 
@@ -64,3 +64,8 @@ export TypeOrdering.given
 object TypeOrdering:
   given Ordering[ComponentType] with
     override def compare(t1: ComponentType, t2: ComponentType): Int = t1.typeId - t2.typeId
+
+inline def shallowId[T <: Component: Tag] = CompIdFactory.generateId(companionNameOf[T])
+inline def deepId[T <: Component: Tag]: ComponentId =
+  val tId = shallowId[T]
+  if (tId == Rw.typeId) CompIdFactory.generateId(companionNameOf1K[T]) else tId

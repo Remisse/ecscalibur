@@ -19,9 +19,7 @@ private[core] object Archetypes:
     def contains(e: Entity): Boolean
     def remove(e: Entity): CSeq
     def softRemove(e: Entity): Unit
-    def iterate(isSelected: ComponentId => Boolean, isRw: ComponentId => Boolean)(
-        f: (Entity, CSeq) => Unit
-    ): Unit
+    def iterate(selectedIds: Signature, rwIds: Array[ComponentId])(f: (Entity, CSeq) => Unit): Unit
 
   object Archetype:
     // TODO Make this parameter configurable
@@ -103,10 +101,8 @@ private[core] object Archetypes:
         if (fr.isEmpty && fr != _fragments.head)
           _fragments = _fragments.filterNot(_ == fr)
 
-      override def iterate(isSelected: ComponentId => Boolean, isRw: ComponentId => Boolean)(
-          f: (Entity, CSeq) => Unit
-      ): Unit =
-        _fragments.foreach(fr => fr.iterate(isSelected, isRw)(f))
+      override def iterate(selectedIds: Signature, rwIds: Array[ComponentId])(f: (Entity, CSeq) => Unit) = 
+        _fragments.foreach(fr => fr.iterate(selectedIds, rwIds)(f))
 
       override def equals(x: Any): Boolean = x match
         case a: Archetype => signature == a.signature
@@ -164,25 +160,23 @@ private[core] object Archetypes:
         entityIndexes -= e
         idx
 
-      override def iterate(isSelected: ComponentId => Boolean, isRw: ComponentId => Boolean)(
-          f: (Entity, CSeq) => Unit
-      ): Unit =
-        val filteredComps = components.collect { case (id, a) if isSelected(id) => a }
+      override def iterate(selectedIds: Signature, rwIds: Array[ComponentId])(f: (Entity, CSeq) => Unit) = 
         for (e, idx) <- entityIndexes do
-          val entityComps = Array.ofDim[Component](filteredComps.size)
+          val entityComps = Array.ofDim[Component](selectedIds.underlying.length)
 
           @tailrec
-          def gatherComponentsOfEntity(i: Int, comps: Iterable[CSeq]): Unit = i match
+          def gatherComponentsOfEntity(i: Int): Unit = i match
             case -1 => ()
             case _ =>
-              val comp = comps.head(idx)
-              entityComps(i) =
-                if isRw(comp.typeId) then Ref(comp)(this, e)
-                else comp
-              gatherComponentsOfEntity(i - 1, comps.tail)
-
-          gatherComponentsOfEntity(entityComps.length - 1, filteredComps)
+              val componentId = selectedIds.underlying(i)
+              val component = components(componentId)(idx)
+              entityComps(i) = 
+                if (rwIds.aContains(componentId)) Rw(component)(this, e)
+                else component
+              gatherComponentsOfEntity(i - 1)
+          
+          gatherComponentsOfEntity(entityComps.length - 1)
           f(e, CSeq(entityComps))
-
+          
     object FragmentImpl:
       val LoadFactor = 0.7

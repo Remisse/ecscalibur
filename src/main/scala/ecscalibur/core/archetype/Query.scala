@@ -1,7 +1,6 @@
 package ecscalibur.core.archetype
 
 import ecscalibur.core.component.ComponentType
-import ecscalibur.util.array.aContains
 
 inline def ro(types: ComponentType*): QueryBuilder = QueryBuilder(_ro = types.toArray)
 inline def rw(types: ComponentType*): QueryBuilder = QueryBuilder(_rw = types.toArray)
@@ -49,12 +48,12 @@ final class Query(
     private val any: Signature,
     private val rw: Array[ComponentId]
 ):
-  inline def isSelected(id: ComponentId): Boolean = all.isNil || all.underlying.aContains(id)
+  inline def selectedIds: Signature = all
   inline def matches(s: Signature): Boolean =
     (all.isNil || s.containsAll(all)) &&
       (none.isNil || !s.containsAny(none)) &&
       (any.isNil || s.containsAny(any))
-  inline def isRw(id: ComponentId): Boolean = rw.aContains(id)
+  inline def rwIds: Array[ComponentId] = rw
 
 export Query.fromBuilder
 object Query:
