@@ -1,6 +1,7 @@
 package ecscalibur.util
 
 import scala.reflect.ClassTag
+import scala.collection.mutable.ArrayBuffer
 
 object array:
   extension [T](a: Array[T])
@@ -82,3 +83,17 @@ object array:
     inline def aContains(elem: T): Boolean = a.aIndexWhere(elem == _) != -1
 
     inline def aExists(inline p: T => Boolean): Boolean = a.aIndexWhere(p) != -1
+
+    inline def aFindUnsafe(inline p: T => Boolean): T = 
+      val idx = a.aIndexWhere(p)
+      require(idx != -1, "Could not find any elements that satisfy the given predicate.")
+      a(idx)
+
+    inline def aFilter(inline p: T => Boolean)(using ClassTag[T]): Array[T] =
+      val buffer = ArrayBuffer.empty[T]
+      a.aForeach: elem =>
+        if (p(elem)) buffer += elem
+      buffer.toArray
+
+    private inline def negate(inline p: T => Boolean)(using ClassTag[T]): T => Boolean = elem => !p(elem)
+    inline def aFilterNot(inline p: T => Boolean)(using ClassTag[T]): Array[T] = a.aFilter(negate(p))

@@ -94,3 +94,15 @@ class ArrayTest extends AnyFlatSpec with should.Matchers:
     a.aExists(_ < Min) shouldBe false
     a.aExists(_ < Max) shouldBe true
     a.aExists(_ > Max) shouldBe false
+
+  "aFindUnsafe" should "work correctly" in:
+    val a = intArray
+    a.aFindUnsafe(_ == Min) shouldBe Min
+    an[IllegalArgumentException] shouldBe thrownBy (a.aFindUnsafe(_ == Max))
+
+  "aFilter" should "work correctly" in:
+    val predicate: Int => Boolean = _ % 2 == 0
+    intArray.aFilter(predicate) shouldBe intArray.filter(predicate)
+    val impossiblePredicate: Int => Boolean = _ > Max
+    intArray.aFilter(impossiblePredicate) shouldBe Array.empty[Int]
+    Array.empty[Int].aFilter(predicate) shouldBe Array.empty[Int]
