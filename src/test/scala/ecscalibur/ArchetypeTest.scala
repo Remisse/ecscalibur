@@ -100,8 +100,6 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
       val _ = comps.readonly[Value] shouldBe editedValue
 
   it should "correctly perform load balancing when fragments reach their limit" in:
-    // sizeOf incorrectly reports sizes greater than 4900 bytes for classes
-    // declared within test classes.
     noException shouldBe thrownBy (ArchetypeTest.StandardArchetypeFixture(Value(0))(nEntities = 10000))
 
   it should "correctly return its Fragments" in:
