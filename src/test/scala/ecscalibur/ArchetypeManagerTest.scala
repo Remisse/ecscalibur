@@ -8,7 +8,7 @@ import org.scalatest.matchers.*
 import component.*
 import CSeq.Extensions.*
 import archetype.ArchetypeManager
-import ecscalibur.core.query
+import ecscalibur.core.queries.*
 
 object ArchetypeManagerTest:
   import ecscalibur.testutil.testclasses.Value
@@ -44,7 +44,6 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       c isA C2 shouldBe true
       sum += v.x
     ).apply
-    
     sum shouldBe v1.x
 
   it should "correctly iterate over the selected entities and update their component values" in:
@@ -121,8 +120,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       v <== fixture.testValue
     ).apply
     (query withAll: (e, v: Value) =>
-      fixture.onIterationStart(v)
-    ).apply
+      fixture.onIterationStart(v)).apply
     fixture.isSuccess shouldBe true
 
   it should "correctly iterate over all entities when supplying 2 type parameters" in:
@@ -133,8 +131,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       v <== fixture.testValue
     ).apply
     (query withAll: (e, v: Value, _: C1) =>
-      fixture.onIterationStart(v)
-    ).apply
+      fixture.onIterationStart(v)).apply
     fixture.isSuccess shouldBe true
 
   it should "correctly iterate over all entities when supplying 3 type parameters" in:
@@ -145,8 +142,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       v <== fixture.testValue
     ).apply
     (query withAll: (e, v: Value, _: C1, _: C2) =>
-      fixture.onIterationStart(v)
-    ).apply
+      fixture.onIterationStart(v)).apply
     fixture.isSuccess shouldBe true
 
   import ecscalibur.testutil.testclasses.C3
@@ -158,8 +154,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       v <== fixture.testValue
     ).apply
     (query withAll: (e, v: Value, _: C1, _: C2, _: C3) =>
-      fixture.onIterationStart(v)
-    ).apply
+      fixture.onIterationStart(v)).apply
     fixture.isSuccess shouldBe true
 
   import ecscalibur.testutil.testclasses.C4
@@ -171,8 +166,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       v <== fixture.testValue
     ).apply
     (query withAll: (e, v: Value, _: C1, _: C2, _: C3, _: C4) =>
-      fixture.onIterationStart(v)
-    ).apply
+      fixture.onIterationStart(v)).apply
     fixture.isSuccess shouldBe true
 
   import ecscalibur.testutil.testclasses.C5
@@ -184,8 +178,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       v <== fixture.testValue
     ).apply
     (query withAll: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5) =>
-      fixture.onIterationStart(v)
-    ).apply
+      fixture.onIterationStart(v)).apply
     fixture.isSuccess shouldBe true
 
   import ecscalibur.testutil.testclasses.C6
@@ -197,6 +190,5 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       v <== fixture.testValue
     ).apply
     (query withAll: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5, _: C6) =>
-      fixture.onIterationStart(v)
-    ).apply
+      fixture.onIterationStart(v)).apply
     fixture.isSuccess shouldBe true

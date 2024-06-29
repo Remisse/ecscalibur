@@ -8,10 +8,17 @@ import ecscalibur.util.array.*
 import ecscalibur.core.archetype.{ArchetypeManager, Signature}
 import Signature.Extensions.*
 
-type Query = () => Unit
+object queries:
+  opaque type Query = () => Unit
+
+  private[core] inline def make(q: () => Unit): Query = q
+
+  extension (q: Query)
+    inline def apply: Unit = q()
 
 inline def query(using ArchetypeManager): QueryBuilder = new QueryBuilderImpl()
 
+import ecscalibur.core.queries.Query
 trait QueryBuilder:
   infix def withNone(types: ComponentType*): QueryBuilder
 
@@ -194,7 +201,7 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
     selected = selectedIds.toSignature
     rw = selectedIds.aFilterNot(wrapped.contains)
     // TODO Create a ComponentId wrapper that carries metadata such as 'isRw'.
-    () => am.iterate(matches, selected, rw)(f)
+    queries.make(() => am.iterate(matches, selected, rw)(f))
 
   private inline def ensureFirstCallToNone: Unit =
     require(_none.isNil, multipleCallsErrorMsg("none"))

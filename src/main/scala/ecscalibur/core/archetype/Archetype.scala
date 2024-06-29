@@ -5,8 +5,7 @@ import ecscalibur.core.component.*
 import ecscalibur.id.IdGenerator
 import ecscalibur.util.sizeof.sizeOf
 
-import scala.annotation.tailrec
-import scala.annotation.targetName
+import scala.annotation.{tailrec, targetName}
 import scala.collection.immutable.*
 import scala.collection.mutable
 import scala.reflect.ClassTag
