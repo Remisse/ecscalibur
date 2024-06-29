@@ -76,7 +76,7 @@ object array:
         case i if i == a.length => -1
         case i if p(a(i))       => i
         case _                  => indexWhere(i + 1)
-      indexWhere(0)
+      if (a.nonEmpty) indexWhere(0) else -1
 
     inline def aIndexOf(elem: T): Int = a.aIndexWhere(elem == _)
 
@@ -90,10 +90,12 @@ object array:
       a(idx)
 
     inline def aFilter(inline p: T => Boolean)(using ClassTag[T]): Array[T] =
-      val buffer = ArrayBuffer.empty[T]
-      a.aForeach: elem =>
-        if (p(elem)) buffer += elem
-      buffer.toArray
+      if (a.isEmpty) a
+      else
+        val buffer = ArrayBuffer.empty[T]
+        a.aForeach: elem =>
+          if (p(elem)) buffer += elem
+        buffer.toArray
 
     private inline def negate(inline p: T => Boolean)(using ClassTag[T]): T => Boolean = elem => !p(elem)
     inline def aFilterNot(inline p: T => Boolean)(using ClassTag[T]): Array[T] = a.aFilter(negate(p))
