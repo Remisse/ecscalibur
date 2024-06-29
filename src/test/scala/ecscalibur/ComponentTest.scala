@@ -14,7 +14,7 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
 
   "A Component class" must "define a companion object" in:
     "class Bad extends Component" shouldNot compile
-    an[IllegalDefinitionException] shouldBe thrownBy (NoCompanionObject().typeId)
+    an[IllegalDefinitionException] shouldBe thrownBy(NoCompanionObject().typeId)
 
   it should "pass its companion object as a given instance to the constructor of Component" in:
     """
@@ -29,7 +29,7 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.WrongGiven
 
   it should "not use the companion object of another Component class as a given instance" in:
-    an[IllegalDefinitionException] shouldBe thrownBy (WrongGiven().typeId)
+    an[IllegalDefinitionException] shouldBe thrownBy(WrongGiven().typeId)
 
   import testclasses.{C1, C2}
 
@@ -37,10 +37,10 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     C1.typeId shouldNot be(ComponentType.Nil)
     // Equivalent to 'C1.typeId shouldNot equal(C2.typeId)'.
     ~C1 shouldNot equal(~C2)
-  
+
   it should "have the same type ID as its companion object" in:
-    shallowId[C1] shouldBe C1.typeId
-    shallowId[C1] shouldNot be (C2.typeId)
+    id0K[C1] shouldBe C1.typeId
+    id0K[C1] shouldNot be(C2.typeId)
 
   "A component instance" should "have the same type ID as its class" in:
     val c1 = C1()
@@ -57,10 +57,12 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     val c2 = C2()
     ~c1 shouldNot be(~c2)
 
-  "shallowId[T]" should "not return the component ID of a 1-kinded class's type parameter" in:
-    shallowId[Rw[C1]] shouldNot be (~C1)
-    shallowId[Rw[C1]] shouldBe ~Rw
+  import testclasses.OneKinded
 
-  "deepId[T]" should "return the component ID of a 1-kinded class's type parameter" in:
-    deepId[Rw[C1]] shouldBe ~C1
-    deepId[C1] shouldBe ~C1
+  "id0K[T]" should "not return the component ID of a 1-kinded class's type parameter" in:
+    id0K[OneKinded[C1]] shouldNot be(~C1)
+    id0K[OneKinded[C1]] shouldBe ~OneKinded
+
+  "id1K[T]" should "return the component ID of a 1-kinded class's type parameter or fall back to id0K" in:
+    id1K[OneKinded[C1]] shouldBe ~C1
+    id1K[C1] shouldBe ~C1

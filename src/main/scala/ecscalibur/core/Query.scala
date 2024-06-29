@@ -1,6 +1,6 @@
 package ecscalibur.core
 
-import ecscalibur.core.component.{ComponentType, ComponentId, Component, CSeq, shallowId, deepId}
+import ecscalibur.core.component.{ComponentType, ComponentId, Component, CSeq, id0K, id1K}
 import izumi.reflect.Tag
 import ecscalibur.core.Entity
 import CSeq.Extensions.*
@@ -73,16 +73,16 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
     this
 
   override infix def withAll[C0 <: Component: Tag](f: (Entity, C0) => Unit): Query =
-    val wrapped = Array(shallowId[C0])
-    val trueIds = Array(deepId[C0])
+    val wrapped = Array(id0K[C0])
+    val trueIds = Array(id1K[C0])
     makeQuery(trueIds, wrapped): (e, components) =>
       f(e, findOfType[C0](trueIds(0))(components))
 
   override infix def withAll[C0 <: Component: Tag, C1 <: Component: Tag](
       f: (Entity, C0, C1) => Unit
   ): Query =
-    val wrapped = Array(shallowId[C0], shallowId[C1])
-    val trueIds = Array(deepId[C0], deepId[C1])
+    val wrapped = Array(id0K[C0], id0K[C1])
+    val trueIds = Array(id1K[C0], id1K[C1])
     makeQuery(trueIds, wrapped): (e, components) =>
       f(
         e,
@@ -93,8 +93,8 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
   override infix def withAll[C0 <: Component: Tag, C1 <: Component: Tag, C2 <: Component: Tag](
       f: (Entity, C0, C1, C2) => Unit
   ): Query =
-    val wrapped = Array(shallowId[C0], shallowId[C1], shallowId[C2])
-    val trueIds = Array(deepId[C0], deepId[C1], deepId[C2])
+    val wrapped = Array(id0K[C0], id0K[C1], id0K[C2])
+    val trueIds = Array(id1K[C0], id1K[C1], id1K[C2])
     makeQuery(trueIds, wrapped): (e, components) =>
       f(
         e,
@@ -109,8 +109,8 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
       C2 <: Component: Tag,
       C3 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3) => Unit): Query =
-    val wrapped = Array(shallowId[C0], shallowId[C1], shallowId[C2], shallowId[C3])
-    val trueIds = Array(deepId[C0], deepId[C1], deepId[C2], deepId[C3])
+    val wrapped = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3])
+    val trueIds = Array(id1K[C0], id1K[C1], id1K[C2], id1K[C3])
     makeQuery(trueIds, wrapped): (e, components) =>
       f(
         e,
@@ -127,8 +127,8 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
       C3 <: Component: Tag,
       C4 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3, C4) => Unit): Query =
-    val wrapped = Array(shallowId[C0], shallowId[C1], shallowId[C2], shallowId[C3], shallowId[C4])
-    val trueIds = Array(deepId[C0], deepId[C1], deepId[C2], deepId[C3], deepId[C4])
+    val wrapped = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4])
+    val trueIds = Array(id1K[C0], id1K[C1], id1K[C2], id1K[C3], id1K[C4])
     makeQuery(trueIds, wrapped): (e, components) =>
       f(
         e,
@@ -147,15 +147,8 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
       C4 <: Component: Tag,
       C5 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3, C4, C5) => Unit): Query =
-    val wrapped = Array(
-      shallowId[C0],
-      shallowId[C1],
-      shallowId[C2],
-      shallowId[C3],
-      shallowId[C4],
-      shallowId[C5]
-    )
-    val trueIds = Array(deepId[C0], deepId[C1], deepId[C2], deepId[C3], deepId[C4], deepId[C5])
+    val wrapped = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4], id0K[C5])
+    val trueIds = Array(id1K[C0], id1K[C1], id1K[C2], id1K[C3], id1K[C4], id1K[C5])
     makeQuery(trueIds, wrapped): (e, components) =>
       f(
         e,
@@ -176,17 +169,8 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
       C5 <: Component: Tag,
       C6 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3, C4, C5, C6) => Unit): Query =
-    val wrapped = Array(
-      shallowId[C0],
-      shallowId[C1],
-      shallowId[C2],
-      shallowId[C3],
-      shallowId[C4],
-      shallowId[C5],
-      shallowId[C6]
-    )
-    val trueIds =
-      Array(deepId[C0], deepId[C1], deepId[C2], deepId[C3], deepId[C4], deepId[C5], deepId[C6])
+    val wrapped = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4], id0K[C5], id0K[C6])
+    val trueIds = Array(id1K[C0], id1K[C1], id1K[C2], id1K[C3], id1K[C4], id1K[C5], id1K[C6])
     makeQuery(trueIds, wrapped): (e, components) =>
       f(
         e,

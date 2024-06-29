@@ -28,7 +28,7 @@ object CSeq:
       inline def toTypes: Array[ComponentId] = l.aMap(_.typeId)
 
       def readonly[T <: Component: Tag]: T =
-        val typeParamId = shallowId[T]
+        val typeParamId = id0K[T]
         val idx = l.aIndexWhere(_.typeId == typeParamId)
         if idx == -1 then
           throw IllegalTypeParameterException(

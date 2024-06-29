@@ -30,3 +30,6 @@ object testclasses:
   class NoCompanionObject extends Component(using C1)
 
   case class IntWrapper(n: Int)
+
+  class OneKinded[T <: Component] extends Component(using OneKinded)
+  object OneKinded extends ComponentType

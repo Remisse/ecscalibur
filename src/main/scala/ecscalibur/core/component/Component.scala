@@ -2,7 +2,7 @@ package ecscalibur.core.component
 
 import ecscalibur.error.IllegalDefinitionException
 import izumi.reflect.Tag
-import ecscalibur.util.{companionNameOf, companionNameOf1K}
+import ecscalibur.util.companionNameOf
 
 /** Type representing unique component IDs.
   */
@@ -21,7 +21,6 @@ sealed trait WithType:
 trait Component(using companion: ComponentType) extends WithType:
   private var verified = false
 
-  import ecscalibur.util.companionNameOf
   override def typeId: ComponentId =
     if (!verified)
       val expectedCompanionName = companionNameOf(getClass)
@@ -65,7 +64,9 @@ object TypeOrdering:
   given Ordering[ComponentType] with
     override def compare(t1: ComponentType, t2: ComponentType): Int = t1.typeId - t2.typeId
 
-inline def shallowId[T <: Component: Tag] = CompIdFactory.generateId(companionNameOf[T])
-inline def deepId[T <: Component: Tag]: ComponentId =
-  val tId = shallowId[T]
-  if (tId == Rw.typeId) CompIdFactory.generateId(companionNameOf1K[T]) else tId
+import ecscalibur.util.{companionNameOf0K, companionNameOf1K}
+
+inline def id0K[T <: Component: Tag] = CompIdFactory.generateId(companionNameOf0K[T])
+inline def id1K[T <: Component: Tag]: ComponentId =
+  if (summon[Tag[T]].tag.typeArgs.isEmpty) id0K[T] 
+  else CompIdFactory.generateId(companionNameOf1K[T])
