@@ -14,7 +14,7 @@ lazy val root = (project in file("."))
 
     scalacOptions ++= Seq(
       "-deprecation",
-      "-experimental",
+      // "-experimental",
       "-feature",
       "-language:experimental.macros",
       "-language:higherKinds",
@@ -28,12 +28,12 @@ lazy val root = (project in file("."))
       "-Wunused:params",
       "-Wunused:privates",
       "-Wvalue-discard",
-      //"-Xfatal-warnings",
+      // "-Xfatal-warnings",
       "-Xcheck-macros", 
-      //"-Xkind-projector",
+      // "-Xkind-projector",
       "-Ycheck:all", 
       "-Ykind-projector",
       "-Ysafe-init",
-      //"-Yexplicit-nulls",
+      // "-Yexplicit-nulls",
       ),
   )
