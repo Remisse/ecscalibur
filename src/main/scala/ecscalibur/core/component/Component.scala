@@ -3,6 +3,7 @@ package ecscalibur.core.component
 import ecscalibur.error.IllegalDefinitionException
 import izumi.reflect.Tag
 import ecscalibur.util.companionNameOf
+import ecscalibur.error.IllegalTypeParameterException
 
 /** Type representing unique component IDs.
   */
@@ -67,6 +68,9 @@ object TypeOrdering:
 import ecscalibur.util.{companionNameOf0K, companionNameOf1K}
 
 inline def id0K[T <: Component: Tag] = CompIdFactory.generateId(companionNameOf0K[T])
-inline def id1K[T <: Component: Tag]: ComponentId =
-  if (summon[Tag[T]].tag.typeArgs.isEmpty) id0K[T] 
-  else CompIdFactory.generateId(companionNameOf1K[T])
+inline def idRw[T <: Component: Tag]: ComponentId =
+  val t = summon[Tag[T]]
+  val id0k = id0K[T]
+  if (t.tag.typeArgs.isEmpty) id0k
+  else if (id0k == ~Rw) CompIdFactory.generateId(companionNameOf1K[T])
+  else throw IllegalTypeParameterException(s"Used 1-kinded component ${t.closestClass}, but only Rw[T] is allowed to be used.")

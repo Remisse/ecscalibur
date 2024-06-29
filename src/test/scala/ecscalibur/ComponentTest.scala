@@ -6,6 +6,7 @@ import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 
 import core.component.*
+import ecscalibur.error.IllegalTypeParameterException
 
 class ComponentTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses
@@ -63,6 +64,7 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     id0K[OneKinded[C1]] shouldNot be(~C1)
     id0K[OneKinded[C1]] shouldBe ~OneKinded
 
-  "id1K[T]" should "return the component ID of a 1-kinded class's type parameter or fall back to id0K" in:
-    id1K[OneKinded[C1]] shouldBe ~C1
-    id1K[C1] shouldBe ~C1
+  "idRw[T]" should "return the component ID of Rw[T]'s type parameter or fall back to id0K" in:
+    an[IllegalTypeParameterException] should be thrownBy (idRw[OneKinded[C1]])
+    idRw[Rw[C1]] shouldBe ~C1
+    idRw[C1] shouldBe id0K[C1]
