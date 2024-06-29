@@ -16,13 +16,15 @@ object ArchetypeTest:
   private abstract class ArchetypeFixture(components: Component*)(nEntities: Int):
     val componentIds = components.map(_.typeId).toArray
     val entities = (0 until nEntities).map(Entity(_)).toVector
+    val nextEntity = Entity(entities.length)
 
   private class StandardArchetypeFixture(components: Component*)(nEntities: Int = 100, fragmentSize: Long = DefaultFragmentSizeBytes) extends ArchetypeFixture(components*)(nEntities):
     val archetype = Aggregate(Signature(componentIds))(fragmentSize)
     for e <- entities do archetype.add(e, CSeq(components*))
 
-  private class StandardFragmentFixture(components: Component*)(nEntities: Int = 100) extends ArchetypeFixture(components*)(nEntities):
-    val fragment = Fragment(Signature(componentIds), nEntities)
+  private class StandardFragmentFixture(components: Component*)(nEntities: Int = 100, maxEntities: Int = 100) extends ArchetypeFixture(components*)(nEntities):
+    require(nEntities <= maxEntities)
+    val fragment = Fragment(Signature(componentIds), maxEntities)
     for e <- entities do fragment.add(e, CSeq(components*))
 
 class ArchetypeTest extends AnyFlatSpec with should.Matchers:
@@ -49,8 +51,8 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     fixture.archetype.contains(fixture.entities(0)) shouldBe true
 
   it should "not accept entities that do not satisfy its signature" in:
-    val fixture = ArchetypeTest.StandardArchetypeFixture(Value(0), C2())(nEntities = 1)
-    val entity = fixture.entities(0)
+    val fixture = ArchetypeTest.StandardArchetypeFixture(Value(0), C2())(nEntities = 0)
+    val entity = fixture.nextEntity
     an[IllegalArgumentException] should be thrownBy (fixture.archetype.add(entity, CSeq(C2())))
     an[IllegalArgumentException] should be thrownBy (
       fixture.archetype.add(entity, CSeq(Value(1), C2(), C3()))
@@ -67,6 +69,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val fixture = ArchetypeTest.StandardArchetypeFixture(components*)(nEntities = 1)
     val entity = fixture.entities(0)
     fixture.archetype.remove(entity).underlying should contain allElementsOf (components)
+    fixture.archetype.contains(entity) shouldBe false
 
   it should "correctly soft-remove entities" in:
     val fixture = ArchetypeTest.StandardArchetypeFixture(C1())(nEntities = 1)
@@ -118,12 +121,13 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     an[IllegalStateException] shouldBe thrownBy (ArchetypeTest.StandardArchetypeFixture(Value(0))(nEntities = 1, ExtremelySmallFragmentSizeBytes))
 
   "A Fragment" should "correctly report whether it is full or not" in:
-    inline val maxEntities = 1
-    val frag = Fragment(Signature(Value), maxEntities)
-    val e = Entity(0)
+    val c = C1()
+    val fixture = ArchetypeTest.StandardFragmentFixture(c)(nEntities = 0, maxEntities = 1)
+    val frag = fixture.fragment
     frag.isEmpty shouldBe true
     frag.isFull shouldBe !frag.isEmpty
-    frag.add(e, CSeq(Value(0)))
+    val e = fixture.nextEntity
+    frag.add(e, CSeq(c))
     frag.isEmpty shouldBe false
     frag.isFull shouldBe !frag.isEmpty
     frag.remove(e)
@@ -131,6 +135,6 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     frag.isFull shouldBe !frag.isEmpty
 
   it should "throw when attempting to add more entities than it can store" in:
-    val v = Value(0)
-    val fixture = ArchetypeTest.StandardFragmentFixture(Value(0))(nEntities = 1)
-    an[IllegalArgumentException] should be thrownBy (fixture.fragment.add(Entity(1), CSeq(v)))
+    val c = C1()
+    val fixture = ArchetypeTest.StandardFragmentFixture(c)(nEntities = 1, maxEntities = 1)
+    an[IllegalArgumentException] should be thrownBy (fixture.fragment.add(fixture.nextEntity, CSeq(c)))
