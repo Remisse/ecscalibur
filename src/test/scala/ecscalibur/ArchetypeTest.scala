@@ -93,8 +93,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val editedValue = Value(0)
     val fixture = ArchetypeTest.StandardArchetypeFixture(v, C1())(nEntities = 1)
     fixture.archetype.iterate(Signature(Value), Array(~Value)): (e, comps) =>
-      given CSeq = comps
-      val c = >>[Value]
+      val c = comps.readwrite[Value]
       c.get shouldBe v
       c <== editedValue
     fixture.archetype.iterate(Signature(Value), Array.empty): (e, comps) =>

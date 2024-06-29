@@ -1,14 +1,10 @@
 package ecscalibur.core.component
 
-opaque type CSeq = Array[Component]
-
-import CSeq.Extensions.{readonly, readwrite}
 import ecscalibur.util.array.*
 import ecscalibur.error.IllegalTypeParameterException
 import izumi.reflect.Tag
 
-inline def <<[T <: Component: Tag](using l: CSeq): T = l.readonly[T]
-inline def >>[T <: Component: Tag](using l: CSeq): Rw[T] = l.readwrite[T]
+opaque type CSeq = Array[Component]
 
 object CSeq:
   def empty = CSeq(Array.empty[Component])
