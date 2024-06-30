@@ -68,3 +68,6 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     an[IllegalTypeParameterException] should be thrownBy (idRw[OneKinded[C1]])
     idRw[Rw[C1]] shouldBe ~C1
     idRw[C1] shouldBe id0K[C1]
+
+  "idRw[T]" should "throw if T is a 1- or higher-kinded type" in:
+    an[IllegalTypeParameterException] should be thrownBy (idRw[Rw[OneKinded[C1]]])

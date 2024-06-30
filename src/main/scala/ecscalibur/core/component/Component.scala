@@ -54,7 +54,7 @@ private[component] object CompIdFactory:
     if (idsByClass.contains(clsName)) idsByClass(clsName)
     else
       val res = idGen.next
-      idsByClass = idsByClass + (clsName-> res)
+      idsByClass = idsByClass + (clsName -> res)
       res
 
 object ComponentType:
@@ -72,5 +72,9 @@ inline def idRw[T <: Component: Tag]: ComponentId =
   val t = summon[Tag[T]]
   val id0k = id0K[T]
   if (t.tag.typeArgs.isEmpty) id0k
-  else if (id0k == ~Rw) CompIdFactory.generateId(companionNameOf1K[T])
-  else throw IllegalTypeParameterException(s"Used 1-kinded component ${t.closestClass}, but only Rw[T] is allowed to be used.")
+  else if (id0k == ~Rw && t.tag.typeArgs.head.typeArgs.isEmpty)
+    CompIdFactory.generateId(companionNameOf1K[T])
+  else
+    throw IllegalTypeParameterException(
+      s"Used 1- or higher-kinded component $t, but only Rw[T] is allowed to be used, where T is a 0-kinded class."
+    )
