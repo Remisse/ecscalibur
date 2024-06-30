@@ -82,19 +82,21 @@ private[core] object Archetypes:
       inline val removalErrorMsg = "Attempted to remove an entity not stored in this archetype."
 
       override def remove(e: Entity): CSeq =
-        require(contains(e), removalErrorMsg)
-        val fragment = entitiesByFragment(e)
-        entitiesByFragment -= e
+        val fragment = removeAndGetFormerFragment(e)
         val res = fragment.remove(e)
         maybeDeleteFragment(fragment)
         res
 
       override def softRemove(e: Entity) =
+        val fragment = removeAndGetFormerFragment(e)
+        fragment.softRemove(e)
+        maybeDeleteFragment(fragment)
+
+      private inline def removeAndGetFormerFragment(e: Entity): Fragment =
         require(contains(e), removalErrorMsg)
         val fragment = entitiesByFragment(e)
         entitiesByFragment -= e
-        fragment.softRemove(e)
-        maybeDeleteFragment(fragment)
+        fragment
 
       private inline def maybeDeleteFragment(fr: Fragment) =
         if (fr.isEmpty && fr != _fragments.head)
@@ -132,7 +134,7 @@ private[core] object Archetypes:
         components(c.typeId)(entityIndexes(e)) = c
 
       override def add(e: Entity, entityComponents: CSeq): Unit =
-        // No need to validate the inputs, as Archetype already takes care of it.
+        // No need to validate the inputs, as Aggregate already takes care of it.
         require(!isFull, s"Cannot add more entities beyond the maximum limit ($maxEntities).")
         val newEntityIdx = idGenerator.next
         entityIndexes += e -> newEntityIdx
