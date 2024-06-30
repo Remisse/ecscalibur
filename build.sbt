@@ -5,12 +5,16 @@ ThisBuild / scalaVersion := "3.4.2"
 lazy val root = (project in file("."))
   .settings(
     name := "ECScalibur",
-    libraryDependencies += "com.google.guava" % "guava" % "33.2.1-jre",
-    libraryDependencies += "dev.zio" %% "izumi-reflect" % "2.3.10",
 
+    libraryDependencies ++= Seq(
+      "com.google.guava" % "guava" % "33.2.1-jre",
+      "dev.zio" %% "izumi-reflect" % "2.3.10",
+    ),
     // Test libraries
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.18" % Test,
-    // libraryDependencies += "org.scalamock" %% "scalamock" % "6.0.0" % Test,
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "3.2.18" % Test,
+      // "org.scalamock" %% "scalamock" % "6.0.0" % Test,
+    ),
 
     scalacOptions ++= Seq(
       "-deprecation",
