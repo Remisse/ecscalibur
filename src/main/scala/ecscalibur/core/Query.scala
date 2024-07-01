@@ -14,6 +14,9 @@ import ecscalibur.core.component.Rw
 object queries:
   opaque type Query = () => Unit
 
+  object Query:
+    val None: Query = () => ()
+
   private[core] inline def make(q: () => Unit): Query = q
 
   extension (q: Query)
@@ -23,29 +26,29 @@ inline def query(using ArchetypeManager): QueryBuilder = new QueryBuilderImpl()
 
 import ecscalibur.core.queries.Query
 trait QueryBuilder:
-  infix def withNone(types: ComponentType*): QueryBuilder
+  infix def except(types: ComponentType*): QueryBuilder
 
-  infix def withAny(types: ComponentType*): QueryBuilder
+  infix def any(types: ComponentType*): QueryBuilder
 
-  infix def withAll[C0 <: Component: Tag](f: (Entity, C0) => Unit): Query
-  infix def withAll[C0 <: Component: Tag, C1 <: Component: Tag](f: (Entity, C0, C1) => Unit): Query
-  infix def withAll[C0 <: Component: Tag, C1 <: Component: Tag, C2 <: Component: Tag](
+  infix def on[C0 <: Component: Tag](f: (Entity, C0) => Unit): Query
+  infix def on[C0 <: Component: Tag, C1 <: Component: Tag](f: (Entity, C0, C1) => Unit): Query
+  infix def on[C0 <: Component: Tag, C1 <: Component: Tag, C2 <: Component: Tag](
       f: (Entity, C0, C1, C2) => Unit
   ): Query
-  infix def withAll[
+  infix def on[
       C0 <: Component: Tag,
       C1 <: Component: Tag,
       C2 <: Component: Tag,
       C3 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3) => Unit): Query
-  infix def withAll[
+  infix def on[
       C0 <: Component: Tag,
       C1 <: Component: Tag,
       C2 <: Component: Tag,
       C3 <: Component: Tag,
       C4 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3, C4) => Unit): Query
-  infix def withAll[
+  infix def on[
       C0 <: Component: Tag,
       C1 <: Component: Tag,
       C2 <: Component: Tag,
@@ -53,7 +56,7 @@ trait QueryBuilder:
       C4 <: Component: Tag,
       C5 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3, C4, C5) => Unit): Query
-  infix def withAll[
+  infix def on[
       C0 <: Component: Tag,
       C1 <: Component: Tag,
       C2 <: Component: Tag,
@@ -71,23 +74,23 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
   private inline def multipleCallsErrorMsg(methodName: String) =
     s"Called '$methodName' multiple times."
 
-  override infix def withNone(types: ComponentType*): QueryBuilder =
+  override infix def except(types: ComponentType*): QueryBuilder =
     ensureFirstCallToNone
     _none = Signature(types*)
     this
 
-  override infix def withAny(types: ComponentType*): QueryBuilder =
+  override infix def any(types: ComponentType*): QueryBuilder =
     ensureFirstCallToAny
     _any = Signature(types*)
     this
 
-  override infix def withAll[C0 <: Component: Tag](f: (Entity, C0) => Unit): Query =
+  override infix def on[C0 <: Component: Tag](f: (Entity, C0) => Unit): Query =
     val trueIds = Array(idRw[C0])
     selected = trueIds.toSignature
     queries.make(() => am.iterate(matches, selected): (e, components, arch) =>
       f(e, findOfType[C0](trueIds(0))(components, arch, e)))
 
-  override infix def withAll[C0 <: Component: Tag, C1 <: Component: Tag](
+  override infix def on[C0 <: Component: Tag, C1 <: Component: Tag](
       f: (Entity, C0, C1) => Unit
   ): Query =
     val trueIds = Array(idRw[C0], idRw[C1])
@@ -99,7 +102,7 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
         findOfType[C1](trueIds(1))(components, arch, e),
       ))
 
-  override infix def withAll[C0 <: Component: Tag, C1 <: Component: Tag, C2 <: Component: Tag](
+  override infix def on[C0 <: Component: Tag, C1 <: Component: Tag, C2 <: Component: Tag](
       f: (Entity, C0, C1, C2) => Unit
   ): Query =
     val trueIds = Array(idRw[C0], idRw[C1], idRw[C2])
@@ -112,7 +115,7 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
         findOfType[C2](trueIds(2))(components, arch, e),
       ))
 
-  override infix def withAll[
+  override infix def on[
       C0 <: Component: Tag,
       C1 <: Component: Tag,
       C2 <: Component: Tag,
@@ -129,7 +132,7 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
         findOfType[C3](trueIds(3))(components, arch, e),
       ))
 
-  override infix def withAll[
+  override infix def on[
       C0 <: Component: Tag,
       C1 <: Component: Tag,
       C2 <: Component: Tag,
@@ -148,7 +151,7 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
         findOfType[C4](trueIds(4))(components, arch, e),
       ))
 
-  override infix def withAll[
+  override infix def on[
       C0 <: Component: Tag,
       C1 <: Component: Tag,
       C2 <: Component: Tag,
@@ -169,7 +172,7 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
         findOfType[C5](trueIds(5))(components, arch, e),
       ))
 
-  override infix def withAll[
+  override infix def on[
       C0 <: Component: Tag,
       C1 <: Component: Tag,
       C2 <: Component: Tag,
