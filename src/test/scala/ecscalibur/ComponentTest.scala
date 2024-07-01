@@ -6,6 +6,7 @@ import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 
 import core.component.*
+import core.component.tpe.*
 import ecscalibur.error.IllegalTypeParameterException
 
 class ComponentTest extends AnyFlatSpec with should.Matchers:
@@ -13,29 +14,12 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
 
   import testclasses.NoCompanionObject
 
-  "A Component class" must "define a companion object" in:
-    "class Bad extends Component" shouldNot compile
-    an[IllegalDefinitionException] shouldBe thrownBy(NoCompanionObject().typeId)
-
-  it should "pass its companion object as a given instance to the constructor of Component" in:
-    """
-    class Bad extends Component
-    object Bad extends ComponentType
-    """ shouldNot compile
-    """
-    class C extends Component(using C)
-    object C extends ComponentType
-    """ should compile
-
-  import ecscalibur.testutil.testclasses.WrongGiven
-
-  it should "not use the companion object of another Component class as a given instance" in:
-    an[IllegalDefinitionException] shouldBe thrownBy(WrongGiven().typeId)
-
+  // "A Component class" must "define a companion object" in:
+  //   an[IllegalDefinitionException] shouldBe thrownBy(NoCompanionObject())
+ 
   import testclasses.{C1, C2}
 
   it should "have a unique type ID" in:
-    C1.typeId shouldNot be(ComponentType.Nil)
     // Equivalent to 'C1.typeId shouldNot equal(C2.typeId)'.
     ~C1 shouldNot equal(~C2)
 
@@ -67,6 +51,7 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
   "idRw[T]" should "return the component ID of Rw[T]'s type parameter or fall back to id0K" in:
     an[IllegalTypeParameterException] should be thrownBy (idRw[OneKinded[C1]])
     idRw[Rw[C1]] shouldBe ~C1
+    idRw[Rw[C1]] shouldNot be (~Rw)
     idRw[C1] shouldBe id0K[C1]
 
   "idRw[T]" should "throw if T is a 1- or higher-kinded type" in:

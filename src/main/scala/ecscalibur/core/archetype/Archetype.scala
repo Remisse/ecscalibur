@@ -18,7 +18,8 @@ private[core] object Archetypes:
     def contains(e: Entity): Boolean
     def remove(e: Entity): CSeq
     def softRemove(e: Entity): Unit
-    def iterate(selectedIds: Signature, rwIds: Array[ComponentId])(f: (Entity, CSeq) => Unit): Unit
+    def iterate(selectedIds: Signature)(f: (Entity, CSeq, Archetype) => Unit): Unit
+    def update(e: Entity, c: Component): Unit
 
   object Archetype:
     // TODO Make this parameter configurable
@@ -35,7 +36,6 @@ private[core] object Archetypes:
   trait Fragment extends Archetype:
     def isFull: Boolean
     def isEmpty: Boolean
-    def update(e: Entity, c: Component): Unit
 
   object Aggregate:
     @targetName("fromTypes")
@@ -102,8 +102,10 @@ private[core] object Archetypes:
         if (fr.isEmpty && fr != _fragments.head)
           _fragments = _fragments.filterNot(_ == fr)
 
-      override def iterate(selectedIds: Signature, rwIds: Array[ComponentId])(f: (Entity, CSeq) => Unit) = 
-        _fragments.foreach(fr => fr.iterate(selectedIds, rwIds)(f))
+      override def iterate(selectedIds: Signature)(f: (Entity, CSeq, Archetype) => Unit) = 
+        _fragments.foreach(fr => fr.iterate(selectedIds)(f))
+
+      override def update(e: Entity, c: Component): Unit = ???
 
       override def equals(x: Any): Boolean = x match
         case a: Archetype => signature == a.signature
@@ -161,7 +163,7 @@ private[core] object Archetypes:
         entityIndexes -= e
         idx
 
-      override def iterate(selectedIds: Signature, rwIds: Array[ComponentId])(f: (Entity, CSeq) => Unit) = 
+      override def iterate(selectedIds: Signature)(f: (Entity, CSeq, Archetype) => Unit) = 
         for (e, idx) <- entityIndexes do
           val entityComps = Array.ofDim[Component](selectedIds.underlying.length)
 
@@ -170,14 +172,11 @@ private[core] object Archetypes:
             case -1 => ()
             case _ =>
               val componentId = selectedIds.underlying(i)
-              val component = components(componentId)(idx)
-              entityComps(i) = 
-                if (rwIds.aContains(componentId)) Rw(component)(this, e)
-                else component
+              entityComps(i) = components(componentId)(idx)
               gatherComponentsOfEntity(i - 1)
           
           gatherComponentsOfEntity(entityComps.length - 1)
-          f(e, CSeq(entityComps))
+          f(e, CSeq(entityComps), this)
           
     object FragmentImpl:
       val LoadFactor = 0.7

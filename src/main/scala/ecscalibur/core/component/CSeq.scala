@@ -1,5 +1,6 @@
 package ecscalibur.core.component
 
+import ecscalibur.core.component.tpe.*
 import ecscalibur.util.array.*
 import ecscalibur.error.IllegalTypeParameterException
 import izumi.reflect.Tag

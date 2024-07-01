@@ -82,22 +82,11 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     inline val nEntities = 2
     val fixture = ArchetypeTest.StandardArchetypeFixture(v, C1())(nEntities = nEntities)
     var sum = 0
-    fixture.archetype.iterate(Signature(Value), Array.empty): (e, comps) =>
+    fixture.archetype.iterate(Signature(Value)): (e, comps, _) =>
       val c = comps.readonly[Value]
       an[IllegalTypeParameterException] should be thrownBy (comps.readwrite[C2])
       sum += c.x
     sum shouldBe v.x * nEntities
-
-  it should "correctly iterate over all selected entities and components in RW mode" in:
-    val v = Value(1)
-    val editedValue = Value(0)
-    val fixture = ArchetypeTest.StandardArchetypeFixture(v, C1())(nEntities = 1)
-    fixture.archetype.iterate(Signature(Value), Array(~Value)): (e, comps) =>
-      val c = comps.readwrite[Value]
-      c.get shouldBe v
-      c <== editedValue
-    fixture.archetype.iterate(Signature(Value), Array.empty): (e, comps) =>
-      val _ = comps.readonly[Value] shouldBe editedValue
 
   it should "correctly perform load balancing when fragments reach their limit" in:
     noException shouldBe thrownBy (ArchetypeTest.StandardArchetypeFixture(Value(0))(nEntities = 10000))

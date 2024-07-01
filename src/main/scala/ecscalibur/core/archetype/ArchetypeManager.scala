@@ -13,7 +13,7 @@ trait ArchetypeManager:
   def addComponents(e: Entity, components: CSeq): Unit
   def removeComponents(e: Entity, compTypes: ComponentType*): Unit
   def delete(e: Entity): Unit
-  def iterate(isSelected: Signature => Boolean, allIds: Signature, rwIds: Array[ComponentId])(f: (Entity, CSeq) => Unit): Unit
+  def iterate(isSelected: Signature => Boolean, allIds: Signature)(f: (Entity, CSeq, Archetype) => Unit): Unit
 
 object ArchetypeManager:
   def apply(): ArchetypeManager = ArchetypeManagerImpl()
@@ -64,9 +64,9 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
     archetypes(signaturesByEntity(e)).softRemove(e)
     val _ = signaturesByEntity.remove(e)
 
-  override def iterate(isSelected: Signature => Boolean, allIds: Signature, rwIds: Array[ComponentId])(f: (Entity, CSeq) => Unit): Unit =
+  override def iterate(isSelected: Signature => Boolean, allIds: Signature)(f: (Entity, CSeq, Archetype) => Unit): Unit =
     archetypes foreach:
-      case (s, arch) if isSelected(s) => arch.iterate(allIds, rwIds)(f)
+      case (s, arch) if isSelected(s) => arch.iterate(allIds)(f)
       case _ => ()
 
   private inline def ensureEntityIsValid(e: Entity): Unit =
