@@ -5,7 +5,8 @@ import ecscalibur.testutil.shouldNotBeExecuted
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.*
 
-import component.*
+import ecscalibur.core.component.Rw
+import ecscalibur.core.component.CSeq
 import CSeq.Extensions.*
 import archetype.ArchetypeManager
 import ecscalibur.core.queries.*

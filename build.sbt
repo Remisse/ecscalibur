@@ -1,6 +1,6 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "3.4.2"
+ThisBuild / scalaVersion := "3.5.0-RC2"
 
 lazy val root = (project in file("."))
   .settings(
@@ -18,13 +18,13 @@ lazy val root = (project in file("."))
 
     scalacOptions ++= Seq(
       "-deprecation",
-      // "-experimental",
+      "-experimental",
       "-feature",
       "-language:experimental.macros",
       "-language:higherKinds",
       "-language:implicitConversions",
       "-unchecked",
-      // "-Wsafe-init",
+      "-Wsafe-init",
       "-Wunused:implicits",
       "-Wunused:explicits",
       "-Wunused:imports",
@@ -34,10 +34,10 @@ lazy val root = (project in file("."))
       "-Wvalue-discard",
       // "-Xfatal-warnings",
       "-Xcheck-macros", 
-      // "-Xkind-projector",
+      "-Xkind-projector",
       "-Ycheck:all", 
-      "-Ykind-projector",
-      "-Ysafe-init",
+      // "-Ykind-projector",
+      // "-Ysafe-init",
       // "-Yexplicit-nulls",
       ),
   )
