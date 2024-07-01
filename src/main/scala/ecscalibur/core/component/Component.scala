@@ -2,7 +2,17 @@ package ecscalibur.core.component
 
 /** Type representing unique component IDs.
   */
-type ComponentId = Int
+opaque type ComponentId = Int
+
+object ComponentId:
+  private[core] inline def apply(id: Int): ComponentId = id
+  private[core] inline def apply(ids: Array[Int]): Array[ComponentId] = ids
+
+  extension (id: ComponentId)
+    private[core] inline def asInt: Int = id
+
+  extension (arr: Array[ComponentId])
+    private[core] inline def asIntArray: Array[Int] = arr
 
 sealed trait WithType:
   final private val _typeId = tpe.getId(getClass)
@@ -23,8 +33,3 @@ trait ComponentType extends WithType:
   final override def equals(other: Any): Boolean = other match
     case o: ComponentType => typeId == o.typeId
     case _                => false
-
-export TypeOrdering.given
-object TypeOrdering:
-  given Ordering[ComponentType] with
-    override def compare(t1: ComponentType, t2: ComponentType): Int = t1.typeId - t2.typeId

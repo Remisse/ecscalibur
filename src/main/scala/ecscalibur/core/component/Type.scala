@@ -18,7 +18,7 @@ object tpe:
 
     inline def generate(tpeName: String) =
       cache getOrElse (tpeName, {
-        val id = generator.next
+        val id = ComponentId(generator.next)
         cache = cache + (tpeName -> id)
         id
       })

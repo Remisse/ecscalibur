@@ -17,7 +17,7 @@ case class Signature private (val underlying: Array[ComponentId]):
     case Signature(u) => underlying.aSameElements(u)
     case _ => false
 
-  override def hashCode(): Int = java.util.Arrays.hashCode(underlying)
+  override def hashCode(): Int = java.util.Arrays.hashCode(underlying.asIntArray)
 
 export Signature.Extensions.*
 object Signature:
@@ -26,9 +26,9 @@ object Signature:
   @targetName("fromIds")
   def apply(ids: Array[ComponentId]): Signature =
     require(ids.nonEmpty, "Failed to make signature: empty sequence.")
-    val res = ids.distinct.sorted
+    val res: Array[Int] = ids.asIntArray.distinct.sorted
     require(res.length == ids.length, "Duplicate types found.")
-    new Signature(res)
+    new Signature(ComponentId(res))
 
   @targetName("fromIds")
   inline def apply(ids: ComponentId*): Signature = apply(ids.toArray)

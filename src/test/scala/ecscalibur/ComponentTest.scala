@@ -11,11 +11,6 @@ import ecscalibur.error.IllegalTypeParameterException
 
 class ComponentTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses
-
-  import testclasses.NoCompanionObject
-
-  // "A Component class" must "define a companion object" in:
-  //   an[IllegalDefinitionException] shouldBe thrownBy(NoCompanionObject())
  
   import testclasses.{C1, C2}
 
@@ -24,8 +19,8 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     ~C1 shouldNot equal(~C2)
 
   it should "have the same type ID as its companion object" in:
-    id0K[C1] shouldBe C1.typeId
-    id0K[C1] shouldNot be(C2.typeId)
+    id0K[C1] shouldBe ~C1
+    id0K[C1] shouldNot be(C2)
 
   "A component instance" should "have the same type ID as its class" in:
     val c1 = C1()

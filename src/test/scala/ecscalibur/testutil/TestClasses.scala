@@ -27,8 +27,6 @@ object testclasses:
   class WrongGiven extends Component
   object WrongGiven extends ComponentType
 
-  class NoCompanionObject extends Component
-
   case class IntWrapper(n: Int)
 
   class OneKinded[T <: Component] extends Component
