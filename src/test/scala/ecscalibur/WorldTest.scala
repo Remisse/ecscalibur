@@ -207,18 +207,25 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     noException shouldBe thrownBy(world loop deferTestIterations)
 
   inline val none = ""
+  inline val s3 = "test3"
 
   it should "execute its systems sorted by priority" in:
     val world = World()
     var systemName = ""
+
+    def test(thisName: String, prevName: String) =
+      systemName shouldBe prevName
+      systemName = thisName
+
+    world.withSystem(s2, priority = 2):
+      _ routine: () =>
+        test(thisName = s2, prevName = s1)
     world.withSystem(s1, priority = 1):
       _ routine: () =>
-        systemName shouldBe s2
-        systemName = s1
-    world.withSystem(s2, priority = 0):
+        test(thisName = s1, prevName = none)
+    world.withSystem(s3, priority = 3):
       _ routine: () =>
-        systemName shouldBe none
-        systemName = s2
+        test(thisName = s3, prevName = s2)
 
     world loop once
-    systemName shouldBe s1
+    systemName shouldBe s3
