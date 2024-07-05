@@ -101,9 +101,10 @@ object world:
         for (e, types) <- entityRemoveComps do am.removeComponents(e, types.map(_._1).toArray*)
         entityRemoveComps.clear
 
-      private inline def processPendingSystems() =
+      private inline def processPendingSystems(): Unit =
         for s <- pendingSystems do activeSystems += s
         pendingSystems.clear()
+        activeSystems.sortInPlaceBy(_.priority)
 
       import EntityRequest.*
       import SystemRequest.*

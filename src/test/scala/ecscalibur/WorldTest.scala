@@ -205,3 +205,20 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
         for _ <- (0 until defersCount) do query.mutator defer delete(e)
 
     noException shouldBe thrownBy(world loop deferTestIterations)
+
+  inline val none = ""
+
+  it should "execute its systems sorted by priority" in:
+    val world = World()
+    var systemName = ""
+    world.withSystem(s1, priority = 1):
+      _ routine: () =>
+        systemName shouldBe s2
+        systemName = s1
+    world.withSystem(s2, priority = 0):
+      _ routine: () =>
+        systemName shouldBe none
+        systemName = s2
+
+    world loop once
+    systemName shouldBe s1
