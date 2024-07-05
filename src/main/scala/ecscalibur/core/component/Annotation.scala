@@ -29,38 +29,28 @@ object annotations:
           Symbol.newVal(cls, idSym.name, idSym.info, Flags.Override | Flags.Protected, Symbol.noSymbol)
         ValDef(idOverrideSym, Some(rhs))
 
-      definition match
-        case ClassDef(name, ctr, parents, selfOpt, body) =>
-          val cls = definition.symbol
-          val id = createId(cls.fullName)
-          val newRhs = Literal(IntConstant(id))
-          ensureExtends[Component](cls)
-          val newClsDef = ClassDef.copy(definition)(
-            name,
-            ctr,
-            parents,
-            selfOpt,
-            recreateIdField(cls, newRhs) :: body
-          )
+      val id = createId(definition.symbol.fullName)
+      val newRhs = Literal(IntConstant(id))
 
-          val newCompClsDef = companion match
-            case None => report.errorAndAbort(s"$name should define a companion object.")
-            case Some(companionDef) =>
-              val compCls = companionDef.symbol
-              ensureExtends[ComponentType](compCls)
-              companionDef match
-                case ClassDef(name, ctr, parents, selfOpt, body) =>
-                  ClassDef.copy(companionDef)(
-                    name,
-                    ctr,
-                    parents,
-                    selfOpt,
-                    recreateIdField(compCls, newRhs) :: body
-                  )
-                case _ => report.errorAndAbort("impossible")
+      def newClassDefinitionWithOverriddenField[typeToExtend](toCopy: Definition)(using Type[typeToExtend]): ClassDef =
+        toCopy match
+          case ClassDef(name, ctr, parents, selfOpt, body) =>
+            val cls = toCopy.symbol
+            ensureExtends[typeToExtend](cls)
+            ClassDef.copy(toCopy)(
+              name,
+              ctr,
+              parents,
+              selfOpt,
+              recreateIdField(cls, newRhs) :: body
+            )
+          case _ => report.errorAndAbort("This annotation only works on classes.")
 
-          report.info(s"${cls.fullName} id: $id")
-          List(newClsDef, newCompClsDef)
-        case _ =>
-          report.error("Annotation only supports classes.")
-          List(definition)
+      companion match
+        case None => report.errorAndAbort(s"This class should define a companion object.")
+        case Some(companionDef) => ()
+
+      List(
+        newClassDefinitionWithOverriddenField[Component](definition),
+        newClassDefinitionWithOverriddenField[ComponentType](companion.head)
+      )
