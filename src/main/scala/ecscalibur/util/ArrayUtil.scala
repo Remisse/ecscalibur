@@ -2,6 +2,7 @@ package ecscalibur.util
 
 import scala.reflect.ClassTag
 import scala.collection.mutable.ArrayBuffer
+import izumi.reflect.Tag
 
 object array:
   extension [T](a: Array[T])
@@ -84,10 +85,18 @@ object array:
 
     inline def aExists(inline p: T => Boolean): Boolean = a.aIndexWhere(p) != -1
 
-    inline def aFindUnsafe(inline p: T => Boolean): T = 
+    inline def findUnsafe(inline p: T => Boolean): T = 
       val idx = a.aIndexWhere(p)
       require(idx != -1, "Could not find any elements that satisfy the given predicate.")
       a(idx)
+
+    inline def findOfType[C <: T: Tag]: C = 
+      val idx = a.aIndexWhere:
+        _ match
+          case _: C => true
+          case _ => false
+      require(idx != -1, s"Could not find any elements of type ${summon[Tag[C]]}.")
+      a(idx).asInstanceOf[C]
 
     inline def aFilter(inline p: T => Boolean)(using ClassTag[T]): Array[T] =
       if (a.isEmpty) a
