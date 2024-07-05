@@ -10,7 +10,7 @@ object annotations:
   /** Assigns a unique type ID to classes extending [[Component]].
     */
   final class component extends MacroAnnotation:
-    def transform(using Quotes)(
+    override def transform(using Quotes)(
         definition: quotes.reflect.Definition,
         companion: Option[quotes.reflect.Definition]
     ): List[quotes.reflect.Definition] =
@@ -21,18 +21,24 @@ object annotations:
           case '[T] => ()
           case _    => report.error(s"${cls.toString} must extend ${TypeRepr.of[T].show}.")
 
-      def recreateIdField(cls: Symbol, rhs: Term)(using Quotes): ValDef =
-        val fieldName = "_typeId"
+      def recreateField(fieldName: String, cls: Symbol, rhs: Term)(using Quotes): ValDef =
         // Works as long as this field is non-private (even protected is fine).
         val idSym = cls.fieldMember(fieldName)
         val idOverrideSym =
-          Symbol.newVal(cls, idSym.name, idSym.info, Flags.Override | Flags.Protected, Symbol.noSymbol)
+          Symbol.newVal(
+            cls,
+            idSym.name,
+            idSym.info,
+            Flags.Override | Flags.Protected,
+            Symbol.noSymbol
+          )
         ValDef(idOverrideSym, Some(rhs))
 
-      val id = createId(definition.symbol.fullName)
-      val newRhs = Literal(IntConstant(id))
+      val newRhs = Literal(IntConstant(createId(definition.symbol.fullName)))
 
-      def newClassDefinitionWithOverriddenField[typeToExtend](toCopy: Definition)(using Type[typeToExtend]): ClassDef =
+      def newClassDefinitionWithOverriddenField[typeToExtend](toCopy: Definition)(using
+          Type[typeToExtend]
+      ): ClassDef =
         toCopy match
           case ClassDef(name, ctr, parents, selfOpt, body) =>
             val cls = toCopy.symbol
@@ -42,13 +48,13 @@ object annotations:
               ctr,
               parents,
               selfOpt,
-              recreateIdField(cls, newRhs) :: body
+              recreateField("_typeId", cls, newRhs) :: body
             )
           case _ => report.errorAndAbort("This annotation only works on classes.")
 
       companion match
         case None => report.errorAndAbort(s"This class should define a companion object.")
-        case Some(companionDef) => ()
+        case _    => ()
 
       List(
         newClassDefinitionWithOverriddenField[Component](definition),

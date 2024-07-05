@@ -7,7 +7,7 @@ import org.scalatest.matchers.*
 
 import ecscalibur.core.*
 import component.*
-import CSeq.Extensions.*
+import ecscalibur.core.CSeq.*
 import archetype.Signature
 import archetype.Archetypes.Aggregate
 import ecscalibur.core.archetype.Archetypes.Archetype.DefaultFragmentSizeBytes
@@ -56,7 +56,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val components = Seq(testValue, C1(), C2())
     val fixture = fixtures.StandardArchetypeFixture(components*)(nEntities = 1)
     val entity = fixture.entities(0)
-    fixture.archetype.remove(entity).underlying should contain allElementsOf (components)
+    fixture.archetype.remove(entity).forall(components.contains) shouldBe true
     fixture.archetype.contains(entity) shouldBe false
 
   it should "correctly soft-remove entities" in:
@@ -70,27 +70,32 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val fixture = fixtures.StandardArchetypeFixture(testValue, C1())(nEntities = nEntities)
     var sum = 0
     fixture.archetype.iterate(Signature(Value)): (e, comps, _) =>
-      val c = comps.underlying.findOfType[Value]
+      val c = comps.findOfType[Value]
       sum += c.x
     sum shouldBe testValue.x * nEntities
 
   it should "correctly perform load balancing when fragments reach their limit" in:
-    noException shouldBe thrownBy (fixtures.StandardArchetypeFixture(Value(0))(nEntities = 10000))
+    noException shouldBe thrownBy(fixtures.StandardArchetypeFixture(Value(0))(nEntities = 10000))
 
   it should "correctly return its Fragments" in:
     val c = C1()
-    val fixture = fixtures.StandardArchetypeFixture(c)(nEntities = 1000, KindaSmallFragmentSizeBytes)
-    val expectedNumberOfFragments = fixture.entities.length / (KindaSmallFragmentSizeBytes / sizeOf(c))
+    val fixture =
+      fixtures.StandardArchetypeFixture(c)(nEntities = 1000, KindaSmallFragmentSizeBytes)
+    val expectedNumberOfFragments =
+      fixture.entities.length / (KindaSmallFragmentSizeBytes / sizeOf(c))
     fixture.archetype.fragments.size shouldBe expectedNumberOfFragments
 
   it should "remove all empty Fragments but one" in:
     val c = C1()
-    val fixture = fixtures.StandardArchetypeFixture(c)(nEntities = 1000, KindaSmallFragmentSizeBytes)
+    val fixture =
+      fixtures.StandardArchetypeFixture(c)(nEntities = 1000, KindaSmallFragmentSizeBytes)
     for e <- fixture.entities do fixture.archetype.remove(e)
     fixture.archetype.fragments.size shouldBe 1
 
   it should "throw if the size of a component is greather than the maximum size limit" in:
-    an[IllegalStateException] shouldBe thrownBy (fixtures.StandardArchetypeFixture(Value(0))(nEntities = 1, ExtremelySmallFragmentSizeBytes))
+    an[IllegalStateException] shouldBe thrownBy(
+      fixtures.StandardArchetypeFixture(Value(0))(nEntities = 1, ExtremelySmallFragmentSizeBytes)
+    )
 
   "A Fragment" should "correctly report whether it is full or not" in:
     val c = C1()
@@ -109,4 +114,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   it should "throw when attempting to add more entities than it can store" in:
     val c = C1()
     val fixture = fixtures.StandardFragmentFixture(c)(nEntities = 1, maxEntities = 1)
-    an[IllegalArgumentException] should be thrownBy (fixture.fragment.add(fixture.nextEntity, CSeq(c)))
+    an[IllegalArgumentException] should be thrownBy (fixture.fragment.add(
+      fixture.nextEntity,
+      CSeq(c)
+    ))

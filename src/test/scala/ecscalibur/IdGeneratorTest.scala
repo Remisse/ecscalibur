@@ -36,4 +36,4 @@ class IdGeneratorTests extends AnyFlatSpec with should.Matchers:
     gen.erase(id)
     val reused = gen.next
     id shouldBe reused
-    gen.next shouldNot be (reused)
+    gen.next shouldNot be(reused)

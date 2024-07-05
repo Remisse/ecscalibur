@@ -10,7 +10,7 @@ final class Rw[T <: Component](c: T)(archetype: Archetype, entity: Entity) exten
 
   override protected val _typeId: Int = Rw._typeId
 
-  inline def get : T = _component
+  inline def get: T = _component
   inline def apply(): T = _component
   inline infix def <==(c: T) =
     _component = c

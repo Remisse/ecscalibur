@@ -95,18 +95,18 @@ class ArrayTest extends AnyFlatSpec with should.Matchers:
     a.aExists(_ < Max) shouldBe true
     a.aExists(_ > Max) shouldBe false
 
-  "findUnsafe" should "work correctly" in:
+  "aFindUnsafe" should "work correctly" in:
     val a = intArray
-    a.findUnsafe(_ == Min) shouldBe Min
-    an[IllegalArgumentException] shouldBe thrownBy (a.findUnsafe(_ == Max))
+    a.aFindUnsafe(_ == Min) shouldBe Min
+    an[IllegalArgumentException] shouldBe thrownBy(a.aFindUnsafe(_ == Max))
 
   import ecscalibur.core.component.Component
   import ecscalibur.testutil.testclasses.{C1, C2, C3}
 
-  "findOfType" should "work correctly" in:
+  "aFindOfType" should "work correctly" in:
     val a: Array[Component] = Array(C1(), C2())
-    a.findOfType[C1] isA C1 shouldBe true
-    an[IllegalArgumentException] shouldBe thrownBy (a.findOfType[C3])
+    a.aFindOfType[C1] isA C1 shouldBe true
+    an[IllegalArgumentException] shouldBe thrownBy(a.aFindOfType[C3])
 
   "aFilter" should "work correctly" in:
     val predicate: Int => Boolean = _ % 2 == 0
@@ -121,3 +121,6 @@ class ArrayTest extends AnyFlatSpec with should.Matchers:
     val impossiblePredicate: Int => Boolean = _ > Max
     intArray.aFilter(impossiblePredicate) shouldBe Array.empty[Int]
     Array.empty[Int].aFilter(predicate) shouldBe Array.empty[Int]
+
+  "aConcat" should "work correctly" in:
+    (intArray.aConcat(intArray)) shouldBe (intArray.concat(intArray))

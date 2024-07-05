@@ -5,10 +5,10 @@ import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 
 import ecscalibur.testutil.testclasses.Value
-import ecscalibur.core.component.CSeq
-import ecscalibur.core.{Entity, Rw}
+import ecscalibur.core.{Entity, CSeq, Rw}
 import ecscalibur.core.world.*
 import Loop.*
+
 import ecscalibur.testutil.shouldNotBeExecuted
 import ecscalibur.testutil.testclasses.C1
 
@@ -72,7 +72,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.withSystem(s1): query =>
       query routine: () =>
         sum += 1
-        if (query.mutator isSystemRunning(s1))
+        if (query.mutator isSystemRunning s1)
           val success = query.mutator defer stop(s1)
           if (!success) shouldNotBeExecuted
 
@@ -88,13 +88,13 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.withSystem(s1): query =>
       query routine: () =>
         sum += 1
-        if (query.mutator isSystemRunning(s1))
+        if (query.mutator isSystemRunning s1)
           val success = query.mutator defer stop(s1)
           if (!success) shouldNotBeExecuted
 
     world.withSystem(s2): query =>
       query routine: () =>
-        if (query.mutator isSystemPaused(s1))
+        if (query.mutator isSystemPaused s1)
           val success = query.mutator defer resume(s1)
           if (!success) shouldNotBeExecuted
 
@@ -186,7 +186,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query on: (e: Entity, _: C1) =>
         for _ <- (0 until defersCount) do query.mutator defer addComponent(e, C2())
 
-    noException shouldBe thrownBy (world loop deferTestIterations)
+    noException shouldBe thrownBy(world loop deferTestIterations)
 
   it should "only execute the first of many 'removeComponent' requests if they do the same thing" in:
     val world = World()

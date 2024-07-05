@@ -1,15 +1,16 @@
 package ecscalibur.core
 
-import ecscalibur.core.component.{ComponentType, ComponentId, Component, CSeq}
-import ecscalibur.core.component.tpe.*
-import izumi.reflect.Tag
 import ecscalibur.core.Entity
-import CSeq.Extensions.*
-import ecscalibur.util.array.*
 import ecscalibur.core.archetype.{ArchetypeManager, Signature}
-import Signature.Extensions.*
 import ecscalibur.core.archetype.Archetypes.Archetype
+import ecscalibur.core.component.{Component, ComponentId, ComponentType}
+import ecscalibur.core.component.tpe.*
 import ecscalibur.core.context.MetaContext
+import ecscalibur.util.array.*
+import izumi.reflect.Tag
+
+import CSeq.*
+import Signature.Extensions.*
 
 object queries:
   final case class Query(val query: () => Unit):
@@ -20,9 +21,12 @@ object queries:
 
   private[core] inline def make(q: () => Unit): Query = Query(q)
 
-inline def query(using ArchetypeManager, MetaContext, Mutator): QueryBuilder = new QueryBuilderImpl(summon[ArchetypeManager])
+inline def query(using ArchetypeManager, MetaContext, Mutator): QueryBuilder = new QueryBuilderImpl(
+  summon[ArchetypeManager]
+)
 
 import ecscalibur.core.queries.Query
+
 trait QueryBuilder:
   given context: MetaContext
   given mutator: Mutator
@@ -96,40 +100,46 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
       f
 
   override infix def on(f: Entity => Unit): Query =
-    queries.make: () => 
+    queries.make: () =>
       am.iterate(matches, selected): (e, components, arch) =>
         f(e)
 
   override infix def on[C0 <: Component: Tag](f: (Entity, C0) => Unit): Query =
     val trueIds = Array(idRw[C0])
     selected = trueIds.toSignature
-    queries.make(() => am.iterate(matches, selected): (e, components, arch) =>
-      f(e, findOfType[C0](trueIds(0))(components, arch, e)))
+    queries.make(() =>
+      am.iterate(matches, selected): (e, components, arch) =>
+        f(e, findOfType[C0](trueIds(0))(components, arch, e))
+    )
 
   override infix def on[C0 <: Component: Tag, C1 <: Component: Tag](
       f: (Entity, C0, C1) => Unit
   ): Query =
     val trueIds = Array(idRw[C0], idRw[C1])
     selected = trueIds.toSignature
-    queries.make(() => am.iterate(matches, selected): (e, components, arch) =>
-      f(
-        e,
-        findOfType[C0](trueIds(0))(components, arch, e),
-        findOfType[C1](trueIds(1))(components, arch, e),
-      ))
+    queries.make(() =>
+      am.iterate(matches, selected): (e, components, arch) =>
+        f(
+          e,
+          findOfType[C0](trueIds(0))(components, arch, e),
+          findOfType[C1](trueIds(1))(components, arch, e)
+        )
+    )
 
   override infix def on[C0 <: Component: Tag, C1 <: Component: Tag, C2 <: Component: Tag](
       f: (Entity, C0, C1, C2) => Unit
   ): Query =
     val trueIds = Array(idRw[C0], idRw[C1], idRw[C2])
     selected = trueIds.toSignature
-    queries.make(() => am.iterate(matches, selected): (e, components, arch) =>
-      f(
-        e,
-        findOfType[C0](trueIds(0))(components, arch, e),
-        findOfType[C1](trueIds(1))(components, arch, e),
-        findOfType[C2](trueIds(2))(components, arch, e),
-      ))
+    queries.make(() =>
+      am.iterate(matches, selected): (e, components, arch) =>
+        f(
+          e,
+          findOfType[C0](trueIds(0))(components, arch, e),
+          findOfType[C1](trueIds(1))(components, arch, e),
+          findOfType[C2](trueIds(2))(components, arch, e)
+        )
+    )
 
   override infix def on[
       C0 <: Component: Tag,
@@ -139,14 +149,16 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
   ](f: (Entity, C0, C1, C2, C3) => Unit): Query =
     val trueIds = Array(idRw[C0], idRw[C1], idRw[C2], idRw[C3])
     selected = trueIds.toSignature
-    queries.make(() => am.iterate(matches, selected): (e, components, arch) =>
-      f(
-        e,
-        findOfType[C0](trueIds(0))(components, arch, e),
-        findOfType[C1](trueIds(1))(components, arch, e),
-        findOfType[C2](trueIds(2))(components, arch, e),
-        findOfType[C3](trueIds(3))(components, arch, e),
-      ))
+    queries.make(() =>
+      am.iterate(matches, selected): (e, components, arch) =>
+        f(
+          e,
+          findOfType[C0](trueIds(0))(components, arch, e),
+          findOfType[C1](trueIds(1))(components, arch, e),
+          findOfType[C2](trueIds(2))(components, arch, e),
+          findOfType[C3](trueIds(3))(components, arch, e)
+        )
+    )
 
   override infix def on[
       C0 <: Component: Tag,
@@ -157,15 +169,17 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
   ](f: (Entity, C0, C1, C2, C3, C4) => Unit): Query =
     val trueIds = Array(idRw[C0], idRw[C1], idRw[C2], idRw[C3], idRw[C4])
     selected = trueIds.toSignature
-    queries.make(() => am.iterate(matches, selected): (e, components, arch) =>
-      f(
-        e,
-        findOfType[C0](trueIds(0))(components, arch, e),
-        findOfType[C1](trueIds(1))(components, arch, e),
-        findOfType[C2](trueIds(2))(components, arch, e),
-        findOfType[C3](trueIds(3))(components, arch, e),
-        findOfType[C4](trueIds(4))(components, arch, e),
-      ))
+    queries.make(() =>
+      am.iterate(matches, selected): (e, components, arch) =>
+        f(
+          e,
+          findOfType[C0](trueIds(0))(components, arch, e),
+          findOfType[C1](trueIds(1))(components, arch, e),
+          findOfType[C2](trueIds(2))(components, arch, e),
+          findOfType[C3](trueIds(3))(components, arch, e),
+          findOfType[C4](trueIds(4))(components, arch, e)
+        )
+    )
 
   override infix def on[
       C0 <: Component: Tag,
@@ -177,16 +191,18 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
   ](f: (Entity, C0, C1, C2, C3, C4, C5) => Unit): Query =
     val trueIds = Array(idRw[C0], idRw[C1], idRw[C2], idRw[C3], idRw[C4], idRw[C5])
     selected = trueIds.toSignature
-    queries.make(() => am.iterate(matches, selected): (e, components, arch) =>
-      f(
-        e,
-        findOfType[C0](trueIds(0))(components, arch, e),
-        findOfType[C1](trueIds(1))(components, arch, e),
-        findOfType[C2](trueIds(2))(components, arch, e),
-        findOfType[C3](trueIds(3))(components, arch, e),
-        findOfType[C4](trueIds(4))(components, arch, e),
-        findOfType[C5](trueIds(5))(components, arch, e),
-      ))
+    queries.make(() =>
+      am.iterate(matches, selected): (e, components, arch) =>
+        f(
+          e,
+          findOfType[C0](trueIds(0))(components, arch, e),
+          findOfType[C1](trueIds(1))(components, arch, e),
+          findOfType[C2](trueIds(2))(components, arch, e),
+          findOfType[C3](trueIds(3))(components, arch, e),
+          findOfType[C4](trueIds(4))(components, arch, e),
+          findOfType[C5](trueIds(5))(components, arch, e)
+        )
+    )
 
   override infix def on[
       C0 <: Component: Tag,
@@ -199,17 +215,19 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
   ](f: (Entity, C0, C1, C2, C3, C4, C5, C6) => Unit): Query =
     val trueIds = Array(idRw[C0], idRw[C1], idRw[C2], idRw[C3], idRw[C4], idRw[C5], idRw[C6])
     selected = trueIds.toSignature
-    queries.make(() => am.iterate(matches, selected): (e, components, arch) =>
-      f(
-        e,
-        findOfType[C0](trueIds(0))(components, arch, e),
-        findOfType[C1](trueIds(1))(components, arch, e),
-        findOfType[C2](trueIds(2))(components, arch, e),
-        findOfType[C3](trueIds(3))(components, arch, e),
-        findOfType[C4](trueIds(4))(components, arch, e),
-        findOfType[C5](trueIds(5))(components, arch, e),
-        findOfType[C6](trueIds(6))(components, arch, e),
-      ))
+    queries.make(() =>
+      am.iterate(matches, selected): (e, components, arch) =>
+        f(
+          e,
+          findOfType[C0](trueIds(0))(components, arch, e),
+          findOfType[C1](trueIds(1))(components, arch, e),
+          findOfType[C2](trueIds(2))(components, arch, e),
+          findOfType[C3](trueIds(3))(components, arch, e),
+          findOfType[C4](trueIds(4))(components, arch, e),
+          findOfType[C5](trueIds(5))(components, arch, e),
+          findOfType[C6](trueIds(6))(components, arch, e)
+        )
+    )
 
   private inline def matches(s: Signature): Boolean =
     (selected.isNil || s.containsAll(selected)) &&
@@ -222,6 +240,8 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
   private inline def ensureFirstCallToAny: Unit =
     require(_any.isNil, multipleCallsErrorMsg("any"))
 
-  private inline def findOfType[C <: Component: Tag](idrw: ComponentId)(components: CSeq, arch: Archetype, e: Entity): C =
-    val c = components.underlying.findUnsafe(_.typeId == idrw)
+  private inline def findOfType[C <: Component: Tag](
+      idrw: ComponentId
+  )(components: CSeq[Component], arch: Archetype, e: Entity): C =
+    val c = components.findUnsafe(_.typeId == idrw)
     (if id0K[C] == ~Rw then Rw(c)(arch, e) else c).asInstanceOf[C]

@@ -1,18 +1,18 @@
 package ecscalibur
 
-import ecscalibur.error.IllegalDefinitionException
+import error.{IllegalDefinitionException, IllegalTypeParameterException}
+import core.Rw
+import core.component.*
+import core.component.tpe.*
+
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 
-import core.component.*
-import core.component.tpe.*
-import ecscalibur.error.IllegalTypeParameterException
-import ecscalibur.core.Rw
 
 class ComponentTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses
- 
+
   import testclasses.NotAnnotated
 
   "A component class" must "be annotated with @component" in:
@@ -77,7 +77,7 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
   "idRw[T]" should "return the component ID of Rw[T]'s type parameter or fall back to id0K" in:
     an[IllegalTypeParameterException] should be thrownBy (idRw[OneKinded[C1]])
     idRw[Rw[C1]] shouldBe ~C1
-    idRw[Rw[C1]] shouldNot be (~Rw)
+    idRw[Rw[C1]] shouldNot be(~Rw)
     idRw[C1] shouldBe id0K[C1]
 
   "idRw[T]" should "throw if T is a 1- or higher-kinded type" in:

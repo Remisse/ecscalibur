@@ -1,6 +1,6 @@
 package ecscalibur.core
 
-import ecscalibur.core.component.{Component, ComponentType, CSeq}
+import ecscalibur.core.component.{Component, ComponentType}
 
 trait Mutator:
   infix def defer(q: SystemRequest | EntityRequest): Boolean
@@ -12,7 +12,7 @@ enum SystemRequest:
   case resume(systemName: String)
 
 enum EntityRequest:
-  case create(components: CSeq)
+  case create(components: CSeq[Component])
   case delete(e: Entity)
   case addComponent(e: Entity, component: Component, orElse: () => Unit = () => ())
   case removeComponent(e: Entity, cType: ComponentType, orElse: () => Unit = () => ())

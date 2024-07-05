@@ -2,7 +2,6 @@ package ecscalibur.core.component
 
 import izumi.reflect.Tag
 import ecscalibur.error.IllegalTypeParameterException
-import ecscalibur.util.base
 import scala.util.hashing.MurmurHash3
 import ecscalibur.core.Rw
 
@@ -25,3 +24,5 @@ private[ecscalibur] object tpe:
       throw IllegalTypeParameterException(
         s"Used 1- or higher-kinded component $t when only Rw[T] is allowed, where T is a 0-kinded type."
       )
+
+  private inline def base(clsName: String): String = clsName.replace(".", "").replace("$", "")

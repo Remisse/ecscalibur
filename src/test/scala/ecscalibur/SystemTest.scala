@@ -4,13 +4,14 @@ import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 
-import ecscalibur.core.archetype.ArchetypeManager
-import ecscalibur.core.systems.System
-import ecscalibur.core.queries.Query
-import ecscalibur.core.{query, Mutator}
-import ecscalibur.testutil.testclasses.Value
-import ecscalibur.core.context.MetaContext
-import ecscalibur.testutil.shouldNotBeExecuted
+import core.archetype.ArchetypeManager
+import core.systems.System
+import core.queries.Query
+import core.{query, Mutator}
+import core.context.MetaContext
+
+import testutil.testclasses.Value
+import testutil.shouldNotBeExecuted
 
 class SystemTest extends AnyFlatSpec with should.Matchers:
 

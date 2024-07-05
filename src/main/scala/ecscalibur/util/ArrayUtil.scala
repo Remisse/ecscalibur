@@ -85,16 +85,16 @@ object array:
 
     inline def aExists(inline p: T => Boolean): Boolean = a.aIndexWhere(p) != -1
 
-    inline def findUnsafe(inline p: T => Boolean): T = 
+    inline def aFindUnsafe(inline p: T => Boolean): T =
       val idx = a.aIndexWhere(p)
       require(idx != -1, "Could not find any elements that satisfy the given predicate.")
       a(idx)
 
-    inline def findOfType[C <: T: Tag]: C = 
+    inline def aFindOfType[C <: T: Tag]: C =
       val idx = a.aIndexWhere:
         _ match
           case _: C => true
-          case _ => false
+          case _    => false
       require(idx != -1, s"Could not find any elements of type ${summon[Tag[C]]}.")
       a(idx).asInstanceOf[C]
 
@@ -106,5 +106,10 @@ object array:
           if (p(elem)) buffer += elem
         buffer.toArray
 
-    private inline def negate(inline p: T => Boolean)(using ClassTag[T]): T => Boolean = elem => !p(elem)
-    inline def aFilterNot(inline p: T => Boolean)(using ClassTag[T]): Array[T] = a.aFilter(negate(p))
+    private inline def negate(inline p: T => Boolean)(using ClassTag[T]): T => Boolean = elem =>
+      !p(elem)
+
+    inline def aFilterNot(inline p: T => Boolean)(using ClassTag[T]): Array[T] =
+      a.aFilter(negate(p))
+
+    inline def aConcat(that: Array[T])(using ClassTag[T]) = a.concat(that)

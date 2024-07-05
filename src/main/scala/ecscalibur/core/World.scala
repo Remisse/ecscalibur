@@ -2,7 +2,7 @@ package ecscalibur.core
 
 import ecscalibur.core.systems.System
 import ecscalibur.core.archetype.ArchetypeManager
-import ecscalibur.core.component.{Component, ComponentType, CSeq}
+import ecscalibur.core.component.{Component, ComponentType}
 import ecscalibur.core.context.MetaContext
 import ecscalibur.core.queries.Query
 
@@ -24,9 +24,8 @@ object world:
   object Loop:
     val forever = Forever
     val once = Times(1)
-    
-    extension (n: Int)
-      inline def times = Times(n)
+
+    extension (n: Int) inline def times = Times(n)
 
   object World:
     def apply(frameCap: Int = 0): World =
@@ -51,7 +50,7 @@ object world:
       private val activeSystems: ArrayBuffer[System] = ArrayBuffer.empty
       private val pendingSystems: ArrayBuffer[System] = ArrayBuffer.empty
 
-      private val entityCreate: mutable.Map[Entity, CSeq] = mutable.Map.empty
+      private val entityCreate: mutable.Map[Entity, CSeq[Component]] = mutable.Map.empty
       private val entityDelete: ArrayBuffer[Entity] = ArrayBuffer.empty
       private val entityAddComps: mutable.Map[Entity, ArrayBuffer[(Component, () => Unit)]] =
         mutable.Map.empty
@@ -148,7 +147,10 @@ object world:
 
       private inline def isEntityValid(e: Entity) = entityIdGenerator.isValid(e.id)
 
-      private inline def forwardCommandToSystem(systemName: String, inline command: System => Unit) =
+      private inline def forwardCommandToSystem(
+          systemName: String,
+          inline command: System => Unit
+      ) =
         activeSystems.find(_.name == systemName) match
           case Some(s) => command(s)
           case _       => ()
@@ -173,13 +175,13 @@ object world:
 
   private[world] object builders:
     trait EntityBuilder:
-      infix def withComponents(components: CSeq): Unit
+      infix def withComponents(components: CSeq[Component]): Unit
 
     object EntityBuilder:
       def apply()(using Mutator): EntityBuilder = EntityBuilderImpl()
 
       private class EntityBuilderImpl(using Mutator) extends EntityBuilder:
-        override def withComponents(components: CSeq): Unit =
+        override def withComponents(components: CSeq[Component]): Unit =
           val _ = summon[Mutator] defer EntityRequest.create(components)
 
     object LiteSystemBuilder:

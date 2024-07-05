@@ -4,11 +4,9 @@ import ecscalibur.testutil.shouldNotBeExecuted
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.*
 
-import ecscalibur.core.component.CSeq
 import ecscalibur.core.archetype.ArchetypeManager
 import ecscalibur.core.context.MetaContext
-import ecscalibur.core.{Entity, Mutator, query}
-import ecscalibur.core.Rw
+import ecscalibur.core.{Entity, Mutator, query, CSeq, Rw}
 
 class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.{Value, C1, C2}
@@ -57,7 +55,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
 
   it should "add components to an existing entity" in:
     val fixture = ArchetypeManagerFixture(
-      CSeq(C1()),
+      CSeq(C1())
     )
     given am: ArchetypeManager = fixture.archManager
     given MetaContext = fixture.context
@@ -85,8 +83,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     given Mutator = fixture.mutator
     am.removeComponents(fixture.entities.head, C1, Value)
     (query any (C1, Value) on: _ =>
-      shouldNotBeExecuted
-    ).apply()
+      shouldNotBeExecuted).apply()
 
   it should "do nothing when attempting to remove non-existing components from an entity" in:
     val fixture = ArchetypeManagerFixture(CSeq(C1()))
@@ -100,28 +97,27 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     given Mutator = fixture.mutator
     am.delete(fixture.entities.head)
     (query any C1 on: _ =>
-      shouldNotBeExecuted
-    ).apply()
+      shouldNotBeExecuted).apply()
 
   val nonExisting = Entity(1)
 
   it should "throw when adding components to a non-existing entity" in:
     val fixture = ArchetypeManagerFixture(
-      CSeq(C1()),
+      CSeq(C1())
     )
     val am = fixture.archManager
     an[IllegalArgumentException] shouldBe thrownBy(am.addComponents(nonExisting, CSeq(C2())))
 
   it should "throw when removing components from a non-existing entity" in:
     val fixture = ArchetypeManagerFixture(
-      CSeq(C1()),
+      CSeq(C1())
     )
     val am = fixture.archManager
     an[IllegalArgumentException] shouldBe thrownBy(am.removeComponents(nonExisting, C2))
 
   it should "throw when deleting a non-existing entity" in:
     val fixture = ArchetypeManagerFixture(
-      CSeq(C1()),
+      CSeq(C1())
     )
     val am = fixture.archManager
     an[IllegalArgumentException] shouldBe thrownBy(am.delete(nonExisting))
@@ -135,9 +131,8 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     given Mutator = fixture.mutator
     var executionsCount = 0
     (query routine: () =>
-      executionsCount += 1
-    ).apply()
-    executionsCount shouldBe 1 
+      executionsCount += 1).apply()
+    executionsCount shouldBe 1
 
   it should "correctly iterate over all entities across all fragments if no components are specified" in:
     inline val nEntities = 100
@@ -147,8 +142,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     given Mutator = fixture.mutator
     var executionsCount = 0
     (query on: _ =>
-      executionsCount += 1
-    ).apply()
+      executionsCount += 1).apply()
     executionsCount shouldBe nEntities
 
   it should "correctly iterate over all entities when supplying 1 type parameter" in:

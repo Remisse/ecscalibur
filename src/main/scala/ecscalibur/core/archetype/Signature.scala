@@ -7,15 +7,17 @@ import scala.annotation.targetName
 case class Signature private (val underlying: Array[ComponentId]):
   inline infix def isPartOf(other: Signature): Boolean = other.underlying.aContainsSlice(underlying)
 
-  inline infix def containsAny(other: Signature): Boolean = other.underlying.aExists(underlying.aContains)
+  inline infix def containsAny(other: Signature): Boolean =
+    other.underlying.aExists(underlying.aContains)
 
-  inline infix def containsAll(other: Signature): Boolean = other.underlying.aForall(underlying.aContains)
+  inline infix def containsAll(other: Signature): Boolean =
+    other.underlying.aForall(underlying.aContains)
 
   inline def isNil: Boolean = underlying.isEmpty
 
   override def equals(other: Any): Boolean = other match
     case Signature(u) => underlying.aSameElements(u)
-    case _ => false
+    case _            => false
 
   override def hashCode(): Int = java.util.Arrays.hashCode(underlying)
 
