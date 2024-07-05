@@ -8,7 +8,7 @@ import org.scalatest.matchers.*
 import core.component.*
 import core.component.tpe.*
 import ecscalibur.error.IllegalTypeParameterException
-import ecscalibur.core.component.Rw
+import ecscalibur.core.Rw
 
 class ComponentTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses

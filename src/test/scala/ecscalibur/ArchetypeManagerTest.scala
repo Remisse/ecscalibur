@@ -1,177 +1,245 @@
 package ecscalibur.core
 
-import ecscalibur.error.IllegalTypeParameterException
 import ecscalibur.testutil.shouldNotBeExecuted
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.*
 
-import ecscalibur.core.component.Rw
 import ecscalibur.core.component.CSeq
 import archetype.ArchetypeManager
-import ecscalibur.core.queries.*
+import ecscalibur.core.context.MetaContext
 
 class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.{Value, C1, C2}
+  import ecscalibur.core.fixtures.ArchetypeManagerFixture
 
-  "An archetype manager" should "correctly add new entities and iterate over them" in:
-    given am: ArchetypeManager = ArchetypeManager()
-    val (v1, v2) = (Value(1), Value(2))
-    val toAdd = Map(
-      Entity(0) -> CSeq(v1, C2()),
-      Entity(1) -> CSeq(v2, C1(), C2())
+  val testValue = Value(1)
+  val defaultEntity = Entity(0)
+
+  "An ArchetypeManager" should "correctly add new entities and iterate over them" in:
+    val fixture = ArchetypeManagerFixture(
+      CSeq(testValue, C2()),
+      CSeq(testValue, C1(), C2())
     )
-    for (entity, comps) <- toAdd do am.addEntity(entity, comps)
+    given am: ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
     var sum = 0
     (query except C1 on: (e: Entity, v: Value, c: C2) =>
       v isA Value shouldBe true
       c isA C2 shouldBe true
       sum += v.x
-    ).apply
-    sum shouldBe v1.x
+    ).apply()
+    sum shouldBe testValue.x
+
+  val editedValue = Value(3)
 
   it should "correctly iterate over the selected entities and update their component values" in:
-    given am: ArchetypeManager = ArchetypeManager()
-    val toAdd = Map(
-      Entity(0) -> CSeq(Value(1), C2()),
-      Entity(1) -> CSeq(Value(2), C1(), C2())
+    val fixture = ArchetypeManagerFixture(
+      CSeq(testValue, C2()),
+      CSeq(testValue, C1(), C2())
     )
-    for (entity, comps) <- toAdd do am.addEntity(entity, comps)
-    val editedValue = Value(3)
+    given am: ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
     var sum = 0
     (query on: (e, v: Rw[Value]) =>
-      v <== editedValue).apply
+      v <== editedValue).apply()
     (query on: (e, v: Value) =>
-      sum += v.x).apply
-    sum shouldBe editedValue.x * toAdd.size
+      sum += v.x).apply()
+    sum shouldBe editedValue.x * fixture.entitiesCount
 
   it should "not add the same entity more than once" in:
     val am = ArchetypeManager()
-    val entity = Entity(0)
-    am.addEntity(entity, CSeq(C1()))
-    an[IllegalArgumentException] shouldBe thrownBy(am.addEntity(entity, CSeq(C1())))
+    am.addEntity(defaultEntity, CSeq(C1()))
+    an[IllegalArgumentException] shouldBe thrownBy(am.addEntity(defaultEntity, CSeq(C1())))
 
-  // it should "add components to an existing entity" in:
-  //   val am = ArchetypeManager()
-  //   val entity = Entity(0)
-  //   am.addEntity(entity, CSeq(C1(), C2()))
-  //   val v = Value(1)
-  //   am.addComponents(entity, CSeq(v))
-  //   var sum = 0
-  //   am.iterate(ro(Value)): (e, comps) =>
-  //     given CSeq = comps
-  //     val v = <<[Value]
-  //     v isA Value shouldBe true
-  //     sum += v.x
-  //     ()
-  //   sum shouldBe v.x
+  it should "add components to an existing entity" in:
+    val fixture = ArchetypeManagerFixture(
+      CSeq(C1()),
+    )
+    given am: ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
+    am.addComponents(fixture.entities.head, CSeq(testValue))
+    var sum = 0
+    (query on: (e, v: Value) =>
+      sum += v.x).apply()
+    sum shouldBe testValue.x
 
-  it should "not add the same component to an entity more than once" in:
-    val am = ArchetypeManager()
-    val entity = Entity(0)
-    am.addEntity(entity, CSeq(C1()))
-    an[IllegalArgumentException] shouldBe thrownBy(am.addComponents(entity, CSeq(C1())))
+  it should "do nothing when adding the same component to an entity more than once" in:
+    val fixture = ArchetypeManagerFixture(CSeq(testValue))
+    given am: ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
+    am.addComponents(fixture.entities.head, CSeq(testValue))
+    (query on: (_, v: Value) =>
+      val _ = v shouldBe testValue
+    ).apply()
 
-  // it should "remove components from an existing entity" in:
-  //   val am = ArchetypeManager()
-  //   val entity = Entity(0)
-  //   am.addEntity(entity, CSeq(C1(), C2(), Value(0)))
-  //   am.removeComponents(entity, C1, Value)
-  //   am.iterate(any(C1, Value)): (_, _) =>
-  //     shouldNotBeExecuted
+  it should "remove components from an existing entity" in:
+    val fixture = ArchetypeManagerFixture(CSeq(C1(), C2(), testValue))
+    given am: ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
+    am.removeComponents(fixture.entities.head, C1, Value)
+    (query any (C1, Value) on: _ =>
+      shouldNotBeExecuted
+    ).apply()
 
-  it should "not remove non-existing components from an entity" in:
-    val am = ArchetypeManager()
-    val entity = Entity(0)
-    am.addEntity(entity, CSeq(C1()))
-    an[IllegalArgumentException] shouldBe thrownBy(am.removeComponents(entity, C2))
+  it should "do nothing when attempting to remove non-existing components from an entity" in:
+    val fixture = ArchetypeManagerFixture(CSeq(C1()))
+    val am = fixture.archManager
+    noException shouldBe thrownBy(am.removeComponents(fixture.entities.head, C2))
 
-  // it should "correctly delete existing entities" in:
-  //   val am = ArchetypeManager()
-  //   val entity = Entity(0)
-  //   am.addEntity(entity, CSeq(C1()))
-  //   am.delete(entity)
-  //   am.iterate(ro(Value)): (_, _) =>
-  //     shouldNotBeExecuted
+  it should "correctly delete existing entities" in:
+    val fixture = ArchetypeManagerFixture(CSeq(C1()))
+    given am: ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
+    am.delete(fixture.entities.head)
+    (query any C1 on: _ =>
+      shouldNotBeExecuted
+    ).apply()
+
+  val nonExisting = Entity(1)
+
+  it should "throw when adding components to a non-existing entity" in:
+    val fixture = ArchetypeManagerFixture(
+      CSeq(C1()),
+    )
+    val am = fixture.archManager
+    an[IllegalArgumentException] shouldBe thrownBy(am.addComponents(nonExisting, CSeq(C2())))
+
+  it should "throw when removing components from a non-existing entity" in:
+    val fixture = ArchetypeManagerFixture(
+      CSeq(C1()),
+    )
+    val am = fixture.archManager
+    an[IllegalArgumentException] shouldBe thrownBy(am.removeComponents(nonExisting, C2))
+
+  it should "throw when deleting a non-existing entity" in:
+    val fixture = ArchetypeManagerFixture(
+      CSeq(C1()),
+    )
+    val am = fixture.archManager
+    an[IllegalArgumentException] shouldBe thrownBy(am.delete(nonExisting))
 
   import fixtures.IterateNFixture
+
+  it should "iterate only once regardless of the number of entities when creating a routine" in:
+    val fixture = IterateNFixture(nEntities = 100, extraComponents = CSeq.empty)
+    given ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
+    var executionsCount = 0
+    (query routine: () =>
+      executionsCount += 1
+    ).apply()
+    executionsCount shouldBe 1 
+
+  it should "correctly iterate over all entities across all fragments if no components are specified" in:
+    inline val nEntities = 100
+    val fixture = IterateNFixture(nEntities, extraComponents = CSeq.empty)
+    given ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
+    var executionsCount = 0
+    (query on: _ =>
+      executionsCount += 1
+    ).apply()
+    executionsCount shouldBe nEntities
 
   it should "correctly iterate over all entities when supplying 1 type parameter" in:
     val fixture = IterateNFixture(extraComponents = CSeq.empty)
     given ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
     (query on: (e, v: Rw[Value]) =>
       fixture.onIterationStart(v.get)
       v <== fixture.testValue
-    ).apply
+    ).apply()
     (query on: (e, v: Value) =>
-      fixture.onIterationStart(v)).apply
+      fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
   it should "correctly iterate over all entities when supplying 2 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1()))
     given ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
     (query on: (e, v: Rw[Value], _: C1) =>
       fixture.onIterationStart(v.get)
       v <== fixture.testValue
-    ).apply
+    ).apply()
     (query on: (e, v: Value, _: C1) =>
-      fixture.onIterationStart(v)).apply
+      fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
   it should "correctly iterate over all entities when supplying 3 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1(), C2()))
     given ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
     (query on: (e, v: Rw[Value], _: C1, _: C2) =>
       fixture.onIterationStart(v.get)
       v <== fixture.testValue
-    ).apply
+    ).apply()
     (query on: (e, v: Value, _: C1, _: C2) =>
-      fixture.onIterationStart(v)).apply
+      fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
   import ecscalibur.testutil.testclasses.C3
   it should "correctly iterate over all entities when supplying 4 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1(), C2(), C3()))
     given ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
     (query on: (e, v: Rw[Value], _: C1, _: C2, _: C3) =>
       fixture.onIterationStart(v.get)
       v <== fixture.testValue
-    ).apply
+    ).apply()
     (query on: (e, v: Value, _: C1, _: C2, _: C3) =>
-      fixture.onIterationStart(v)).apply
+      fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
   import ecscalibur.testutil.testclasses.C4
   it should "correctly iterate over all entities when supplying 5 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1(), C2(), C3(), C4()))
     given ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
     (query on: (e, v: Rw[Value], _: C1, _: C2, _: C3, _: C4) =>
       fixture.onIterationStart(v.get)
       v <== fixture.testValue
-    ).apply
+    ).apply()
     (query on: (e, v: Value, _: C1, _: C2, _: C3, _: C4) =>
-      fixture.onIterationStart(v)).apply
+      fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
   import ecscalibur.testutil.testclasses.C5
   it should "correctly iterate over all entities when supplying 6 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1(), C2(), C3(), C4(), C5()))
     given ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
     (query on: (e, v: Rw[Value], _: C1, _: C2, _: C3, _: C4, _: C5) =>
       fixture.onIterationStart(v.get)
       v <== fixture.testValue
-    ).apply
+    ).apply()
     (query on: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5) =>
-      fixture.onIterationStart(v)).apply
+      fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
   import ecscalibur.testutil.testclasses.C6
   it should "correctly iterate over all entities when supplying 7 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1(), C2(), C3(), C4(), C5(), C6()))
     given ArchetypeManager = fixture.archManager
+    given MetaContext = fixture.context
+    given Mutator = fixture.mutator
     (query on: (e, v: Rw[Value], _: C1, _: C2, _: C3, _: C4, _: C5, _: C6) =>
       fixture.onIterationStart(v.get)
       v <== fixture.testValue
-    ).apply
+    ).apply()
     (query on: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5, _: C6) =>
-      fixture.onIterationStart(v)).apply
+      fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true

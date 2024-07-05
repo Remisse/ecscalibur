@@ -1,6 +1,7 @@
-package ecscalibur.core.component
+package ecscalibur.core
 
 import ecscalibur.core.Entity
+import ecscalibur.core.component.{Component, ComponentType, tpe}
 import ecscalibur.core.archetype.Archetypes.Archetype
 
 // TODO Find out why this class in particular breaks @component

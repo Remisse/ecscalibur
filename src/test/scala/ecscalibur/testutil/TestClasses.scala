@@ -40,3 +40,15 @@ object testclasses:
   @component
   class OneKinded[T <: Component] extends Component
   object OneKinded extends ComponentType
+
+  case class Vec2D(val x: Float, val y: Float):
+    def +(that: Vec2D): Vec2D = Vec2D(x + that.x, y + that.y)
+    def *(scalar: Float): Vec2D = Vec2D(x * scalar, y * scalar)
+
+  @component
+  class Position(val vec: Vec2D) extends Component
+  object Position extends ComponentType
+
+  @component
+  class Velocity(val vec: Vec2D) extends Component
+  object Velocity extends ComponentType

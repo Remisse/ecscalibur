@@ -4,6 +4,7 @@ import izumi.reflect.Tag
 import ecscalibur.error.IllegalTypeParameterException
 import ecscalibur.util.base
 import scala.util.hashing.MurmurHash3
+import ecscalibur.core.Rw
 
 object tpe:
   private[core] inline def createId(clsName: String): Int = MurmurHash3.stringHash(base(clsName))

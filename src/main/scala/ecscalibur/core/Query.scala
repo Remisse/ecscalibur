@@ -9,27 +9,31 @@ import ecscalibur.util.array.*
 import ecscalibur.core.archetype.{ArchetypeManager, Signature}
 import Signature.Extensions.*
 import ecscalibur.core.archetype.Archetypes.Archetype
-import ecscalibur.core.component.Rw
+import ecscalibur.core.context.MetaContext
 
 object queries:
-  opaque type Query = () => Unit
+  final case class Query(val query: () => Unit):
+    inline def apply(): Unit = query()
 
   object Query:
-    val None: Query = () => ()
+    def None: Query = Query(() => ())
 
-  private[core] inline def make(q: () => Unit): Query = q
+  private[core] inline def make(q: () => Unit): Query = Query(q)
 
-  extension (q: Query)
-    inline def apply: Unit = q()
-
-inline def query(using ArchetypeManager): QueryBuilder = new QueryBuilderImpl()
+inline def query(using ArchetypeManager, MetaContext, Mutator): QueryBuilder = new QueryBuilderImpl(summon[ArchetypeManager])
 
 import ecscalibur.core.queries.Query
 trait QueryBuilder:
+  given context: MetaContext
+  given mutator: Mutator
+
   infix def except(types: ComponentType*): QueryBuilder
 
   infix def any(types: ComponentType*): QueryBuilder
 
+  infix def routine(f: () => Unit): Query
+
+  infix def on(f: Entity => Unit): Query
   infix def on[C0 <: Component: Tag](f: (Entity, C0) => Unit): Query
   infix def on[C0 <: Component: Tag, C1 <: Component: Tag](f: (Entity, C0, C1) => Unit): Query
   infix def on[C0 <: Component: Tag, C1 <: Component: Tag, C2 <: Component: Tag](
@@ -66,7 +70,10 @@ trait QueryBuilder:
       C6 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3, C4, C5, C6) => Unit): Query
 
-class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
+class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends QueryBuilder:
+  override given context: MetaContext = summon[MetaContext]
+  override given mutator: Mutator = summon[Mutator]
+
   private var selected: Signature = Signature.Nil
   private var _none: Signature = Signature.Nil
   private var _any: Signature = Signature.Nil
@@ -83,6 +90,15 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
     ensureFirstCallToAny
     _any = Signature(types*)
     this
+
+  override infix def routine(f: () => Unit): Query =
+    queries.make:
+      f
+
+  override infix def on(f: Entity => Unit): Query =
+    queries.make: () => 
+      am.iterate(matches, selected): (e, components, arch) =>
+        f(e)
 
   override infix def on[C0 <: Component: Tag](f: (Entity, C0) => Unit): Query =
     val trueIds = Array(idRw[C0])
@@ -207,5 +223,5 @@ class QueryBuilderImpl(using am: ArchetypeManager) extends QueryBuilder:
     require(_any.isNil, multipleCallsErrorMsg("any"))
 
   private inline def findOfType[C <: Component: Tag](idrw: ComponentId)(components: CSeq, arch: Archetype, e: Entity): C =
-    val c = components.underlying.aFindUnsafe(_.typeId == idrw)
+    val c = components.underlying.findUnsafe(_.typeId == idrw)
     (if id0K[C] == ~Rw then Rw(c)(arch, e) else c).asInstanceOf[C]
