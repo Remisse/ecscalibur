@@ -6,8 +6,8 @@ import ecscalibur.util.base
 import scala.util.hashing.MurmurHash3
 import ecscalibur.core.Rw
 
-object tpe:
-  private[core] inline def createId(clsName: String): Int = MurmurHash3.stringHash(base(clsName))
+private[ecscalibur] object tpe:
+  inline def createId(clsName: String): Int = MurmurHash3.stringHash(base(clsName))
 
   inline def getId(cls: Class[?]): ComponentId = ComponentId(createId(cls.getName))
 
