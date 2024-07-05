@@ -5,7 +5,7 @@ opaque type Entity <: Int = Int
 /**
   * Factory for [[Entity]].
   */
-private[core] object Entity:
+private[ecscalibur] object Entity:
   def apply(id: Int): Entity = id
 
 export Extensions.*

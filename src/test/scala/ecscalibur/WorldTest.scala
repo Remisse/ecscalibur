@@ -1,4 +1,4 @@
-package ecscalibur.core
+package ecscalibur
 
 import org.scalatest.*
 import org.scalatest.flatspec.*
@@ -6,14 +6,16 @@ import org.scalatest.matchers.*
 
 import ecscalibur.testutil.testclasses.Value
 import ecscalibur.core.component.CSeq
-import ecscalibur.core.Entity
-import ecscalibur.core.Loop.*
+import ecscalibur.core.{Entity, Rw}
+import ecscalibur.core.world.*
+import Loop.*
 import ecscalibur.testutil.shouldNotBeExecuted
 import ecscalibur.testutil.testclasses.C1
 
 class WorldTest extends AnyFlatSpec with should.Matchers:
   inline val s1 = "test1"
   inline val s2 = "test2"
+
   val testValue = Value(1)
 
   "A World" should "correctly create an entity with the supplied components" in:
@@ -24,7 +26,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query on: (e: Entity, v: Value) =>
         test = v
 
-    world.loop(Times(1))
+    world loop once
     test shouldBe testValue
 
   import ecscalibur.testutil.testclasses.{Vec2D, Position, Velocity}
@@ -45,7 +47,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query on: (_, p: Position) =>
         vec = p.vec
 
-    world.loop(Times(1))
+    world loop once
     vec shouldBe (pos.vec + vel.vec)
 
   inline val Tolerance = 1e-8
@@ -58,8 +60,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
         dt = query.context.deltaTime
 
     // TODO Find out why dt === 0.0 +- Tolerance returns false after 1 iteration
-    inline val iterations = 2
-    world loop Times(iterations)
+    world loop 2.times
     dt === 0.0 +- Tolerance shouldBe false
     dt should be(world.context.deltaTime)
 
@@ -75,9 +76,9 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
           val success = query.mutator defer stop(s1)
           if (!success) shouldNotBeExecuted
 
-    world loop Times(1)
+    world loop once
     sum shouldBe 1
-    world loop Times(1)
+    world loop once
     sum shouldBe 1
 
   it should "correctly defer resuming a system" in:
@@ -97,9 +98,9 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
           val success = query.mutator defer resume(s1)
           if (!success) shouldNotBeExecuted
 
-    world loop Times(2)
+    world loop 2.times
     sum shouldBe 1
-    world loop Times(1)
+    world loop once
     sum shouldBe 2
 
   import ecscalibur.core.EntityRequest.*
@@ -116,9 +117,9 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query on: (_, v: Value) =>
         test = v
 
-    world.loop(Times(1))
+    world loop once
     test shouldNot be(testValue)
-    world.loop(Times(1))
+    world loop once
     test shouldBe testValue
 
   it should "correctly defer deleting an entity" in:
@@ -133,7 +134,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query on: (_, _: C1) =>
         sum += 1
 
-    world.loop(Times(2))
+    world loop 2.times
     sum shouldBe 2
 
   it should "correctly defer adding components to an entity" in:
@@ -149,9 +150,9 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query on: (_, v: Value) =>
         test = v
 
-    world.loop(Times(1))
+    world loop once
     test shouldNot be(testValue)
-    world.loop(Times(1))
+    world loop once
     test shouldBe testValue
 
   it should "correctly defer removing components to an entity" in:
@@ -168,15 +169,15 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query on: (e: Entity, _: C1) =>
         sum += 1
 
-    world loop Times(1)
+    world loop once
     sum shouldBe 1
-    world loop Times(1)
+    world loop once
     sum shouldBe 1
 
   import ecscalibur.testutil.testclasses.C2
 
   inline val defersCount = 10
-  inline val deferTestIterations = 10
+  val deferTestIterations = 10.times
 
   it should "only execute the first of many 'addComponent' requests if they do the same thing" in:
     val world = World()
@@ -185,7 +186,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query on: (e: Entity, _: C1) =>
         for _ <- (0 until defersCount) do query.mutator defer addComponent(e, C2())
 
-    world loop Times(deferTestIterations)
+    noException shouldBe thrownBy (world loop deferTestIterations)
 
   it should "only execute the first of many 'removeComponent' requests if they do the same thing" in:
     val world = World()
@@ -194,7 +195,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query on: (e: Entity, _: C1) =>
         for _ <- (0 until defersCount) do query.mutator defer removeComponent(e, C1)
 
-    noException shouldBe thrownBy(world loop Times(deferTestIterations))
+    noException shouldBe thrownBy(world loop deferTestIterations)
 
   it should "only execute the first of many 'delete' requests if they refer to the same Entity" in:
     val world = World()
@@ -203,4 +204,4 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query on: (e: Entity, _: C1) =>
         for _ <- (0 until defersCount) do query.mutator defer delete(e)
 
-    noException shouldBe thrownBy(world loop Times(deferTestIterations))
+    noException shouldBe thrownBy(world loop deferTestIterations)

@@ -1,16 +1,18 @@
-package ecscalibur.core
+package ecscalibur
 
 import ecscalibur.testutil.shouldNotBeExecuted
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.*
 
 import ecscalibur.core.component.CSeq
-import archetype.ArchetypeManager
+import ecscalibur.core.archetype.ArchetypeManager
 import ecscalibur.core.context.MetaContext
+import ecscalibur.core.{Entity, Mutator, query}
+import ecscalibur.core.Rw
 
 class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.{Value, C1, C2}
-  import ecscalibur.core.fixtures.ArchetypeManagerFixture
+  import ecscalibur.fixtures.ArchetypeManagerFixture
 
   val testValue = Value(1)
   val defaultEntity = Entity(0)

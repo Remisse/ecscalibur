@@ -5,7 +5,7 @@ import scala.annotation.targetName
 
 /** Type representing unique component IDs.
   */
-opaque type ComponentId = Int
+type ComponentId = Int
 
 object ComponentId:
   final inline def Nil = ComponentId(-1)
@@ -13,16 +13,10 @@ object ComponentId:
   private[core] inline def apply(id: Int): ComponentId = id
   private[core] inline def apply(ids: Array[Int]): Array[ComponentId] = ids
 
-  extension (id: ComponentId)
-    private[core] inline def asInt: Int = id
-
-  extension (arr: Array[ComponentId])
-    private[core] inline def asIntArray: Array[Int] = arr
-
 sealed trait WithType:
-  protected val _typeId: Int = ComponentId.Nil.asInt
+  protected val _typeId: Int = ComponentId.Nil
 
-  def typeId: ComponentId = if _typeId != ComponentId.Nil.asInt then ComponentId(_typeId)
+  def typeId: ComponentId = if _typeId != ComponentId.Nil then ComponentId(_typeId)
   else throw IllegalDefinitionException(s"$getClass must be annotated with @component.")
 
   /** Equivalent to 'typeId'.

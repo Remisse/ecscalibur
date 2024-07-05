@@ -1,4 +1,4 @@
-package ecscalibur.core
+package ecscalibur
 
 import ecscalibur.core.component.CSeq
 import CSeq.Extensions.*
@@ -10,6 +10,8 @@ import ecscalibur.core.archetype.Archetypes.Aggregate
 import ecscalibur.core.archetype.Archetypes.Archetype.DefaultFragmentSizeBytes
 import ecscalibur.core.archetype.Archetypes.Fragment
 import ecscalibur.core.context.MetaContext
+import ecscalibur.core.Mutator
+import ecscalibur.core.{SystemRequest, EntityRequest}
 
 object fixtures:
   import ecscalibur.testutil.testclasses.Value

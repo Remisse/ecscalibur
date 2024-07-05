@@ -11,7 +11,7 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 
 import CSeq.Extensions.*
-private[core] object Archetypes:
+private[ecscalibur] object Archetypes:
   trait Archetype private[archetype] (val signature: Signature):
     def add(e: Entity, entityComponents: CSeq): Unit
     def contains(e: Entity): Boolean

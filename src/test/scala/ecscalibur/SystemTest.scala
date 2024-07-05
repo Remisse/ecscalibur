@@ -1,4 +1,4 @@
-package ecscalibur.core
+package ecscalibur
 
 import org.scalatest.*
 import org.scalatest.flatspec.*
@@ -7,7 +7,7 @@ import org.scalatest.matchers.*
 import ecscalibur.core.archetype.ArchetypeManager
 import ecscalibur.core.systems.System
 import ecscalibur.core.queries.Query
-import ecscalibur.core.query
+import ecscalibur.core.{query, Mutator}
 import ecscalibur.testutil.testclasses.Value
 import ecscalibur.core.context.MetaContext
 import ecscalibur.testutil.shouldNotBeExecuted

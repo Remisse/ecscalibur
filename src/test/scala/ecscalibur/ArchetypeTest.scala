@@ -1,10 +1,11 @@
-package ecscalibur.core
+package ecscalibur
 
 import ecscalibur.util.sizeof.sizeOf
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 
+import ecscalibur.core.*
 import component.*
 import CSeq.Extensions.*
 import archetype.Signature
