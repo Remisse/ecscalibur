@@ -11,7 +11,6 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 
 import CSeq.Extensions.*
-
 private[core] object Archetypes:
   trait Archetype private[archetype] (val signature: Signature):
     def add(e: Entity, entityComponents: CSeq): Unit
@@ -49,7 +48,6 @@ private[core] object Archetypes:
         extends Archetype(inSignature),
           Aggregate:
       import ecscalibur.util.array.*
-
       private var _fragments: Vector[Fragment] = Vector.empty
       private val entitiesByFragment: mutable.Map[Entity, Fragment] = mutable.Map.empty
 
@@ -61,16 +59,18 @@ private[core] object Archetypes:
           signature == Signature(entityComponents.toTypes),
           "Given component types do not correspond to this archetype's signature."
         )
-        if (_fragments.isEmpty || _fragments.head.isFull)
-          val sizeBytes = estimateComponentsSize(entityComponents)
-          if (sizeBytes > maxFragmentSizeBytes)
-            throw IllegalStateException(
-              s"Exceeded the maximum fragment size ($sizeBytes > $maxFragmentSizeBytes)."
-            )
-          val maxEntities = (maxFragmentSizeBytes / sizeBytes).toInt
-          _fragments = Fragment(signature, maxEntities) +: _fragments
+        if (_fragments.isEmpty || _fragments.head.isFull) prependNewFragment(entityComponents)
         _fragments.head.add(e, entityComponents)
         entitiesByFragment += e -> _fragments.head
+
+      private inline def prependNewFragment(components: CSeq) =
+        val sizeBytes = estimateComponentsSize(components)
+        if (sizeBytes > maxFragmentSizeBytes)
+          throw IllegalStateException(
+            s"Exceeded the maximum fragment size ($sizeBytes > $maxFragmentSizeBytes)."
+          )
+        val maxEntities = (maxFragmentSizeBytes / sizeBytes).toInt
+        _fragments = Fragment(signature, maxEntities) +: _fragments
 
       private inline def estimateComponentsSize(components: CSeq): Long =
         var estimatedComponentsSize: Long = 0
@@ -82,17 +82,17 @@ private[core] object Archetypes:
       inline val removalErrorMsg = "Attempted to remove an entity not stored in this archetype."
 
       override def remove(e: Entity): CSeq =
-        val fragment = removeAndGetFormerFragment(e)
+        val fragment = removeFromMapAndGetFormerFragment(e)
         val res = fragment.remove(e)
         maybeDeleteFragment(fragment)
         res
 
       override def softRemove(e: Entity) =
-        val fragment = removeAndGetFormerFragment(e)
+        val fragment = removeFromMapAndGetFormerFragment(e)
         fragment.softRemove(e)
         maybeDeleteFragment(fragment)
 
-      private inline def removeAndGetFormerFragment(e: Entity): Fragment =
+      private inline def removeFromMapAndGetFormerFragment(e: Entity): Fragment =
         require(contains(e), removalErrorMsg)
         val fragment = entitiesByFragment(e)
         entitiesByFragment -= e

@@ -10,8 +10,8 @@ import scala.collection.mutable
 
 trait ArchetypeManager:
   def addEntity(e: Entity, components: CSeq): Unit
-  def addComponents(e: Entity, components: CSeq): Unit
-  def removeComponents(e: Entity, compTypes: ComponentType*): Unit
+  def addComponents(e: Entity, components: CSeq): Boolean 
+  def removeComponents(e: Entity, compTypes: ComponentType*): Boolean
   def delete(e: Entity): Unit
   def iterate(isSelected: Signature => Boolean, allIds: Signature)(f: (Entity, CSeq, Archetype) => Unit): Unit
 
@@ -36,28 +36,28 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
     archetypes(entitySignature).add(e, components)
     signaturesByEntity.update(e, entitySignature)
 
-  override def addComponents(e: Entity, components: CSeq): Unit =
+  override def addComponents(e: Entity, components: CSeq): Boolean =
     ensureEntityIsValid(e)
     require(components.underlying.nonEmpty, "Component list is empty.")
-    val currentSignature = signaturesByEntity(e)
-    require(
-      !components.underlying.aExists(c => currentSignature.underlying.aContains(~c)),
-      "Given entity already has one or more of the given components."
-    )
     val existing: CSeq = archetypes(signaturesByEntity(e)).remove(e)
+    if (filterOutExistingComponents(existing, components.toTypes).isEmpty) 
+      return false
     signaturesByEntity.remove(e)
     newEntityToArchetype(e, CSeq(existing.underlying concat components.underlying))
+    true
 
-  override def removeComponents(e: Entity, compTypes: ComponentType*): Unit =
+  override def removeComponents(e: Entity, compTypes: ComponentType*): Boolean =
     ensureEntityIsValid(e)
-    require(
-      signaturesByEntity(e).containsAll(Signature(compTypes*)),
-      "Given component types are not part of the given entity's signature."
-    )
+    if (!signaturesByEntity(e).containsAny(Signature(compTypes*))) 
+      return false
     val entityComps: CSeq = archetypes(signaturesByEntity(e)).remove(e)
     signaturesByEntity.remove(e)
-    val filteredComps = CSeq(entityComps.underlying.filterNot(c => compTypes.map(~_).contains(~c)))
-    newEntityToArchetype(e, filteredComps)
+    val filtered = filterOutExistingComponents(entityComps, compTypes.toArray.aMap(~_))
+    if (filtered.nonEmpty) newEntityToArchetype(e, filtered)
+    true
+
+  private inline def filterOutExistingComponents(toBeFiltered: CSeq, ids: Array[ComponentId]): CSeq =
+    CSeq(toBeFiltered.underlying.aFilterNot(c => ids.aContains(~c)))
 
   override def delete(e: Entity): Unit =
     ensureEntityIsValid(e)

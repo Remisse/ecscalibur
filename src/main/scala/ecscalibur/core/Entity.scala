@@ -1,6 +1,6 @@
 package ecscalibur.core
 
-type Entity = Int
+opaque type Entity <: Int = Int
 
 /**
   * Factory for [[Entity]].

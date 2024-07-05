@@ -37,7 +37,7 @@ object Signature:
   inline def apply[T <: WithType](types: T*): Signature = apply(types.map(_.typeId).toArray)
 
   @targetName("fromTypes")
-  inline def apply[T <: WithType](types: Array[T]): Signature = apply(types.map(_.typeId))
+  inline def apply[T <: WithType](types: Array[T]): Signature = apply(types.aMap(_.typeId))
 
   object Extensions:
     extension (ids: ComponentId*)

@@ -1,9 +1,7 @@
 package ecscalibur.core.component
 
-import ecscalibur.core.component.tpe.*
 import ecscalibur.util.array.*
-import ecscalibur.error.IllegalTypeParameterException
-import izumi.reflect.Tag
+import scala.reflect.ClassTag
 
 opaque type CSeq = Array[Component]
 
@@ -24,13 +22,8 @@ object CSeq:
 
       inline def toTypes: Array[ComponentId] = l.aMap(_.typeId)
 
-      def readonly[T <: Component: Tag]: T =
-        val typeParamId = id0K[T]
-        val idx = l.aIndexWhere(_.typeId == typeParamId)
-        if idx == -1 then
-          throw IllegalTypeParameterException(
-            s"No component of class ${summon[Tag[T]]} found."
-          )
-        l(idx).asInstanceOf[T]
+      // Warns about an infinite loop when using underlying.isEmpty, which
+      // makes no sense.
+      inline def isEmpty: Boolean = l.underlying.length == 0
 
-      def readwrite[T <: Component: Tag]: Rw[T] = l.readonly[T].asInstanceOf[Rw[T]]
+      inline def nonEmpty: Boolean = l.underlying.length != 0
