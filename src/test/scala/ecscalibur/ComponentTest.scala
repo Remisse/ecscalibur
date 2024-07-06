@@ -9,7 +9,6 @@ import core.Rw
 import core.component._
 import core.component.tpe._
 
-
 class ComponentTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses
 

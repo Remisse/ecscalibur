@@ -24,7 +24,8 @@ trait ArchetypeManager:
 object ArchetypeManager:
   def apply(): ArchetypeManager = ArchetypeManagerImpl()
 
-private class ArchetypeManagerImpl extends ArchetypeManager:
+private final class ArchetypeManagerImpl extends ArchetypeManager:
+  private var archetypeBuffer: Vector[Archetype] = Vector.empty
   private val archetypes: mutable.Map[Signature, Archetype] = mutable.HashMap.empty
   private val signaturesByEntity: mutable.Map[Entity, Signature] = mutable.HashMap.empty
 
@@ -38,7 +39,9 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
   private inline def newEntityToArchetype(e: Entity, components: CSeq[Component]): Unit =
     val entitySignature: Signature = Signature(components.map(~_).toArray)
     if !archetypes.contains(entitySignature) then
-      archetypes += entitySignature -> Archetype(entitySignature)
+      val newArchetype = Archetype(entitySignature)
+      archetypes += entitySignature -> newArchetype
+      archetypeBuffer = archetypeBuffer :+ newArchetype
     archetypes(entitySignature).add(e, components)
     signaturesByEntity.update(e, entitySignature)
 
@@ -76,9 +79,9 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
   override def iterate(isSelected: Signature => Boolean, allIds: Signature)(
       f: (Entity, CSeq[Component], Archetype) => Unit
   ): Unit =
-    archetypes foreach:
-      case (s, arch) if isSelected(s) => arch.iterate(allIds)(f)
-      case _                          => ()
+    archetypeBuffer foreach:
+      case a if isSelected(a.signature) => a.iterate(allIds)(f)
+      case _                            => ()
 
   private inline def ensureEntityIsValid(e: Entity): Unit =
     require(signaturesByEntity.contains(e), "Given entity does not exist.")

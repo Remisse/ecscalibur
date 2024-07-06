@@ -5,7 +5,9 @@ import ecscalibur.core.component.ComponentType
 
 trait Mutator:
   infix def defer(q: SystemRequest | EntityRequest): Boolean
+
   infix def isSystemRunning(name: String): Boolean
+
   infix def isSystemPaused(name: String): Boolean
 
 enum SystemRequest:

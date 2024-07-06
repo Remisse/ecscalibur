@@ -5,7 +5,7 @@ object annotations:
   import scala.quoted.*
   import ecscalibur.core
 
-  import tpe.createId
+  import tpe.getId
 
   /** Assigns a unique type ID to classes extending [[Component]].
     */
@@ -34,7 +34,7 @@ object annotations:
           )
         ValDef(idOverrideSym, Some(rhs))
 
-      val newRhs = Literal(IntConstant(createId(definition.symbol.fullName)))
+      val newRhs = Literal(IntConstant(getId(definition.symbol.fullName)))
 
       def newClassDefinitionWithOverriddenField[typeToExtend](toCopy: Definition)(using
           Type[typeToExtend]

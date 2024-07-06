@@ -49,12 +49,12 @@ private[ecscalibur] object archetypes:
     def apply(signature: Signature)(maxFragmentSizeBytes: Long): Aggregate =
       AggregateImpl(signature, maxFragmentSizeBytes)
 
-    private class AggregateImpl(inSignature: Signature, maxFragmentSizeBytes: Long)
+    private final class AggregateImpl(inSignature: Signature, maxFragmentSizeBytes: Long)
         extends Archetype(inSignature),
           Aggregate:
       import ecscalibur.util.array.*
       private var _fragments: Vector[Fragment] = Vector.empty
-      private val entitiesByFragment: mutable.Map[Entity, Fragment] = mutable.Map.empty
+      private val fragmentsByEntity: mutable.Map[Entity, Fragment] = mutable.Map.empty
 
       override def fragments: Iterable[Fragment] = _fragments
 
@@ -66,7 +66,7 @@ private[ecscalibur] object archetypes:
         )
         if (_fragments.isEmpty || _fragments.head.isFull) prependNewFragment(entityComponents)
         _fragments.head.add(e, entityComponents)
-        entitiesByFragment += e -> _fragments.head
+        fragmentsByEntity += e -> _fragments.head
 
       private inline def prependNewFragment(components: CSeq[Component]): Unit =
         val sizeBytes = estimateComponentsSize(components)
@@ -82,7 +82,7 @@ private[ecscalibur] object archetypes:
         components.foreach(c => estimatedComponentsSize += sizeOf(c))
         estimatedComponentsSize
 
-      override inline def contains(e: Entity): Boolean = entitiesByFragment.contains(e)
+      override inline def contains(e: Entity): Boolean = fragmentsByEntity.contains(e)
 
       override def remove(e: Entity): CSeq[Component] =
         val fragment = removeFromMapAndGetFormerFragment(e)
@@ -97,8 +97,8 @@ private[ecscalibur] object archetypes:
 
       private inline def removeFromMapAndGetFormerFragment(e: Entity): Fragment =
         require(contains(e), removalErrorMsg)
-        val fragment = entitiesByFragment(e)
-        entitiesByFragment -= e
+        val fragment = fragmentsByEntity(e)
+        fragmentsByEntity -= e
         fragment
 
       private inline def maybeDeleteFragment(fr: Fragment): Unit =
@@ -111,12 +111,12 @@ private[ecscalibur] object archetypes:
         _fragments.foreach(fr => fr.iterate(selectedIds)(f))
 
       override def update(e: Entity, c: Component): Unit =
-        require(entitiesByFragment.contains(e), "Given entity is not stored in this archetype.")
+        require(fragmentsByEntity.contains(e), "Given entity is not stored in this archetype.")
         require(
           signature.underlying.contains(c.typeId),
           "Attempted to update the value of a non-existing component."
         )
-        entitiesByFragment(e).update(e, c)
+        fragmentsByEntity(e).update(e, c)
 
       override def equals(x: Any): Boolean = x match
         case a: Archetype => signature == a.signature
@@ -128,7 +128,7 @@ private[ecscalibur] object archetypes:
     def apply(signature: Signature, maxEntities: Int): Fragment =
       FragmentImpl(signature, maxEntities)
 
-    private class FragmentImpl(inSignature: Signature, maxEntities: Int)
+    private final class FragmentImpl(inSignature: Signature, maxEntities: Int)
         extends Archetype(inSignature),
           Fragment:
       import ecscalibur.util.array.*
@@ -138,7 +138,7 @@ private[ecscalibur] object archetypes:
         new mutable.HashMap(maxEntities, FragmentImpl.LoadFactor)
       private val components: Map[ComponentId, CSeq[Component]] =
         signature.underlying
-          .aMap(t => t -> CSeq[Component](Array.ofDim[Component](maxEntities)))
+          .aMap(_ -> CSeq.ofDim[Component](maxEntities))
           .to(HashMap)
 
       override inline def isFull: Boolean = entityIndexes.size == maxEntities
@@ -177,19 +177,19 @@ private[ecscalibur] object archetypes:
       override def iterate(selectedIds: Signature)(
           f: (Entity, CSeq[Component], Archetype) => Unit
       ): Unit =
-        for (e, idx) <- entityIndexes do
-          val entityComps = Array.ofDim[Component](selectedIds.underlying.length)
+        for (e, entityIdx) <- entityIndexes do
+          val entityComps = CSeq.ofDim[Component](selectedIds.underlying.length)
 
           @tailrec
           def gatherComponentsOfEntity(i: Int): Unit = i match
-            case -1 => ()
+            case i if i == entityComps.length => ()
             case _ =>
               val componentId = selectedIds.underlying(i)
-              entityComps(i) = components(componentId)(idx)
-              gatherComponentsOfEntity(i - 1)
+              entityComps(i) = components(componentId)(entityIdx)
+              gatherComponentsOfEntity(i + 1)
 
-          gatherComponentsOfEntity(entityComps.length - 1)
-          f(e, CSeq[Component](entityComps), this)
+          gatherComponentsOfEntity(0)
+          f(e, entityComps, this)
 
     private object FragmentImpl:
       private val LoadFactor = 0.7

@@ -5,6 +5,7 @@ import ecscalibur.core.component.Component
 import ecscalibur.core.component.ComponentType
 import ecscalibur.core.context.MetaContext
 import ecscalibur.core.queries.Query
+import ecscalibur.core.queries.query
 import ecscalibur.core.systems.System
 
 object world:

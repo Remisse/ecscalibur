@@ -6,7 +6,7 @@ import ecscalibur.util.array._
 
 import scala.annotation.targetName
 
-case class Signature private (val underlying: Array[ComponentId]):
+final case class Signature private (val underlying: Array[ComponentId]):
   inline infix def isPartOf(other: Signature): Boolean = other.underlying.aContainsSlice(underlying)
 
   inline infix def containsAny(other: Signature): Boolean =

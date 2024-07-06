@@ -24,4 +24,4 @@ final class Rw[T <: Component](c: T)(archetype: Archetype, entity: Entity) exten
     archetype.update(entity, c)
 
 object Rw extends ComponentType:
-  override protected val _typeId: Int = tpe.createId(getClass.getName)
+  override protected val _typeId: Int = tpe.getId(getClass.getName)

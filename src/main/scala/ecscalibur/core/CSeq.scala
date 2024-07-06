@@ -17,6 +17,10 @@ object CSeq:
 
   inline def apply[T: ClassTag](elements: Iterable[T]): CSeq[T] = elements.toArray
 
+  inline def ofDim[T: ClassTag](dim: Int): CSeq[T] = Array.ofDim[T](dim)
+
+  inline def fill[T: ClassTag](n: Int)(f: => T): CSeq[T] = Array.fill(n)(f)
+
   extension [T: ClassTag](l: CSeq[T])
     inline def toArray: Array[T] = l
 
@@ -55,6 +59,8 @@ object CSeq:
     inline def filterNot(inline p: T => Boolean): CSeq[T] = l.toArray.aFilterNot(p)
 
     inline infix def concat(that: CSeq[T]): CSeq[T] = CSeq(l.toArray.aConcat(that.toArray))
+
+    inline def length: Int = l.toArray.length
 
   extension [T: ClassTag](elem: T)
     @targetName("prepended")

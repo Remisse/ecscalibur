@@ -6,7 +6,7 @@ import ecscalibur.core.Mutator
 import ecscalibur.core.Rw
 import ecscalibur.core.archetype.ArchetypeManager
 import ecscalibur.core.context.MetaContext
-import ecscalibur.core.query
+import ecscalibur.core.queries.query
 import ecscalibur.testutil.shouldNotBeExecuted
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers._

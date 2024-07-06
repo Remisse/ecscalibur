@@ -7,7 +7,8 @@ import org.scalatest.matchers._
 import core.archetype.ArchetypeManager
 import core.systems.System
 import core.queries.Query
-import core.{query, Mutator}
+import core.queries.query
+import core.Mutator
 import core.context.MetaContext
 import testutil.testclasses.Value
 import testutil.shouldNotBeExecuted
