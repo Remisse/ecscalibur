@@ -1,17 +1,22 @@
 package ecscalibur
 
 import ecscalibur.core.CSeq
-import CSeq.*
-import ecscalibur.core.archetype.ArchetypeManager
 import ecscalibur.core.Entity
-import ecscalibur.core.component.Component
-import ecscalibur.core.archetype.Signature
-import ecscalibur.core.archetype.Archetypes.Aggregate
-import ecscalibur.core.archetype.Archetypes.Archetype.DefaultFragmentSizeBytes
-import ecscalibur.core.archetype.Archetypes.Fragment
-import ecscalibur.core.context.MetaContext
+import ecscalibur.core.EntityRequest
 import ecscalibur.core.Mutator
-import ecscalibur.core.{SystemRequest, EntityRequest}
+import ecscalibur.core.SystemRequest
+import ecscalibur.core.archetype.ArchetypeManager
+import ecscalibur.core.archetype.Signature
+import ecscalibur.core.archetype.archetypes.Aggregate
+import ecscalibur.core.archetype.archetypes.Fragment
+import ecscalibur.core.component.Component
+import ecscalibur.core.context.MetaContext
+
+import CSeq._
+
+// 'import core.archetype.Archetypes.Archetype.DefaultFragmentSizeBytes' warns about an unused import
+// for some reason.
+val DefaultFragmentSizeBytes = core.archetype.archetypes.Archetype.DefaultFragmentSizeBytes
 
 object fixtures:
   import ecscalibur.testutil.testclasses.Value
@@ -75,4 +80,4 @@ object fixtures:
     val mutator = TestMutator()
 
     val defaultValue = Value(1)
-    for i <- (0 until nEntities) yield am.addEntity(Entity(i), CSeq(defaultValue))
+    for i <- (0 until nEntities) do am.addEntity(Entity(i), CSeq(defaultValue))

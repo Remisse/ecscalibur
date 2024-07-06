@@ -1,19 +1,22 @@
 package ecscalibur
 
-import ecscalibur.testutil.shouldNotBeExecuted
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.*
-
+import ecscalibur.core.CSeq
+import ecscalibur.core.Entity
+import ecscalibur.core.Mutator
+import ecscalibur.core.Rw
 import ecscalibur.core.archetype.ArchetypeManager
 import ecscalibur.core.context.MetaContext
-import ecscalibur.core.{Entity, Mutator, query, CSeq, Rw}
+import ecscalibur.core.query
+import ecscalibur.testutil.shouldNotBeExecuted
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers._
 
 class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.{Value, C1, C2}
   import ecscalibur.fixtures.ArchetypeManagerFixture
 
-  val testValue = Value(1)
-  val defaultEntity = Entity(0)
+  val testValue: Value = Value(1)
+  val defaultEntity: Entity = Entity(0)
 
   "An ArchetypeManager" should "correctly add new entities and iterate over them" in:
     val fixture = ArchetypeManagerFixture(
@@ -31,7 +34,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     ).apply()
     sum shouldBe testValue.x
 
-  val editedValue = Value(3)
+  val editedValue: Value = Value(3)
 
   it should "correctly iterate over the selected entities and update their component values" in:
     val fixture = ArchetypeManagerFixture(
@@ -73,7 +76,8 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     given Mutator = fixture.mutator
     am.addComponents(fixture.entities.head, CSeq(testValue))
     (query on: (_, v: Value) =>
-      val _ = v shouldBe testValue
+      v shouldBe testValue
+      ()
     ).apply()
 
   it should "remove components from an existing entity" in:
@@ -99,7 +103,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     (query any C1 on: _ =>
       shouldNotBeExecuted).apply()
 
-  val nonExisting = Entity(1)
+  val nonExisting: Entity = Entity(1)
 
   it should "throw when adding components to a non-existing entity" in:
     val fixture = ArchetypeManagerFixture(

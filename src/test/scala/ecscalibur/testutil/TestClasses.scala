@@ -1,6 +1,7 @@
 package ecscalibur.testutil
 
-import ecscalibur.core.component.{Component, ComponentType}
+import ecscalibur.core.component.Component
+import ecscalibur.core.component.ComponentType
 import ecscalibur.core.component.annotations.component
 
 object testclasses:

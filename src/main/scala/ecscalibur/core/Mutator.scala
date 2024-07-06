@@ -1,6 +1,7 @@
 package ecscalibur.core
 
-import ecscalibur.core.component.{Component, ComponentType}
+import ecscalibur.core.component.Component
+import ecscalibur.core.component.ComponentType
 
 trait Mutator:
   infix def defer(q: SystemRequest | EntityRequest): Boolean
@@ -8,7 +9,7 @@ trait Mutator:
   infix def isSystemPaused(name: String): Boolean
 
 enum SystemRequest:
-  case stop(systemName: String)
+  case pause(systemName: String)
   case resume(systemName: String)
 
 enum EntityRequest:

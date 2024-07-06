@@ -1,6 +1,7 @@
 package ecscalibur.core.component
 
 import ecscalibur.error.IllegalDefinitionException
+
 import scala.annotation.targetName
 
 /** Type representing unique component IDs.
@@ -8,7 +9,7 @@ import scala.annotation.targetName
 type ComponentId = Int
 
 object ComponentId:
-  final inline def Nil = ComponentId(-1)
+  final inline def Nil: ComponentId = ComponentId(-1)
 
   private[core] inline def apply(id: Int): ComponentId = id
   private[core] inline def apply(ids: Array[Int]): Array[ComponentId] = ids

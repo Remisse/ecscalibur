@@ -1,28 +1,28 @@
 package ecscalibur
 
+import ecscalibur.core.CSeq._
+import ecscalibur.core._
+import ecscalibur.util.array._
 import ecscalibur.util.sizeof.sizeOf
-import org.scalatest.*
-import org.scalatest.flatspec.*
-import org.scalatest.matchers.*
+import org.scalatest._
+import org.scalatest.flatspec._
+import org.scalatest.matchers._
 
-import ecscalibur.core.*
-import component.*
-import ecscalibur.core.CSeq.*
+import component._
 import archetype.Signature
-import archetype.Archetypes.Aggregate
-import ecscalibur.core.archetype.Archetypes.Archetype.DefaultFragmentSizeBytes
-import ecscalibur.util.array.*
+import archetype.archetypes.Aggregate
 
 class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.*
 
+  val DefaultFragmentSizeBytes = ecscalibur.core.archetype.archetypes.Archetype.DefaultFragmentSizeBytes
   inline val KindaSmallFragmentSizeBytes = 64
   inline val ExtremelySmallFragmentSizeBytes = 1
 
-  val testValue = Value(1)
+  val testValue: Value = Value(1)
 
   "An Aggregate archetype with no signature" should "throw when created" in:
-    an[IllegalArgumentException] should be thrownBy (Aggregate()(DefaultFragmentSizeBytes))
+    an[IllegalArgumentException] should be thrownBy Aggregate()(DefaultFragmentSizeBytes)
 
   "An Aggregate archetype" should "be identified by the component classes it holds" in:
     val archetype = Aggregate(C1, C2)(DefaultFragmentSizeBytes)
@@ -41,10 +41,10 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   it should "not accept entities that do not satisfy its signature" in:
     val fixture = fixtures.StandardArchetypeFixture(testValue, C2())(nEntities = 0)
     val entity = fixture.nextEntity
-    an[IllegalArgumentException] should be thrownBy (fixture.archetype.add(entity, CSeq(C2())))
-    an[IllegalArgumentException] should be thrownBy (
+    an[IllegalArgumentException] should be thrownBy fixture.archetype.add(entity, CSeq(C2()))
+    an[IllegalArgumentException] should be thrownBy
       fixture.archetype.add(entity, CSeq(testValue, C2(), C3()))
-    )
+
 
   it should "correctly remove stored entities" in:
     val fixture = fixtures.StandardArchetypeFixture(C1())(nEntities = 1)
@@ -114,7 +114,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   it should "throw when attempting to add more entities than it can store" in:
     val c = C1()
     val fixture = fixtures.StandardFragmentFixture(c)(nEntities = 1, maxEntities = 1)
-    an[IllegalArgumentException] should be thrownBy (fixture.fragment.add(
+    an[IllegalArgumentException] should be thrownBy fixture.fragment.add(
       fixture.nextEntity,
       CSeq(c)
-    ))
+    )

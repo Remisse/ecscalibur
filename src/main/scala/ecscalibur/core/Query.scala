@@ -1,16 +1,18 @@
 package ecscalibur.core
 
 import ecscalibur.core.Entity
-import ecscalibur.core.archetype.{ArchetypeManager, Signature}
-import ecscalibur.core.archetype.Archetypes.Archetype
-import ecscalibur.core.component.{Component, ComponentId, ComponentType}
-import ecscalibur.core.component.tpe.*
+import ecscalibur.core.archetype.ArchetypeManager
+import ecscalibur.core.archetype.Signature
+import ecscalibur.core.archetype.archetypes.Archetype
+import ecscalibur.core.component.Component
+import ecscalibur.core.component.ComponentId
+import ecscalibur.core.component.ComponentType
+import ecscalibur.core.component.tpe._
 import ecscalibur.core.context.MetaContext
-import ecscalibur.util.array.*
+import ecscalibur.util.array._
 import izumi.reflect.Tag
 
-import CSeq.*
-import Signature.Extensions.*
+import CSeq._
 
 object queries:
   final case class Query(val query: () => Unit):
@@ -86,12 +88,12 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
     s"Called '$methodName' multiple times."
 
   override infix def except(types: ComponentType*): QueryBuilder =
-    ensureFirstCallToNone
+    ensureFirstCallToNone()
     _none = Signature(types*)
     this
 
   override infix def any(types: ComponentType*): QueryBuilder =
-    ensureFirstCallToAny
+    ensureFirstCallToAny()
     _any = Signature(types*)
     this
 
@@ -106,7 +108,7 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
 
   override infix def on[C0 <: Component: Tag](f: (Entity, C0) => Unit): Query =
     val trueIds = Array(idRw[C0])
-    selected = trueIds.toSignature
+    selected = Signature(trueIds)
     queries.make(() =>
       am.iterate(matches, selected): (e, components, arch) =>
         f(e, findOfType[C0](trueIds(0))(components, arch, e))
@@ -116,7 +118,7 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
       f: (Entity, C0, C1) => Unit
   ): Query =
     val trueIds = Array(idRw[C0], idRw[C1])
-    selected = trueIds.toSignature
+    selected = Signature(trueIds)
     queries.make(() =>
       am.iterate(matches, selected): (e, components, arch) =>
         f(
@@ -130,7 +132,7 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
       f: (Entity, C0, C1, C2) => Unit
   ): Query =
     val trueIds = Array(idRw[C0], idRw[C1], idRw[C2])
-    selected = trueIds.toSignature
+    selected = Signature(trueIds)
     queries.make(() =>
       am.iterate(matches, selected): (e, components, arch) =>
         f(
@@ -148,7 +150,7 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
       C3 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3) => Unit): Query =
     val trueIds = Array(idRw[C0], idRw[C1], idRw[C2], idRw[C3])
-    selected = trueIds.toSignature
+    selected = Signature(trueIds)
     queries.make(() =>
       am.iterate(matches, selected): (e, components, arch) =>
         f(
@@ -168,7 +170,7 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
       C4 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3, C4) => Unit): Query =
     val trueIds = Array(idRw[C0], idRw[C1], idRw[C2], idRw[C3], idRw[C4])
-    selected = trueIds.toSignature
+    selected = Signature(trueIds)
     queries.make(() =>
       am.iterate(matches, selected): (e, components, arch) =>
         f(
@@ -190,7 +192,7 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
       C5 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3, C4, C5) => Unit): Query =
     val trueIds = Array(idRw[C0], idRw[C1], idRw[C2], idRw[C3], idRw[C4], idRw[C5])
-    selected = trueIds.toSignature
+    selected = Signature(trueIds)
     queries.make(() =>
       am.iterate(matches, selected): (e, components, arch) =>
         f(
@@ -214,7 +216,7 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
       C6 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3, C4, C5, C6) => Unit): Query =
     val trueIds = Array(idRw[C0], idRw[C1], idRw[C2], idRw[C3], idRw[C4], idRw[C5], idRw[C6])
-    selected = trueIds.toSignature
+    selected = Signature(trueIds)
     queries.make(() =>
       am.iterate(matches, selected): (e, components, arch) =>
         f(
@@ -234,10 +236,10 @@ class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator) extends
       (_none.isNil || !s.containsAny(_none)) &&
       (_any.isNil || s.containsAny(_any))
 
-  private inline def ensureFirstCallToNone: Unit =
+  private inline def ensureFirstCallToNone(): Unit =
     require(_none.isNil, multipleCallsErrorMsg("none"))
 
-  private inline def ensureFirstCallToAny: Unit =
+  private inline def ensureFirstCallToAny(): Unit =
     require(_any.isNil, multipleCallsErrorMsg("any"))
 
   private inline def findOfType[C <: Component: Tag](

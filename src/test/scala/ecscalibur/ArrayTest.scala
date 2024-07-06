@@ -1,10 +1,10 @@
 package ecscalibur
 
 import ecscalibur.testutil.shouldNotBeExecuted
-import ecscalibur.util.array.*
-import org.scalatest.*
-import org.scalatest.flatspec.*
-import org.scalatest.matchers.*
+import ecscalibur.util.array._
+import org.scalatest._
+import org.scalatest.flatspec._
+import org.scalatest.matchers._
 
 class ArrayTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.IntWrapper
@@ -17,12 +17,12 @@ class ArrayTest extends AnyFlatSpec with should.Matchers:
   "aForeach" should "work correctly" in:
     val a = intArray
     var sum = 0
-    a.aForeach: (n) =>
+    a.aForeach: n =>
       sum += n
     sum shouldBe a.sum
     Array
       .empty[Int]
-      .aForeach: (_) =>
+      .aForeach: _ =>
         shouldNotBeExecuted
 
   "aForeachIndex" should "work correctly" in:
@@ -41,11 +41,11 @@ class ArrayTest extends AnyFlatSpec with should.Matchers:
 
   "aForall" should "work correctly" in:
     val a = intArray
-    a.aForall((n) => Min <= n && n < Max) shouldBe true
-    a.aForall((n) => n < 0) shouldBe false
+    a.aForall(n => Min <= n && n < Max) shouldBe true
+    a.aForall(n => n < 0) shouldBe false
     Array
       .empty[Int]
-      .aForall: (_) =>
+      .aForall: _ =>
         shouldNotBeExecuted
 
   "aSameElements" should "work correctly" in:
@@ -123,4 +123,4 @@ class ArrayTest extends AnyFlatSpec with should.Matchers:
     Array.empty[Int].aFilter(predicate) shouldBe Array.empty[Int]
 
   "aConcat" should "work correctly" in:
-    (intArray.aConcat(intArray)) shouldBe (intArray.concat(intArray))
+    intArray.aConcat(intArray) shouldBe intArray.concat(intArray)

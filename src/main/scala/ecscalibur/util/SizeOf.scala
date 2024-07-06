@@ -1,6 +1,7 @@
 package ecscalibur.util
 
-import ecscalibur.core.component.{ComponentId, Component}
+import ecscalibur.core.component.Component
+import ecscalibur.core.component.ComponentId
 import ecscalibur.util.spark.SizeEstimator
 
 object sizeof:

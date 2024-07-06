@@ -1,10 +1,11 @@
 package ecscalibur.core
 
-import ecscalibur.core.systems.System
 import ecscalibur.core.archetype.ArchetypeManager
-import ecscalibur.core.component.{Component, ComponentType}
+import ecscalibur.core.component.Component
+import ecscalibur.core.component.ComponentType
 import ecscalibur.core.context.MetaContext
 import ecscalibur.core.queries.Query
+import ecscalibur.core.systems.System
 
 object world:
   import builders.*
@@ -22,10 +23,10 @@ object world:
     case Times(times: Int)
 
   object Loop:
-    val forever = Forever
-    val once = Times(1)
+    val forever: Loop = Forever
+    val once: Loop = Times(1)
 
-    extension (n: Int) inline def times = Times(n)
+    extension (n: Int) inline def times: Loop = Times(n)
 
   object World:
     def apply(frameCap: Int = 0): World =
@@ -77,15 +78,15 @@ object world:
           for s <- activeSystems do s.update()
         loopType match
           case Loop.Forever      => while (true) _loop()
-          case Loop.Times(times) => for _ <- (0 until times) do _loop()
+          case Loop.Times(times) => for _ <- 0 until times do _loop()
 
-      private inline def processPendingEntityOperations() =
+      private inline def processPendingEntityOperations(): Unit =
         for (e, comps) <- entityCreate do am.addEntity(e, comps)
         entityCreate.clear
 
         for e <- entityDelete do
           am.delete(e)
-          entityIdGenerator.erase(e.id)
+          val _ = entityIdGenerator.erase(e.id)
           if (entityAddComps.contains(e))
             for (_, orElse) <- entityAddComps(e) do orElse()
             entityAddComps -= e
@@ -111,12 +112,10 @@ object world:
       override def defer(q: SystemRequest | EntityRequest): Boolean =
         var res = false
         q match
-          case SystemRequest.stop(systemName) =>
-            forwardCommandToSystem(systemName, _.pause())
-            res = true
+          case SystemRequest.pause(systemName) =>
+            res = forwardCommandToSystem(systemName, _.pause())
           case SystemRequest.resume(systemName) =>
-            forwardCommandToSystem(systemName, _.resume())
-            res = true
+            res = forwardCommandToSystem(systemName, _.resume())
 
           case EntityRequest.create(components) =>
             entityCreate += (Entity(entityIdGenerator.next) -> components)
@@ -150,10 +149,12 @@ object world:
       private inline def forwardCommandToSystem(
           systemName: String,
           inline command: System => Unit
-      ) =
+      ): Boolean =
         activeSystems.find(_.name == systemName) match
-          case Some(s) => command(s)
-          case _       => ()
+          case Some(s) => 
+            command(s)
+            true
+          case _       => false
 
       import ecscalibur.core.component.WithType
 
@@ -171,7 +172,7 @@ object world:
         orElse()
         false
 
-      private inline def updateDeltaTime() = ctx.setDeltaTime(pacer.pace())
+      private inline def updateDeltaTime(): Unit = ctx.setDeltaTime(pacer.pace())
 
   private[world] object builders:
     trait EntityBuilder:

@@ -1,8 +1,10 @@
 package ecscalibur.core
 
-import ecscalibur.util.array.*
-import scala.reflect.ClassTag
+import ecscalibur.util.array._
 import izumi.reflect.Tag
+
+import scala.annotation.targetName
+import scala.reflect.ClassTag
 
 opaque type CSeq[T] = Array[T]
 
@@ -16,45 +18,47 @@ object CSeq:
   inline def apply[T: ClassTag](elements: Iterable[T]): CSeq[T] = elements.toArray
 
   extension [T: ClassTag](l: CSeq[T])
-    private[CSeq] inline def underlying: Array[T] = l
+    inline def toArray: Array[T] = l
 
     inline def apply(i: Int): T = l(i)
 
     inline def update(i: Int, c: T) = l.update(i, c)
 
-    inline def isEmpty: Boolean = l.underlying.length == 0
+    inline def isEmpty: Boolean = l.toArray.length == 0
 
-    inline def nonEmpty: Boolean = l.underlying.length != 0
+    inline def nonEmpty: Boolean = l.toArray.length != 0
 
-    inline def foreach(inline f: T => Unit): Unit = l.underlying.aForeach(f)
+    inline def foreach(inline f: T => Unit): Unit = l.toArray.aForeach(f)
 
-    inline def forall(inline p: T => Boolean): Boolean = l.underlying.aForall(p)
+    inline def forall(inline p: T => Boolean): Boolean = l.toArray.aForall(p)
 
-    inline def sameElements(other: Array[T]): Boolean = l.underlying.aSameElements(other)
+    inline def sameElements(other: Array[T]): Boolean = l.toArray.aSameElements(other)
 
-    inline def map[U: ClassTag](inline f: T => U): Array[U] = l.underlying.aMap(f)
+    inline def map[U: ClassTag](inline f: T => U): CSeq[U] = l.toArray.aMap(f)
 
-    inline def containsSlice(that: Array[T]): Boolean = l.underlying.aContainsSlice(that)
+    inline def containsSlice(that: Array[T]): Boolean = l.toArray.aContainsSlice(that)
 
-    inline def indexWhere(inline p: T => Boolean): Int = l.underlying.aIndexWhere(p)
+    inline def indexWhere(inline p: T => Boolean): Int = l.toArray.aIndexWhere(p)
 
-    inline def indexOf(elem: T): Int = l.underlying.aIndexOf(elem)
+    inline def indexOf(elem: T): Int = l.toArray.aIndexOf(elem)
 
-    inline def contains(elem: T): Boolean = l.underlying.aContains(elem)
+    inline def contains(elem: T): Boolean = l.toArray.aContains(elem)
 
-    inline def exists(inline p: T => Boolean): Boolean = l.underlying.aExists(p)
+    inline def exists(inline p: T => Boolean): Boolean = l.toArray.aExists(p)
 
-    inline def findUnsafe(inline p: T => Boolean): T = l.underlying.aFindUnsafe(p)
+    inline def findUnsafe(inline p: T => Boolean): T = l.toArray.aFindUnsafe(p)
 
-    inline def findOfType[C <: T: Tag]: C = l.underlying.aFindOfType[C]
+    inline def findOfType[C <: T: Tag]: C = l.toArray.aFindOfType[C]
 
-    inline def filter(inline p: T => Boolean): Array[T] = l.underlying.aFilter(p)
+    inline def filter(inline p: T => Boolean): CSeq[T] = l.toArray.aFilter(p)
 
-    inline def filterNot(inline p: T => Boolean): Array[T] = l.underlying.aFilterNot(p)
+    inline def filterNot(inline p: T => Boolean): CSeq[T] = l.toArray.aFilterNot(p)
 
-    inline infix def concat(that: CSeq[T]): CSeq[T] = CSeq(l.underlying.aConcat(that.underlying))
+    inline infix def concat(that: CSeq[T]): CSeq[T] = CSeq(l.toArray.aConcat(that.toArray))
 
   extension [T: ClassTag](elem: T)
-    inline infix def +:(cseq: CSeq[T]): CSeq[T] = CSeq(cseq.underlying.prepended(elem))
+    @targetName("prepended")
+    inline infix def +:(cseq: CSeq[T]): CSeq[T] = CSeq(cseq.toArray.prepended(elem))
 
-    inline infix def :+(cseq: CSeq[T]): CSeq[T] = CSeq(cseq.underlying.appended(elem))
+    @targetName("appended")
+    inline infix def :+(cseq: CSeq[T]): CSeq[T] = CSeq(cseq.toArray.appended(elem))

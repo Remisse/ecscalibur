@@ -1,12 +1,16 @@
 package ecscalibur.core.archetype
 
-import ecscalibur.core.{CSeq, Entity}
-import ecscalibur.core.archetype.Archetypes.Archetype
-import ecscalibur.core.component.{Component, ComponentId, ComponentType}
-import CSeq.*
-import ecscalibur.util.array.*
+import ecscalibur.core.CSeq
+import ecscalibur.core.Entity
+import ecscalibur.core.archetype.archetypes.Archetype
+import ecscalibur.core.component.Component
+import ecscalibur.core.component.ComponentId
+import ecscalibur.core.component.ComponentType
+import ecscalibur.util.array._
 
 import scala.collection.mutable
+
+import CSeq._
 
 trait ArchetypeManager:
   def addEntity(e: Entity, components: CSeq[Component]): Unit
@@ -32,7 +36,7 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
     newEntityToArchetype(e, components)
 
   private inline def newEntityToArchetype(e: Entity, components: CSeq[Component]): Unit =
-    val entitySignature: Signature = components.map(~_).toSignature
+    val entitySignature: Signature = Signature(components.map(~_).toArray)
     if !archetypes.contains(entitySignature) then
       archetypes += entitySignature -> Archetype(entitySignature)
     archetypes(entitySignature).add(e, components)
@@ -42,9 +46,9 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
     ensureEntityIsValid(e)
     require(components.nonEmpty, "Component list is empty.")
     val existing: CSeq[Component] = archetypes(signaturesByEntity(e)).remove(e)
-    if (filterOutExistingComponents(existing, components.map(~_)).isEmpty)
+    if (filterOutExistingComponents(existing, components.map(~_).toArray).isEmpty)
       return false
-    signaturesByEntity.remove(e)
+    signaturesByEntity -= e
     newEntityToArchetype(e, existing concat components)
     true
 
@@ -53,7 +57,7 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
     if (!signaturesByEntity(e).containsAny(Signature(compTypes*)))
       return false
     val entityComps: CSeq[Component] = archetypes(signaturesByEntity(e)).remove(e)
-    signaturesByEntity.remove(e)
+    signaturesByEntity -= e
     val filtered = filterOutExistingComponents(entityComps, compTypes.toArray.aMap(~_))
     if (filtered.nonEmpty) newEntityToArchetype(e, filtered)
     true
@@ -62,12 +66,12 @@ private class ArchetypeManagerImpl extends ArchetypeManager:
       toBeFiltered: CSeq[Component],
       ids: Array[ComponentId]
   ): CSeq[Component] =
-    CSeq[Component](toBeFiltered.filterNot(c => ids.aContains(~c)))
+    toBeFiltered.filterNot(c => ids.aContains(~c))
 
   override def delete(e: Entity): Unit =
     ensureEntityIsValid(e)
     archetypes(signaturesByEntity(e)).softRemove(e)
-    val _ = signaturesByEntity.remove(e)
+    signaturesByEntity -= e
 
   override def iterate(isSelected: Signature => Boolean, allIds: Signature)(
       f: (Entity, CSeq[Component], Archetype) => Unit

@@ -6,6 +6,9 @@ lazy val root = (project in file("."))
   .settings(
     name := "ECScalibur",
 
+    semanticdbEnabled := true,
+    semanticdbVersion := scalafixSemanticdb.revision,
+
     libraryDependencies ++= Seq(
       "com.google.guava" % "guava" % "33.2.1-jre",
       "dev.zio" %% "izumi-reflect" % "2.3.10",
@@ -24,7 +27,7 @@ lazy val root = (project in file("."))
       "-language:higherKinds",
       "-language:implicitConversions",
       "-unchecked",
-      "-Wsafe-init",
+      // "-Wsafe-init",
       "-Wunused:implicits",
       "-Wunused:explicits",
       "-Wunused:imports",
@@ -36,8 +39,6 @@ lazy val root = (project in file("."))
       "-Xcheck-macros", 
       "-Xkind-projector",
       "-Ycheck:all", 
-      // "-Ykind-projector",
-      // "-Ysafe-init",
       // "-Yexplicit-nulls",
       ),
   )

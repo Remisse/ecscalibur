@@ -1,22 +1,23 @@
 package ecscalibur
 
-import org.scalatest.*
-import org.scalatest.flatspec.*
-import org.scalatest.matchers.*
-
-import ecscalibur.testutil.testclasses.Value
-import ecscalibur.core.{Entity, CSeq, Rw}
-import ecscalibur.core.world.*
-import Loop.*
-
+import ecscalibur.core.CSeq
+import ecscalibur.core.Entity
+import ecscalibur.core.Rw
+import ecscalibur.core.world._
 import ecscalibur.testutil.shouldNotBeExecuted
 import ecscalibur.testutil.testclasses.C1
+import ecscalibur.testutil.testclasses.Value
+import org.scalatest._
+import org.scalatest.flatspec._
+import org.scalatest.matchers._
+
+import Loop._
 
 class WorldTest extends AnyFlatSpec with should.Matchers:
   inline val s1 = "test1"
   inline val s2 = "test2"
 
-  val testValue = Value(1)
+  val testValue: Value = Value(1)
 
   "A World" should "correctly create an entity with the supplied components" in:
     val world = World()
@@ -73,7 +74,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query routine: () =>
         sum += 1
         if (query.mutator isSystemRunning s1)
-          val success = query.mutator defer stop(s1)
+          val success = query.mutator defer pause(s1)
           if (!success) shouldNotBeExecuted
 
     world loop once
@@ -89,7 +90,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       query routine: () =>
         sum += 1
         if (query.mutator isSystemRunning s1)
-          val success = query.mutator defer stop(s1)
+          val success = query.mutator defer pause(s1)
           if (!success) shouldNotBeExecuted
 
     world.withSystem(s2): query =>
@@ -109,8 +110,9 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     val world = World()
     world.withSystem(s1, priority = 0): query =>
       query routine: () =>
-        val _ = query.mutator defer create(CSeq(testValue))
-        val _ = query.mutator defer stop(s1)
+        query.mutator defer create(CSeq(testValue))
+        query.mutator defer pause(s1)
+        ()
 
     var test = Value(0)
     world.withSystem(s2, priority = 1): query =>
@@ -128,7 +130,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     var sum = 0
     world.withSystem(s1): query =>
       query on: (e: Entity, _: C1) =>
-        val _ = query.mutator defer delete(e)
+        query.mutator defer delete(e)
         sum += 1
     world.withSystem(s2): query =>
       query on: (_, _: C1) =>
@@ -142,8 +144,8 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.entity withComponents CSeq(C1())
     world.withSystem(s1): query =>
       query on: (e: Entity, _: C1) =>
-        val _ = query.mutator defer addComponent(e, testValue, () => shouldNotBeExecuted)
-        val _ = query.mutator defer stop(s1)
+        query.mutator defer addComponent(e, testValue, () => shouldNotBeExecuted)
+        val _  = query.mutator defer pause(s1)
 
     var test = Value(0)
     world.withSystem(s2): query =>
@@ -161,8 +163,8 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
     world.withSystem(s1): query =>
       query on: (e: Entity, _: C1) =>
-        val _ = query.mutator defer removeComponent(e, C1, () => shouldNotBeExecuted)
-        val _ = query.mutator defer stop(s1)
+        query.mutator defer removeComponent(e, C1, () => shouldNotBeExecuted)
+        val _ = query.mutator defer pause(s1)
 
     var sum = 0
     world.withSystem(s2): query =>
@@ -177,14 +179,14 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.C2
 
   inline val defersCount = 10
-  val deferTestIterations = 10.times
+  val deferTestIterations: Loop = 10.times
 
   it should "only execute the first of many 'addComponent' requests if they do the same thing" in:
     val world = World()
     world.entity withComponents CSeq(C1())
     world.withSystem(s1): query =>
       query on: (e: Entity, _: C1) =>
-        for _ <- (0 until defersCount) do query.mutator defer addComponent(e, C2())
+        for _ <- 0 until defersCount do query.mutator defer addComponent(e, C2())
 
     noException shouldBe thrownBy(world loop deferTestIterations)
 
@@ -193,7 +195,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.entity withComponents CSeq(C1())
     world.withSystem(s1): query =>
       query on: (e: Entity, _: C1) =>
-        for _ <- (0 until defersCount) do query.mutator defer removeComponent(e, C1)
+        for _ <- 0 until defersCount do query.mutator defer removeComponent(e, C1)
 
     noException shouldBe thrownBy(world loop deferTestIterations)
 
@@ -202,7 +204,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.entity withComponents CSeq(C1())
     world.withSystem(s1): query =>
       query on: (e: Entity, _: C1) =>
-        for _ <- (0 until defersCount) do query.mutator defer delete(e)
+        for _ <- 0 until defersCount do query.mutator defer delete(e)
 
     noException shouldBe thrownBy(world loop deferTestIterations)
 
@@ -213,7 +215,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     val world = World()
     var systemName = ""
 
-    def test(thisName: String, prevName: String) =
+    def test(thisName: String, prevName: String): Unit =
       systemName shouldBe prevName
       systemName = thisName
 

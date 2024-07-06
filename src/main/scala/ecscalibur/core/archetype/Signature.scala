@@ -1,7 +1,9 @@
 package ecscalibur.core.archetype
 
-import ecscalibur.core.component.{ComponentId, WithType}
-import ecscalibur.util.array.*
+import ecscalibur.core.component.ComponentId
+import ecscalibur.core.component.WithType
+import ecscalibur.util.array._
+
 import scala.annotation.targetName
 
 case class Signature private (val underlying: Array[ComponentId]):
@@ -21,7 +23,6 @@ case class Signature private (val underlying: Array[ComponentId]):
 
   override def hashCode(): Int = java.util.Arrays.hashCode(underlying)
 
-export Signature.Extensions.*
 object Signature:
   val Nil: Signature = new Signature(Array.empty[ComponentId])
 
@@ -40,20 +41,3 @@ object Signature:
 
   @targetName("fromTypes")
   inline def apply[T <: WithType](types: Array[T]): Signature = apply(types.aMap(_.typeId))
-
-  object Extensions:
-    extension (ids: ComponentId*)
-      @targetName("idsToSignature")
-      inline def toSignature = Signature(ids*)
-
-    extension (ids: Array[ComponentId])
-      @targetName("idsToSignature")
-      inline def toSignature = Signature(ids)
-
-    extension [T <: WithType](types: T*)
-      @targetName("typesToSignature")
-      inline def toSignature = Signature(types*)
-
-    extension [T <: WithType](types: Array[T])
-      @targetName("typesToSignature")
-      inline def toSignature = Signature(types)

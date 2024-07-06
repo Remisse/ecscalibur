@@ -1,10 +1,9 @@
 package ecscalibur
 
-import org.scalatest.*
-import org.scalatest.flatspec.*
-import org.scalatest.matchers.*
-
 import ecscalibur.util.FramePacer
+import org.scalatest._
+import org.scalatest.flatspec._
+import org.scalatest.matchers._
 
 class FramePacerTest extends AnyFlatSpec with should.Matchers:
   inline val defaultCap = 60

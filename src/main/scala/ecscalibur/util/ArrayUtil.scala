@@ -1,8 +1,9 @@
 package ecscalibur.util
 
-import scala.reflect.ClassTag
-import scala.collection.mutable.ArrayBuffer
 import izumi.reflect.Tag
+
+import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
 object array:
   extension [T](a: Array[T])
@@ -92,9 +93,8 @@ object array:
 
     inline def aFindOfType[C <: T: Tag]: C =
       val idx = a.aIndexWhere:
-        _ match
-          case _: C => true
-          case _    => false
+        case _: C => true
+        case _ => false
       require(idx != -1, s"Could not find any elements of type ${summon[Tag[C]]}.")
       a(idx).asInstanceOf[C]
 
@@ -112,4 +112,4 @@ object array:
     inline def aFilterNot(inline p: T => Boolean)(using ClassTag[T]): Array[T] =
       a.aFilter(negate(p))
 
-    inline def aConcat(that: Array[T])(using ClassTag[T]) = a.concat(that)
+    inline def aConcat(that: Array[T])(using ClassTag[T]): Array[T] = a.concat(that)

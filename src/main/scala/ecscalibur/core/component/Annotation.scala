@@ -53,7 +53,7 @@ object annotations:
           case _ => report.errorAndAbort("This annotation only works on classes.")
 
       companion match
-        case None => report.errorAndAbort(s"This class should define a companion object.")
+        case None => report.errorAndAbort("This class should define a companion object.")
         case _    => ()
 
       List(

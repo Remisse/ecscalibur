@@ -1,18 +1,18 @@
 package ecscalibur
 
-import org.scalatest.*
-import org.scalatest.flatspec.*
-import org.scalatest.matchers.*
+import org.scalatest._
+import org.scalatest.flatspec._
+import org.scalatest.matchers._
 
 class IdGeneratorTests extends AnyFlatSpec with should.Matchers:
   import ecscalibur.id.IdGenerator
 
-  val cons = 0 to 9
+  val cons: Seq[Int] = 0 to 9
 
   "An ID generator" should "generate consecutive IDs" in:
     val gen = IdGenerator()
     val ids = cons.map(_ => gen.next)
-    ids should contain allElementsOf (cons)
+    ids should contain allElementsOf cons
 
   it should "recognize all IDs it has generated" in:
     val gen = IdGenerator()

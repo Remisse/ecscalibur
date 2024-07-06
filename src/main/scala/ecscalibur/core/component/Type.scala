@@ -1,18 +1,19 @@
 package ecscalibur.core.component
 
-import izumi.reflect.Tag
-import ecscalibur.error.IllegalTypeParameterException
-import scala.util.hashing.MurmurHash3
 import ecscalibur.core.Rw
+import ecscalibur.error.IllegalTypeParameterException
+import izumi.reflect.Tag
+
+import scala.util.hashing.MurmurHash3
 
 private[ecscalibur] object tpe:
   inline def createId(clsName: String): Int = MurmurHash3.stringHash(base(clsName))
 
-  inline def getId(cls: Class[?]): ComponentId = ComponentId(createId(cls.getName))
+  private inline def getId(cls: Class[?]): ComponentId = ComponentId(createId(cls.getName))
 
-  inline def getId(clsName: String): ComponentId = ComponentId(createId(clsName))
+  private inline def getId(clsName: String): ComponentId = ComponentId(createId(clsName))
 
-  inline def id0K[T <: WithType: Tag] = getId(summon[Tag[T]].closestClass)
+  inline def id0K[T <: WithType: Tag]: ComponentId = getId(summon[Tag[T]].closestClass)
 
   inline def idRw[T <: WithType: Tag]: ComponentId =
     val t = summon[Tag[T]]

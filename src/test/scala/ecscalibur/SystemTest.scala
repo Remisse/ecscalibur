@@ -1,15 +1,14 @@
 package ecscalibur
 
-import org.scalatest.*
-import org.scalatest.flatspec.*
-import org.scalatest.matchers.*
+import org.scalatest._
+import org.scalatest.flatspec._
+import org.scalatest.matchers._
 
 import core.archetype.ArchetypeManager
 import core.systems.System
 import core.queries.Query
 import core.{query, Mutator}
 import core.context.MetaContext
-
 import testutil.testclasses.Value
 import testutil.shouldNotBeExecuted
 
@@ -32,7 +31,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
       override protected val process: Query =
         query on: (e, v: Value) =>
           sum += v.x
-      override protected val onStop: () => Unit =
+      override protected val onPause: () => Unit =
         () => shouldNotBeExecuted
 
     s.update()
@@ -62,11 +61,11 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     var sum = Int.MinValue
     val s = new System(name = s1, priority = 0):
       override protected val onStart: () => Unit =
-        () =>
+        () => ()
       override protected val process: Query =
         query on: (e, v: Value) =>
           sum = 0
-      override protected val onStop: () => Unit =
+      override protected val onPause: () => Unit =
         () => sum = Int.MaxValue
 
     an[IllegalStateException] shouldBe thrownBy(s.pause())
@@ -90,7 +89,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
       override protected val process: Query =
         query on: (e, v: Value) =>
           sum += v.x
-      override protected val onStop: () => Unit =
+      override protected val onPause: () => Unit =
         () => sum = Int.MaxValue
 
     an[IllegalStateException] shouldBe thrownBy(s.resume())
