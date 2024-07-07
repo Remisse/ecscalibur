@@ -213,7 +213,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "execute its systems sorted by priority" in:
     val world = World()
-    var systemName = ""
+    var systemName = none
 
     def test(thisName: String, prevName: String): Unit =
       systemName shouldBe prevName
@@ -231,3 +231,13 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
     world loop once
     systemName shouldBe s3
+
+  it should "not contain two systems with the same name" in:
+    val world = World()
+    world.withSystem(s1):
+      _ routine: () => 
+        ()
+    an[IllegalArgumentException] shouldBe thrownBy:
+      world.withSystem(s1):
+        _ routine: () => 
+          ()

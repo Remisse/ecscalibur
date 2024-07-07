@@ -15,6 +15,7 @@ private[ecscalibur] object FramePacer:
       case _ => Some(((1.0 / cap) * 1e+9).toLong)
 
     import java.lang.System.nanoTime
+    import java.time.Duration
 
     override def pace(): Float =
       val time = nanoTime()
@@ -24,7 +25,7 @@ private[ecscalibur] object FramePacer:
         frameTime match
           case Some(ft) =>
             val overhead = math.max(ft - elapsed, 0)
-            if (overhead > 0) Thread.sleep(java.time.Duration.ofNanos(overhead))
+            if (overhead > 0) Thread.sleep(Duration.ofNanos(overhead))
             newDtNanos = elapsed + overhead
           case None => newDtNanos = elapsed
       lastUpdateTime = time

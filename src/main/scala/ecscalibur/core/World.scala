@@ -50,7 +50,6 @@ object world:
       import scala.collection.mutable.ArrayBuffer
 
       private val activeSystems: ArrayBuffer[System] = ArrayBuffer.empty
-      private val pendingSystems: ArrayBuffer[System] = ArrayBuffer.empty
 
       private val entityCreate: mutable.Map[Entity, CSeq[Component]] = mutable.Map.empty
       private val entityDelete: ArrayBuffer[Entity] = ArrayBuffer.empty
@@ -66,7 +65,10 @@ object world:
         withSystem:
           LiteSystemBuilder(name, priority)(using am, ctx).executing(qb(query))
 
-      override def withSystem(s: System): Unit = pendingSystems += s
+      override def withSystem(s: System): Unit =
+        require(!activeSystems.contains(s), s"System ${s.name} already exists.")
+        activeSystems += s
+        activeSystems.sortInPlaceBy(_.priority)
 
       override def loop(loopType: Loop): Unit =
         inline def _loop(): Unit =
@@ -74,8 +76,6 @@ object world:
           if (areBuffersDirty)
             areBuffersDirty = false
             processPendingEntityOperations()
-          if (pendingSystems.nonEmpty)
-            processPendingSystems()
           for s <- activeSystems do s.update()
         loopType match
           case Loop.Forever      => while (true) _loop()
@@ -101,11 +101,6 @@ object world:
 
         for (e, types) <- entityRemoveComps do am.removeComponents(e, types.map(_._1).toArray*)
         entityRemoveComps.clear
-
-      private inline def processPendingSystems(): Unit =
-        for s <- pendingSystems do activeSystems += s
-        pendingSystems.clear()
-        activeSystems.sortInPlaceBy(_.priority)
 
       import EntityRequest.*
       import SystemRequest.*
