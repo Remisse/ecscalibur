@@ -49,15 +49,15 @@ object IdGenerator:
     private val erasedIds = mutable.HashSet.empty[Int]
 
     override def next: Int =
-      var res: Int = -1
-      erasedIds.size match
-        case 0 =>
-          res = highestAvailableIdx
+      erasedIds.isEmpty match
+        case true =>
+          val res = highestAvailableIdx
           highestAvailableIdx = highestAvailableIdx + 1
+          res
         case _ => 
-          res = erasedIds.head
+          val res = erasedIds.head
           erasedIds -= res
-      res
+          res
 
     override def erase(id: Int): Boolean =
       if isValid(id) then

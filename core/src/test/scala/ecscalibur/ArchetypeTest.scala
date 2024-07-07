@@ -77,18 +77,18 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   it should "correctly perform load balancing when fragments reach their limit" in:
     noException shouldBe thrownBy(fixtures.StandardArchetypeFixture(Value(0))(nEntities = 10000))
 
+  val defaultComponent = C1()
+
   it should "correctly return its Fragments" in:
-    val c = C1()
     val fixture =
-      fixtures.StandardArchetypeFixture(c)(nEntities = 1000, KindaSmallFragmentSizeBytes)
+      fixtures.StandardArchetypeFixture(defaultComponent)(nEntities = 1000, KindaSmallFragmentSizeBytes)
     val expectedNumberOfFragments =
-      fixture.entities.length / (KindaSmallFragmentSizeBytes / sizeOf(c))
+      fixture.entities.length / (KindaSmallFragmentSizeBytes / sizeOf(defaultComponent))
     fixture.archetype.fragments.size shouldBe expectedNumberOfFragments
 
   it should "remove all empty Fragments but one" in:
-    val c = C1()
     val fixture =
-      fixtures.StandardArchetypeFixture(c)(nEntities = 1000, KindaSmallFragmentSizeBytes)
+      fixtures.StandardArchetypeFixture(defaultComponent)(nEntities = 1000, KindaSmallFragmentSizeBytes)
     for e <- fixture.entities do fixture.archetype.remove(e)
     fixture.archetype.fragments.size shouldBe 1
 
@@ -98,13 +98,12 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     )
 
   "A Fragment" should "correctly report whether it is full or not" in:
-    val c = C1()
-    val fixture = fixtures.StandardFragmentFixture(c)(nEntities = 0, maxEntities = 1)
+    val fixture = fixtures.StandardFragmentFixture(defaultComponent)(nEntities = 0, maxEntities = 1)
     val frag = fixture.fragment
     frag.isEmpty shouldBe true
     frag.isFull shouldBe !frag.isEmpty
     val e = fixture.nextEntity
-    frag.add(e, CSeq(c))
+    frag.add(e, CSeq(defaultComponent))
     frag.isEmpty shouldBe false
     frag.isFull shouldBe !frag.isEmpty
     frag.remove(e)
@@ -112,9 +111,8 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     frag.isFull shouldBe !frag.isEmpty
 
   it should "throw when attempting to add more entities than it can store" in:
-    val c = C1()
-    val fixture = fixtures.StandardFragmentFixture(c)(nEntities = 1, maxEntities = 1)
+    val fixture = fixtures.StandardFragmentFixture(defaultComponent)(nEntities = 1, maxEntities = 1)
     an[IllegalArgumentException] should be thrownBy fixture.fragment.add(
       fixture.nextEntity,
-      CSeq(c)
+      CSeq(defaultComponent)
     )

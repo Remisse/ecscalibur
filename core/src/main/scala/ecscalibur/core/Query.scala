@@ -222,7 +222,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mu
 
   override infix def on(f: Entity => Unit): Query =
     queries.make: () =>
-      am.iterate(matches, selected): (e, components, arch) =>
+      am.iterate(matches, selected): (e, _, _) =>
         f(e)
 
   private inline def initSignatureAndId0kCache(): Unit =
