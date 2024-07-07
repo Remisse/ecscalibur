@@ -11,25 +11,86 @@ import ecscalibur.core.systems.System
 object world:
   import builders.*
 
+  /** A World is the main entry point into an ECS application. It lets the user create Entities, add
+    * Components to them and define Systems to iterate over the created Entities.
+    *
+    * Ideally, there should only be one World instance per application.
+    */
   trait World:
     private[ecscalibur] val context: MetaContext
 
+    /** Starts the creation of a new [[Entity]]. Call [[EntityBuilder.withComponents]] after this to
+      * define which Components this Entity should have.
+      *
+      * @return
+      *   an [[EntityBuilder]] instance
+      */
     def entity: EntityBuilder
+
+    /** Creates a new System with [[System.process]] overridden by the given [[Query]]. Both
+      * [[System.onResume]] and [[System.onPause]] do not contain any logic.
+      *
+      * @param name
+      *   a unique name for this System
+      * @param priority
+      *   its priority value relative to the other Systems in the World
+      * @param qb
+      *   a function that returns a new Query created with the help of a [[QueryBuilder]]
+      */
     infix def withSystem(name: String, priority: Int = 0)(qb: QueryBuilder => Query): Unit
+
+    /** Adds a [[System]] instance to this World.
+      *
+      * @param s
+      *   the System to be added.
+      */
     infix def withSystem(s: System): Unit
+
+    /** Performs one or more World iterations based on the given [[Loop]] type.
+      *
+      * @param loopType
+      *   dictates how many iterations will be performed
+      */
     infix def loop(loopType: Loop): Unit
 
+  /** Represents the number of iterations a [[World]] will perform when calling [[World!.loop]].
+    */
   enum Loop:
+    /** The [[World]] will loop forever, never stopping.
+      */
     case Forever
+
+    /** The [[World]] will loop a fixed number of times.
+      *
+      * @param times
+      *   times the World will loop
+      */
     case Times(times: Int)
 
+  /** Factory for [[Loop]].
+    */
   object Loop:
+    /** Returns a [[Loop!.Forever]] instance.
+      */
     val forever: Loop = Forever
+
+    /** Returns a [[Loop!.Times]] instance initialized to 1.
+      */
     val once: Loop = Times(1)
 
+    /** @return
+      *   a [[Loop!.Times]] instance initialized with the given parameter.
+      */
     extension (n: Int) inline def times: Loop = Times(n)
 
   object World:
+    // TODO Pass a Configuration object instead
+
+    /** @param frameCap
+      *   Frame rate limit expressed as Frames Per Second (FPS). A value of 0 means no limit.
+      * @return
+      *   a new World instance
+      */
     def apply(frameCap: Int = 0): World =
       WorldImpl(frameCap)(using ArchetypeManager())(using MetaContext())
 
@@ -147,10 +208,10 @@ object world:
           inline command: System => Unit
       ): Boolean =
         activeSystems.find(_.name == systemName) match
-          case Some(s) => 
+          case Some(s) =>
             command(s)
             true
-          case _       => false
+          case _ => false
 
       import ecscalibur.core.component.WithType
 

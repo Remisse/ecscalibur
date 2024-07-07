@@ -7,7 +7,9 @@ object annotations:
 
   import tpe.getId
 
-  /** Assigns a unique type ID to classes extending [[Component]].
+  /** Assigns a unique [[ComponentId]] to a component class. Will error out if it is used to
+    * annotate something other than a class or if the annotated class does not extend the
+    * [[Component]] trait and its companion object does not extend [[ComponentType]].
     */
   final class component extends MacroAnnotation:
     override def transform(using Quotes)(
@@ -22,7 +24,8 @@ object annotations:
           case _    => report.error(s"${cls.toString} must extend ${TypeRepr.of[T].show}.")
 
       def recreateField(fieldName: String, cls: Symbol, rhs: Term)(using Quotes): ValDef =
-        // Works as long as this field is non-private (even protected is fine).
+        // Works as long as this field is non-private (even protected is fine). If the field
+        // is private, compilation will fail silently.
         val idSym = cls.fieldMember(fieldName)
         val idOverrideSym =
           Symbol.newVal(

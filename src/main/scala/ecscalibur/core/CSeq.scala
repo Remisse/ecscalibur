@@ -6,6 +6,11 @@ import izumi.reflect.Tag
 import scala.annotation.targetName
 import scala.reflect.ClassTag
 
+/** Mutable collection based on arrays.
+  *
+  * Provides a few reimplemented array operations due to weird performance issues when using
+  * library methods on arrays of primitives.
+  */
 opaque type CSeq[T] = Array[T]
 
 object CSeq:
@@ -50,8 +55,23 @@ object CSeq:
 
     inline def exists(inline p: T => Boolean): Boolean = l.toArray.aExists(p)
 
+    /** Returns the first element of this collection which satisfies the given predicate, or throws
+      * if no elements are found.
+      *
+      * @param p
+      *   the predicate against which the elements of this collection will be tested
+      * @return
+      *   the first element satisfying the given predicate
+      */
     inline def findUnsafe(inline p: T => Boolean): T = l.toArray.aFindUnsafe(p)
 
+    /** Returns the first element of this collection that is instance of the given type parameter.
+      *
+      * @tparam C
+      *   type of the desired element
+      * @return
+      *   the first element that is instance of the given type
+      */
     inline def findOfType[C <: T: Tag]: C = l.toArray.aFindOfType[C]
 
     inline def filter(inline p: T => Boolean): CSeq[T] = l.toArray.aFilter(p)

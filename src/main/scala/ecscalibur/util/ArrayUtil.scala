@@ -5,6 +5,13 @@ import izumi.reflect.Tag
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
+// TODO Push all benchmarks
+
+/**
+  * Collection of Array extension methods that reimplement some of the operations available
+  * through the standard Scala library. This is due to the fact that many library methods perform
+  * poorly with arrays of primitives for unknown reasons.
+  */
 object array:
   extension [T](a: Array[T])
     inline def aForeach(inline f: T => Unit): Unit =
