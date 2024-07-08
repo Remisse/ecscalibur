@@ -13,6 +13,7 @@ import ecscalibur.core.component.Component
 import ecscalibur.core.context.MetaContext
 
 import CSeq._
+import ecscalibur.core.world.World
 
 // 'import core.archetype.Archetypes.Archetype.DefaultFragmentSizeBytes' warns about an unused import
 // for some reason.
@@ -23,8 +24,6 @@ object fixtures:
 
   class TestMutator extends Mutator:
     override def defer(q: SystemRequest | EntityRequest): Boolean = false
-    override def isSystemPaused(name: String): Boolean = false
-    override def isSystemRunning(name: String): Boolean = true
 
   class ArchetypeManagerFixture(entityComponents: CSeq[Component]*):
     require(entityComponents.length > 0)
@@ -75,9 +74,7 @@ object fixtures:
     for e <- entities do fragment.add(e, CSeq(components*))
 
   class SystemFixture(nEntities: Int = 1):
-    val am = ArchetypeManager()
-    val context = MetaContext()
-    val mutator = TestMutator()
+    val world = World()
 
     val defaultValue = Value(1)
-    for i <- (0 until nEntities) do am.addEntity(Entity(i), CSeq(defaultValue))
+    for i <- (0 until nEntities) do world.archetypeManager.addEntity(Entity(i), CSeq(defaultValue))

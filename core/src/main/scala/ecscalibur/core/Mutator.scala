@@ -17,24 +17,6 @@ trait Mutator:
     */
   infix def defer(q: SystemRequest | EntityRequest): Boolean
 
-  /** Checks whether the [[System]] identified by the given name is currently running.
-    *
-    * @param name
-    *   name of the system to check
-    * @return
-    *   true if the system is running, false otherwise
-    */
-  infix def isSystemRunning(name: String): Boolean
-
-  /** Checks whether the [[System]] identified by the given name is currently paused.
-    *
-    * @param name
-    *   name of the system to check
-    * @return
-    *   true if the system is paused, false otherwise
-    */
-  infix def isSystemPaused(name: String): Boolean
-
 /** Class of requests related to the execution of a [[System]].
   */
 enum SystemRequest:

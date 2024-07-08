@@ -17,7 +17,21 @@ object world:
     * Ideally, there should only be one World instance per application.
     */
   trait World:
-    private[ecscalibur] val context: MetaContext
+    /** Reference to this World's [[MetaContext]] instance.
+      *
+      * @return
+      *   this World's MetaContext instance.
+      */
+    given context: MetaContext
+
+    /** Reference to this World's [[Mutator]] instance.
+      *
+      * @return
+      *   this World's Mutator instance.
+      */
+    given mutator: Mutator
+
+    private[ecscalibur] given archetypeManager: ArchetypeManager
 
     /** Starts the creation of a new [[Entity]]. Call [[EntityBuilder.withComponents]] after this to
       * define which Components this Entity should have.
@@ -46,6 +60,24 @@ object world:
       */
     infix def withSystem(s: System): Unit
 
+    /** Checks whether the [[System]] identified by the given name is currently running.
+      *
+      * @param name
+      *   name of the system to check
+      * @return
+      *   true if the system is running, false otherwise
+      */
+    infix def isSystemRunning(name: String): Boolean
+
+    /** Checks whether the [[System]] identified by the given name is currently paused.
+      *
+      * @param name
+      *   name of the system to check
+      * @return
+      *   true if the system is paused, false otherwise
+      */
+    infix def isSystemPaused(name: String): Boolean
+
     /** Performs one or more World iterations based on the given [[Loop]] type.
       *
       * @param loopType
@@ -53,7 +85,7 @@ object world:
       */
     infix def loop(loopType: Loop): Unit
 
-  /** Represents the number of iterations a [[World]] will perform when calling [[World!.loop]].
+  /** Represents the number of iterations a [[World]] will perform when calling [[World.loop]].
     */
   enum Loop:
     /** The [[World]] will loop forever, never stopping.
@@ -70,16 +102,16 @@ object world:
   /** Factory for [[Loop]].
     */
   object Loop:
-    /** Returns a [[Loop!.Forever]] instance.
+    /** Returns a [[Loop.Forever]] instance.
       */
     val forever: Loop = Forever
 
-    /** Returns a [[Loop!.Times]] instance initialized to 1.
+    /** Returns a [[Loop.Times]] instance initialized to 1.
       */
     val once: Loop = Times(1)
 
     /** @return
-      *   a [[Loop!.Times]] instance initialized with the given parameter.
+      *   a [[Loop.Times]] instance initialized with the given parameter.
       */
     extension (n: Int) inline def times: Loop = Times(n)
 
@@ -92,16 +124,17 @@ object world:
       *   a new World instance
       */
     def apply(frameCap: Int = 0): World =
-      WorldImpl(frameCap)(using ArchetypeManager())(using MetaContext())
+      WorldImpl(frameCap)(using ArchetypeManager(), MetaContext())
 
-    private class WorldImpl(frameCap: Int)(using am: ArchetypeManager)(using ctx: MetaContext)
+    private class WorldImpl(frameCap: Int)(using ArchetypeManager, MetaContext)
         extends World,
           Mutator:
       import ecscalibur.id.IdGenerator
       import scala.collection.mutable
 
-      given mutator: Mutator = this
-      override val context: MetaContext = ctx
+      override given archetypeManager: ArchetypeManager = summon[ArchetypeManager]
+      override given mutator: Mutator = this
+      override given context: MetaContext = summon[MetaContext]
 
       import ecscalibur.util.FramePacer
       private val pacer = FramePacer(frameCap)
@@ -111,6 +144,7 @@ object world:
       import scala.collection.mutable.ArrayBuffer
 
       private val activeSystems: ArrayBuffer[System] = ArrayBuffer.empty
+      private val pendingSystems: ArrayBuffer[System] = ArrayBuffer.empty
 
       private val entityCreate: mutable.Map[Entity, CSeq[Component]] = mutable.Map.empty
       private val entityDelete: ArrayBuffer[Entity] = ArrayBuffer.empty
@@ -123,13 +157,17 @@ object world:
       override def entity: EntityBuilder = EntityBuilder()(using this)
 
       override def withSystem(name: String, priority: Int)(qb: QueryBuilder => Query): Unit =
+        given World = this
         withSystem:
-          LiteSystemBuilder(name, priority)(using am, ctx).executing(qb(query))
+          new System(name, priority):
+            override protected val process: Query = qb(query)
 
       override def withSystem(s: System): Unit =
-        require(!activeSystems.contains(s), s"System ${s.name} already exists.")
-        activeSystems += s
-        activeSystems.sortInPlaceBy(_.priority)
+        require(
+          !(activeSystems.contains(s) || pendingSystems.contains(s)),
+          s"System \"${s.name}\" already exists."
+        )
+        pendingSystems += s
 
       override def loop(loopType: Loop): Unit =
         inline def _loop(): Unit =
@@ -137,17 +175,18 @@ object world:
           if (areBuffersDirty)
             areBuffersDirty = false
             processPendingEntityOperations()
+          processPendingSystems()
           for s <- activeSystems do s.update()
         loopType match
           case Loop.Forever      => while (true) _loop()
           case Loop.Times(times) => for _ <- 0 until times do _loop()
 
       private inline def processPendingEntityOperations(): Unit =
-        for (e, comps) <- entityCreate do am.addEntity(e, comps)
+        for (e, comps) <- entityCreate do archetypeManager.addEntity(e, comps)
         entityCreate.clear
 
         for e <- entityDelete do
-          am.delete(e)
+          archetypeManager.delete(e)
           val _ = entityIdGenerator.erase(e.id)
           if (entityAddComps.contains(e))
             for (_, orElse) <- entityAddComps(e) do orElse()
@@ -157,39 +196,47 @@ object world:
             entityRemoveComps -= e
         entityDelete.clear
 
-        for (e, comps) <- entityAddComps do am.addComponents(e, CSeq(comps.map(_._1).toArray))
+        for (e, comps) <- entityAddComps do
+          archetypeManager.addComponents(e, CSeq(comps.map(_._1).toArray))
         entityAddComps.clear
 
-        for (e, types) <- entityRemoveComps do am.removeComponents(e, types.map(_._1).toArray*)
+        for (e, types) <- entityRemoveComps do
+          archetypeManager.removeComponents(e, types.map(_._1).toArray*)
         entityRemoveComps.clear
+
+      private inline def processPendingSystems(): Unit =
+        for s <- pendingSystems do activeSystems += s
+        pendingSystems.clear()
+        activeSystems.sortInPlaceBy(_.priority)
 
       import EntityRequest.*
       import SystemRequest.*
 
       override def defer(q: SystemRequest | EntityRequest): Boolean =
-        var res = false
         q match
           case SystemRequest.pause(systemName) =>
-            res = forwardCommandToSystem(systemName, _.pause())
+            tryForwardCommandToSystem(systemName, _.pause())
           case SystemRequest.resume(systemName) =>
-            res = forwardCommandToSystem(systemName, _.resume())
+            tryForwardCommandToSystem(systemName, _.resume())
 
           case EntityRequest.create(components) =>
             entityCreate += (Entity(entityIdGenerator.next) -> components)
-            res = true
             areBuffersDirty = true
+            true
           case EntityRequest.delete(e) =>
             if (isEntityValid(e) && !entityDelete.contains(e))
               entityDelete += e
-              res = true
               areBuffersDirty = true
+              return true
+            false
           case EntityRequest.addComponent(e, component, orElse) =>
-            res = addOrRemoveComponent(entityAddComps, e, component, orElse)
+            val res = tryScheduleAddOrRemoveComponent(entityAddComps, e, component, orElse)
             areBuffersDirty = res
+            res
           case EntityRequest.removeComponent(e, cType, orElse) =>
-            res = addOrRemoveComponent(entityRemoveComps, e, cType, orElse)
+            val res = tryScheduleAddOrRemoveComponent(entityRemoveComps, e, cType, orElse)
             areBuffersDirty = res
-        res
+            res
 
       override def isSystemRunning(name: String): Boolean =
         val idx = activeSystems.indexWhere(_.name == name)
@@ -203,7 +250,7 @@ object world:
 
       private inline def isEntityValid(e: Entity) = entityIdGenerator.isValid(e.id)
 
-      private inline def forwardCommandToSystem(
+      private inline def tryForwardCommandToSystem(
           systemName: String,
           inline command: System => Unit
       ): Boolean =
@@ -215,21 +262,22 @@ object world:
 
       import ecscalibur.core.component.WithType
 
-      private def addOrRemoveComponent[T <: WithType](
+      private inline def tryScheduleAddOrRemoveComponent[T <: WithType](
           buffer: mutable.Map[Entity, ArrayBuffer[(T, () => Unit)]],
           e: Entity,
           comp: T,
           orElse: () => Unit
       ): Boolean =
-        if (!isEntityValid(e)) return false
-        val arrayBuf: ArrayBuffer[(T, () => Unit)] = buffer.getOrElseUpdate(e, ArrayBuffer.empty)
-        if (!arrayBuf.exists(_._1.typeId == comp.typeId))
-          arrayBuf += ((comp, orElse))
-          return true
-        orElse()
-        false
+        var res = false
+        if (isEntityValid(e))
+          val arrayBuf: ArrayBuffer[(T, () => Unit)] = buffer.getOrElseUpdate(e, ArrayBuffer.empty)
+          if (!arrayBuf.exists(_._1.typeId == comp.typeId))
+            arrayBuf += ((comp, orElse))
+            res = true
+        if (!res) orElse()
+        res
 
-      private inline def updateDeltaTime(): Unit = ctx.setDeltaTime(pacer.pace())
+      private inline def updateDeltaTime(): Unit = context.setDeltaTime(pacer.pace())
 
   private[world] object builders:
     trait EntityBuilder:
@@ -241,17 +289,3 @@ object world:
       private class EntityBuilderImpl(using Mutator) extends EntityBuilder:
         override def withComponents(components: CSeq[Component]): Unit =
           val _ = summon[Mutator] defer EntityRequest.create(components)
-
-    object LiteSystemBuilder:
-      def apply(name: String, priority: Int)(using
-          ArchetypeManager,
-          MetaContext
-      ): LiteSystemBuilder = new LiteSystemBuilder(name, priority)
-
-      final class LiteSystemBuilder(name: String, priority: Int)(using
-          ArchetypeManager,
-          MetaContext
-      ):
-        infix def executing(q: Query): System =
-          new System(name, priority):
-            override protected val process: Query = q

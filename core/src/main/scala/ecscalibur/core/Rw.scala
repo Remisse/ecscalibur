@@ -10,7 +10,7 @@ import scala.annotation.targetName
 
 // TODO Find out why this class in particular breaks @component
 
-/** Wrapper for Components to be used in Queries. They make it possible to overwrite the value of an
+/** Wrapper for Components to be used in Queries. They make it possible to overwrite the reference to an
   * Entity's Component.
   *
   * @param c

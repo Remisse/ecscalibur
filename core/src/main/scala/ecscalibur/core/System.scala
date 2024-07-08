@@ -1,9 +1,6 @@
 package ecscalibur.core
 
-import ecscalibur.core.archetype.ArchetypeManager
 import ecscalibur.core.queries.Query
-
-import context.MetaContext
 
 object systems:
   /** Systems contain logic that is executed every World loop.
@@ -14,7 +11,7 @@ object systems:
     *   value that dictates when this System will be executed relative
     *   to the others stored in the same World instance
     */
-  trait System(val name: String, val priority: Int)(using ArchetypeManager, MetaContext):
+  trait System(val name: String, val priority: Int):
     /** Logic executed once when the system starts and once every time it resumes after being
       * paused.
       */
@@ -43,18 +40,18 @@ object systems:
         _status = Status.Paused
       case Status.Paused => ()
 
-    /** Pauses this System or throws if called while this System is not running. 
+    /** Pauses this System or throws if called while the System is not running. 
       * Also causes [[System.onPause]] to execute.
       */
-    final inline def pause(): Unit = _status match
+    private[ecscalibur] final inline def pause(): Unit = _status match
       case Status.Running => _status = Status.Pausing
       case _ =>
         throw IllegalStateException(s"A System may only pause while Running ($name was $_status)")
 
-    /** Resumes this System or throws if called while this System is not paused. 
+    /** Resumes this System or throws if called while the System is not paused. 
       * Also causes [[System.onResume]] to execute.
       */
-    final inline def resume(): Unit = _status match
+    private[ecscalibur] final inline def resume(): Unit = _status match
       case Status.Paused => _status = Status.Starting
       case _ =>
         throw IllegalStateException(

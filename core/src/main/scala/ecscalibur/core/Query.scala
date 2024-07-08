@@ -8,16 +8,15 @@ import ecscalibur.core.component.Component
 import ecscalibur.core.component.ComponentId
 import ecscalibur.core.component.ComponentType
 import ecscalibur.core.component.tpe._
-import ecscalibur.core.context.MetaContext
 import ecscalibur.util.array._
 import izumi.reflect.Tag
 
 import CSeq._
+import ecscalibur.core.world.World
 
 object queries:
   /** Queries allow users to iterate on a subset of the Components of every Entity stored in a
-    * [[World]], read or update their values and perform structural changes to the World's state
-    * through a [[Mutator]].
+    * [[World]], read or update their values and perform structural changes to the World's state.
     *
     * They make up the logic of all [[System]]s.
     *
@@ -43,25 +42,13 @@ object queries:
     * @return
     *   a new Query
     */
-  def query(using ArchetypeManager, MetaContext, Mutator): QueryBuilder = new QueryBuilderImpl(
-    summon[ArchetypeManager]
-  )
+  def query(using World): QueryBuilder = new QueryBuilderImpl(summon[World].archetypeManager)
 
 import ecscalibur.core.queries.Query
 
 /** Builder for [[Query]].
   */
-trait QueryBuilder:
-  /** @return
-    *   a reference to the current World's [[MetaContext]].
-    */
-  given context: MetaContext
-
-  /** @return
-    *   a reference to the current World's [[Mutator]].
-    */
-  given mutator: Mutator
-
+private[ecscalibur] trait QueryBuilder:
   /** Excludes all the Components with the given types from the final Query. Entities with at least
     * one of such Components will not be selected.
     *
@@ -191,11 +178,11 @@ trait QueryBuilder:
       C6 <: Component: Tag
   ](f: (Entity, C0, C1, C2, C3, C4, C5, C6) => Unit): Query
 
-private final class QueryBuilderImpl(am: ArchetypeManager)(using MetaContext, Mutator)
-    extends QueryBuilder:
-  override given context: MetaContext = summon[MetaContext]
-  override given mutator: Mutator = summon[Mutator]
+private[ecscalibur] object QueryBuilder:
+  def apply(am: ArchetypeManager): QueryBuilder = new QueryBuilderImpl(am)
 
+private final class QueryBuilderImpl(am: ArchetypeManager)
+    extends QueryBuilder:
   private var selected: Signature = Signature.Nil
   private var _none: Signature = Signature.Nil
   private var _any: Signature = Signature.Nil

@@ -3,6 +3,9 @@ package ecscalibur.testutil
 import ecscalibur.core.component.Component
 import ecscalibur.core.component.ComponentType
 import ecscalibur.core.component.annotations.component
+import ecscalibur.core.world.World
+import ecscalibur.core.queries.Query
+import ecscalibur.core.queries.query
 
 object testclasses:
   @component
@@ -53,3 +56,8 @@ object testclasses:
   @component
   class Velocity(val vec: Vec2D) extends Component
   object Velocity extends ComponentType
+
+  class TestSystem(logic: () => Unit)(using World) extends ecscalibur.core.systems.System("test", 0):
+    override protected val process: Query =
+      query routine: () =>
+        logic()
