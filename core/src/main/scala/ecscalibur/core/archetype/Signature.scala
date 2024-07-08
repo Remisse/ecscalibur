@@ -73,6 +73,8 @@ object Signature:
     *
     * @param ids
     *   the ComponentIds this Signature will be made of
+    * @throws IllegalArgumentException
+    *   if the given sequence is empty or if it contains duplicate elements.
     * @return
     *   a new Signature instance.
     */
@@ -87,6 +89,8 @@ object Signature:
     *
     * @param ids
     *   the ComponentIds this Signature will be made of
+    * @throws IllegalArgumentException
+    *   if the given sequence is empty or if it contains duplicate elements.
     * @return
     *   a new Signature instance.
     */
@@ -97,6 +101,8 @@ object Signature:
     *
     * @param types
     *   the Components or ComponentTypes this Signature will be made of
+    * @throws IllegalArgumentException
+    *   if the given sequence is empty or if it contains duplicate elements.
     * @return
     *   a new Signature instance.
     */
@@ -107,6 +113,8 @@ object Signature:
     *
     * @param types
     *   the Components or ComponentTypes this Signature will be made of
+    * @throws IllegalArgumentException
+    *   if the given sequence is empty or if it contains duplicate elements.
     * @return
     *   a new Signature instance.
     */

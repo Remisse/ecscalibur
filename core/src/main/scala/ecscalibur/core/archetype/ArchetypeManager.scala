@@ -19,6 +19,9 @@ trait ArchetypeManager:
     *
     * @param e
     *   the Entity to be added
+    * @throws IllegalArgumentException
+    *   if the given Entity is already handled by this manager or if the given component sequence is
+    *   empty.
     * @param components
     *   the given Entity's Components
     */
@@ -35,6 +38,9 @@ trait ArchetypeManager:
     *   the Entity to which the given components must be added
     * @param components
     *   the Components to be added
+    * @throws IllegalArgumentException
+    *   if the given Entity is not handled by this manager or if the given component sequence is
+    *   empty.
     * @return
     *   true if this operation has been successfully executed, false otherwise.
     */
@@ -51,6 +57,9 @@ trait ArchetypeManager:
     *   the Entity from which the given components must be removed
     * @param components
     *   the Components to be removed
+    * @throws IllegalArgumentException
+    *   if the given Entity is not handled by this manager or if the given component sequence is
+    *   empty.
     * @return
     *   true if this operation has been successfully executed, false otherwise.
     */
@@ -60,6 +69,8 @@ trait ArchetypeManager:
     *
     * @param e
     *   the Entity to be deleted
+    * @throws IllegalArgumentException
+    *   if the given Entity is not handled by this manager.
     */
   def delete(e: Entity): Unit
 

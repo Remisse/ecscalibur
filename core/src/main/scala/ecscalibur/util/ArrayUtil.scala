@@ -4,13 +4,13 @@ import izumi.reflect.Tag
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
+import java.{util => ju}
 
 // TODO Push all benchmarks
 
-/**
-  * Collection of Array extension methods that reimplement some of the operations available
-  * through the standard Scala library. This is due to the fact that many library methods perform
-  * poorly with arrays of primitives for unknown reasons.
+/** Collection of Array extension methods that reimplement some of the operations available through
+  * the standard Scala library. This is due to the fact that many library methods perform poorly
+  * with arrays of primitives for unknown reasons.
   */
 object array:
   extension [T](a: Array[T])
@@ -95,14 +95,15 @@ object array:
 
     inline def aFindUnsafe(inline p: T => Boolean): T =
       val idx = a.aIndexWhere(p)
-      require(idx != -1, "Could not find any elements that satisfy the given predicate.")
+      if (idx == -1) throw ju.NoSuchElementException("No elements satisfy the given predicate.")
       a(idx)
 
     inline def aFindOfType[C <: T: Tag]: C =
       val idx = a.aIndexWhere:
         case _: C => true
-        case _ => false
-      require(idx != -1, s"Could not find any elements of type ${summon[Tag[C]]}.")
+        case _    => false
+      if (idx == -1)
+        throw ju.NoSuchElementException(s"No elements of type ${summon[Tag[T]].toString} found.")
       a(idx).asInstanceOf[C]
 
     inline def aFilter(inline p: T => Boolean)(using ClassTag[T]): Array[T] =

@@ -21,10 +21,13 @@ private[ecscalibur] object archetypes:
     *   this Archetype's [[Signature]].
     */
   trait Archetype private[archetype] (val signature: Signature):
-    /** Adds an [[Entity]] to this Archetype along with the given [[Component]]s.
+    /** Adds an [[Entity]] to this Archetype along with the given [[Component]]s. The sequence of
+      * components must satisfy this Archetypes's [[Signature]].
       *
       * @param e
       *   the Entity to be added
+      * @throws IllegalArgumentException
+      *   if the given components do not satisfy this archetype's signature.
       * @param entityComponents
       *   the Components to be added
       */
@@ -43,6 +46,8 @@ private[ecscalibur] object archetypes:
       *
       * @param e
       *   the Entity to be removed
+      * @throws IllegalArgumentException
+      *   if the given Entity is not stored in this Archetype.
       * @return
       *   the given Entity's Components.
       */
@@ -52,6 +57,8 @@ private[ecscalibur] object archetypes:
       *
       * @param e
       *   the Entity to be removed
+      * @throws IllegalArgumentException
+      *   if the given Entity is not stored in this Archetype.
       */
     def softRemove(e: Entity): Unit
 
@@ -69,6 +76,9 @@ private[ecscalibur] object archetypes:
       *
       * @param e
       *   the Entity on which to perform the update
+      * @throws IllegalArgumentException
+      *   if the given Entity is not stored in this Archetype or the given Component is not part of
+      *   this Archetype's signature.
       * @param c
       *   the Component to be replaced
       */

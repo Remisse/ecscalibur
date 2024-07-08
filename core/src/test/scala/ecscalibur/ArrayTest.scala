@@ -96,17 +96,17 @@ class ArrayTest extends AnyFlatSpec with should.Matchers:
     a.aExists(_ > Max) shouldBe false
 
   "aFindUnsafe" should "work correctly" in:
-    val a = intArray
-    a.aFindUnsafe(_ == Min) shouldBe Min
-    an[IllegalArgumentException] shouldBe thrownBy(a.aFindUnsafe(_ == Max))
+    val arr = intArray
+    arr.aFindUnsafe(_ == Min) shouldBe Min
+    a[NoSuchElementException] shouldBe thrownBy(arr.aFindUnsafe(_ == Max))
 
   import ecscalibur.core.component.Component
   import ecscalibur.testutil.testclasses.{C1, C2, C3}
 
   "aFindOfType" should "work correctly" in:
-    val a: Array[Component] = Array(C1(), C2())
-    a.aFindOfType[C1] isA C1 shouldBe true
-    an[IllegalArgumentException] shouldBe thrownBy(a.aFindOfType[C3])
+    val arr: Array[Component] = Array(C1(), C2())
+    arr.aFindOfType[C1] isA C1 shouldBe true
+    a[NoSuchElementException] shouldBe thrownBy(arr.aFindOfType[C3])
 
   "aFilter" should "work correctly" in:
     val predicate: Int => Boolean = _ % 2 == 0

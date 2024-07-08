@@ -50,7 +50,7 @@ import ecscalibur.core.queries.Query
   */
 private[ecscalibur] trait QueryBuilder:
   /** Excludes all the Components with the given types from the final Query. Entities with at least
-    * one of such Components will not be selected.
+    * one of the specified Components will not be selected.
     *
     * @param types
     *   the types of Components to exclude
@@ -181,8 +181,7 @@ private[ecscalibur] trait QueryBuilder:
 private[ecscalibur] object QueryBuilder:
   def apply(am: ArchetypeManager): QueryBuilder = new QueryBuilderImpl(am)
 
-private final class QueryBuilderImpl(am: ArchetypeManager)
-    extends QueryBuilder:
+private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   private var selected: Signature = Signature.Nil
   private var _none: Signature = Signature.Nil
   private var _any: Signature = Signature.Nil

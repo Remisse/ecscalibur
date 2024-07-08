@@ -50,6 +50,8 @@ object world:
       *   its priority value relative to the other Systems in the World
       * @param qb
       *   a function that returns a new Query created with the help of a [[QueryBuilder]]
+      * @throws IllegalArgumentException
+      *   if a System with the same name already exists
       */
     infix def withSystem(name: String, priority: Int = 0)(qb: QueryBuilder => Query): Unit
 
@@ -57,6 +59,8 @@ object world:
       *
       * @param s
       *   the System to be added.
+      * @throws IllegalArgumentException
+      *   if a System with the same name already exists
       */
     infix def withSystem(s: System): Unit
 

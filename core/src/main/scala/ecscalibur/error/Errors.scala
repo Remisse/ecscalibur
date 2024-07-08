@@ -1,15 +1,13 @@
 package ecscalibur.error
 
-/**
-  * Thrown when the requirements of a method regarding its type parameters are not satisfied.
+/** Thrown when the requirements of a method regarding its type parameters are not met.
   *
   * @param msg
   *   the error message
   */
 class IllegalTypeParameterException(msg: String = "") extends RuntimeException(msg)
 
-/**
-  * Thrown when a class has not been defined correctly.
+/** Thrown when a class has not been defined correctly.
   *
   * @param msg
   *   the error message

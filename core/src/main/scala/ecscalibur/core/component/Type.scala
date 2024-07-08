@@ -44,6 +44,8 @@ private[ecscalibur] object tpe:
 
   /** @tparam T
     *   the type for which the ComponentId must be retrieved
+    * @throws IllegalTypeParameterException
+    *   if the given type is a 1- or higher-kinded type different from Rw[?].
     * @return
     *   the ComponentId of T's type parameter if T is Rw[_] and is 1-kinded, or T's ComponentId if T is
     *   0-kinded.

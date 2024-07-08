@@ -60,6 +60,8 @@ object CSeq:
       *
       * @param p
       *   the predicate against which the elements of this collection will be tested
+      * @throws NoSuchElementException
+      *   if no element in this collection satisfies the given predicate
       * @return
       *   the first element satisfying the given predicate
       */
@@ -69,6 +71,8 @@ object CSeq:
       *
       * @tparam C
       *   type of the desired element
+      * @throws NoSuchElementException
+      *   if no element in this collection is of type C
       * @return
       *   the first element that is instance of the given type
       */
