@@ -210,7 +210,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
         f(e)
 
   private inline def initSignature(cache: CSeq[ComponentId]): Unit =
-    selected = Signature(cache.toArray)
+    selected = Signature(cache)
 
   override infix def on[C0 <: Component: ClassTag](f: (Entity, C0) => Unit): Query =
     idCache = CSeq(id0K[C0])

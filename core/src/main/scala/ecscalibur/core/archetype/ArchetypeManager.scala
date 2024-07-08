@@ -120,7 +120,7 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
     newEntityToArchetype(e, components)
 
   private inline def newEntityToArchetype(e: Entity, components: CSeq[Component]): Unit =
-    val entitySignature: Signature = Signature(components.map(~_).toArray)
+    val entitySignature: Signature = Signature(components.map(~_))
     if !archetypes.contains(entitySignature) then
       val newArchetype = Archetype(entitySignature)
       archetypes += entitySignature -> newArchetype

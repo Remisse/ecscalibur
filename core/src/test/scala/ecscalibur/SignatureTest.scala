@@ -5,6 +5,7 @@ import org.scalatest.flatspec._
 import org.scalatest.matchers._
 import ecscalibur.core.archetype.Signature
 import ecscalibur.core.component.ComponentId
+import ecsutil.CSeq
 
 class SignatureTest extends AnyFlatSpec with should.Matchers:
   import testutil.testclasses.{C1, C2, C3}
@@ -15,7 +16,7 @@ class SignatureTest extends AnyFlatSpec with should.Matchers:
     signature.underlying.isEmpty should be(true)
 
   it should "be non-empty and made of distinct component IDs" in:
-    an[IllegalArgumentException] should be thrownBy(Signature(Array.empty[ComponentId]))
+    an[IllegalArgumentException] should be thrownBy(Signature(CSeq.empty[ComponentId]))
     val signature = Signature(C1, C2, C3)
     signature.isNil should be(false)
     signature.underlying.isEmpty should be(false)

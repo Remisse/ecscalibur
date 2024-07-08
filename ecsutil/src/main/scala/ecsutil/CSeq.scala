@@ -40,11 +40,11 @@ object CSeq:
 
     inline def forall(inline p: T => Boolean): Boolean = l.toArray.aForall(p)
 
-    inline def sameElements(other: Array[T]): Boolean = l.toArray.aSameElements(other)
+    inline def sameElements(other: CSeq[T]): Boolean = l.toArray.aSameElements(other.toArray)
 
     inline def map[U: ClassTag](inline f: T => U): CSeq[U] = l.toArray.aMap(f)
 
-    inline def containsSlice(that: Array[T]): Boolean = l.toArray.aContainsSlice(that)
+    inline def containsSlice(that: CSeq[T]): Boolean = l.toArray.aContainsSlice(that.toArray)
 
     inline def indexWhere(inline p: T => Boolean): Int = l.toArray.aIndexWhere(p)
 

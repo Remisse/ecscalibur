@@ -2,16 +2,17 @@ package ecscalibur.core.archetype
 
 import ecscalibur.core.component.ComponentId
 import ecscalibur.core.component.WithType
-import ecsutil.array._
 
 import scala.annotation.targetName
+import ecsutil.CSeq
+import scala.reflect.ClassTag
 
 /** Ordered sequence of distinct [[ComponentId]]s.
   *
   * @param underlying
   *   ComponentIds out of which this Signature will be made.
   */
-private[ecscalibur] final case class Signature(val underlying: Array[ComponentId]):
+private[ecscalibur] final case class Signature(val underlying: CSeq[ComponentId]):
   /** Checks whether this Signature contains at least one of the ComponentIds the given
     * Signature is made of.
     *
@@ -22,7 +23,7 @@ private[ecscalibur] final case class Signature(val underlying: Array[ComponentId
     *   of, false otherwise.
     */
   inline infix def containsAny(other: Signature): Boolean =
-    other.underlying.aExists(underlying.aContains)
+    other.underlying.exists(underlying.contains)
 
   /** Checks whether this Signature contains all of the ComponentIds the given Signature is
     * made of.
@@ -34,7 +35,7 @@ private[ecscalibur] final case class Signature(val underlying: Array[ComponentId
     *   false otherwise.
     */
   inline infix def containsAll(other: Signature): Boolean =
-    other.underlying.aForall(underlying.aContains)
+    other.underlying.forall(underlying.contains)
 
   /** Checks whether this Signature is empty.
     *
@@ -44,15 +45,15 @@ private[ecscalibur] final case class Signature(val underlying: Array[ComponentId
   inline def isNil: Boolean = underlying.isEmpty
 
   override def equals(other: Any): Boolean = other match
-    case Signature(u) => underlying.aSameElements(u)
+    case Signature(u) => underlying.sameElements(u)
     case _            => false
 
-  override def hashCode(): Int = java.util.Arrays.hashCode(underlying)
+  override def hashCode(): Int = java.util.Arrays.hashCode(underlying.toArray)
 
 object Signature:
   /** Empty signature.
     */
-  val Nil: Signature = new Signature(Array.empty[ComponentId])
+  val Nil: Signature = new Signature(CSeq.empty[ComponentId])
 
   /** Creates a new Signature from the given ComponentIds.
     *
@@ -64,11 +65,11 @@ object Signature:
     *   a new Signature instance.
     */
   @targetName("fromIds")
-  def apply(ids: Array[ComponentId]): Signature =
+  def apply(ids: CSeq[ComponentId]): Signature =
     require(ids.nonEmpty, "Failed to make signature: empty sequence.")
-    val res: Array[Int] = ids.distinct.sortInPlace().array
+    val res: Array[Int] = ids.toArray.distinct.sortInPlace().array
     require(res.length == ids.length, "Duplicate types found.")
-    new Signature(ComponentId(res))
+    new Signature(CSeq(ComponentId(res)))
 
   /** Creates a new Signature from the given ComponentIds.
     *
@@ -80,7 +81,7 @@ object Signature:
     *   a new Signature instance.
     */
   @targetName("fromIds")
-  inline def apply(ids: ComponentId*): Signature = apply(ids.toArray)
+  inline def apply(ids: ComponentId*): Signature = apply(CSeq(ids))
 
   /** Creates a new Signature from the given Components or ComponentTypes.
     *
@@ -92,7 +93,7 @@ object Signature:
     *   a new Signature instance.
     */
   @targetName("fromTypes")
-  inline def apply[T <: WithType](types: T*): Signature = apply(types.map(_.typeId).toArray)
+  inline def apply[T <: WithType](types: T*): Signature = apply(CSeq(types.map(_.typeId)))
 
   /** Creates a new Signature from the given Components or ComponentTypes.
     *
@@ -104,4 +105,4 @@ object Signature:
     *   a new Signature instance.
     */
   @targetName("fromTypes")
-  inline def apply[T <: WithType](types: Array[T]): Signature = apply(types.aMap(_.typeId))
+  inline def apply[T <: WithType: ClassTag](types: CSeq[T]): Signature = apply(types.map(_.typeId))

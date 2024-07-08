@@ -72,7 +72,7 @@ object fixtures:
     require(nEntities <= maxEntities)
 
     val signature = Signature(componentIds*)
-    val fragment = Fragment(signature, ProgressiveMap.from(signature.underlying*), maxEntities)
+    val fragment = Fragment(signature, ProgressiveMap.from(signature.underlying.toArray*), maxEntities)
     for e <- entities do fragment.add(e, CSeq(components*))
 
   class SystemFixture(nEntities: Int = 1):

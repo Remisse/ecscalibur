@@ -64,13 +64,12 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       _ on: (e: Entity, v: Velocity, p: Position) =>
         e <== Position(p.vec + v.vec)
 
-    var vec = Vec2D(0, 0)
     world.withSystem(s2, priority = 1):
       _ on: (_, p: Position) =>
-        vec = p.vec
+        p.vec should be(pos.vec + vel.vec)
+        ()
 
     world loop once
-    vec should be(pos.vec + vel.vec)
 
   inline val Tolerance = 1e-8
 

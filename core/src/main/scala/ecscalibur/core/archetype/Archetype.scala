@@ -174,14 +174,14 @@ private[ecscalibur] object archetypes:
 
       private var _fragments: Vector[Fragment] = Vector.empty
       private val fragmentsByEntity: mutable.Map[Entity, Fragment] = mutable.Map.empty
-      private val componentMappings = ProgressiveMap.from[ComponentId](inSignature.underlying*)
+      private val componentMappings = ProgressiveMap.from[ComponentId](inSignature.underlying.toArray*)
 
       override def fragments: Iterable[Fragment] = _fragments
 
       override def add(e: Entity, entityComponents: CSeq[Component]): Unit =
         require(!contains(e), "Attempted to add an already existing entity.")
         require(
-          signature == Signature(entityComponents.map(~_).toArray),
+          signature == Signature(entityComponents.map(~_)),
           "Given component types do not correspond to this archetype's signature."
         )
         if (_fragments.isEmpty || _fragments.head.isFull) prependNewFragment(entityComponents)
