@@ -1,6 +1,6 @@
 package ecsutil
 
-trait ProgressiveMap[T] extends Iterable[(T, Int)]:
+trait ProgressiveMap[T]:
   def +=(elem: T): ProgressiveMap[T]
 
   def -=(elem: T): ProgressiveMap[T]
@@ -27,45 +27,40 @@ object ProgressiveMap:
     res
 
   final class ProgressiveMapImpl[T] extends ProgressiveMap[T]:
-    import scala.collection.mutable
+    import com.google.common.collect.HashBiMap
+    import com.google.common.collect.BiMap
 
     private var effectiveSize = 0
-    private val map: mutable.Map[T, Int] = mutable.Map.empty
-    private val reverse: mutable.Map[Int, T] = mutable.Map.empty
+    private val bimap: BiMap[T, Int] = HashBiMap.create()
     private val idGenerator = IdGenerator()
 
-    override def +=(elem: T): ProgressiveMap[T] = 
+    override def +=(elem: T): ProgressiveMap[T] =
       require(!contains(elem), s"Element $elem has already been mapped.")
-      val id = idGenerator.next
-      map += (elem -> id)
-      reverse += (id -> elem)
+      bimap.put(elem, idGenerator.next)
       effectiveSize += 1
       this
 
-    override def -=(elem: T): ProgressiveMap[T] = 
+    override def -=(elem: T): ProgressiveMap[T] =
       require(contains(elem), s"Element $elem has not been mapped.")
-      val id = map.remove(elem).head
-      reverse -= id
+      val id = bimap.remove(elem)
       idGenerator.erase(id)
       effectiveSize -= 1
       this
 
-    override inline def contains(elem: T): Boolean = map.contains(elem)
+    override inline def contains(elem: T): Boolean = bimap.containsKey(elem)
 
-    override def apply(elem: T): Int = 
-        require(contains(elem), s"Element $elem not mapped.")
-        map(elem)
+    override def apply(elem: T): Int =
+      require(contains(elem), s"Element $elem not mapped.")
+      bimap.get(elem)
 
     override def ofId(id: Int): T =
-      require(reverse.contains(id), s"No elements with id $id.")
-      reverse(id)
+      require(bimap.containsValue(id), s"No elements with id $id.")
+      bimap.inverse().get(id)
 
     override def foreach(f: (T, Int) => Unit): Unit =
-      map foreach: (elem, id) =>
-        f(elem, id)
+      bimap.forEach: (k, v) =>
+        f(k, v)
 
     override def size: Int = effectiveSize
 
     override def isEmpty: Boolean = effectiveSize == 0
-
-    override def iterator: Iterator[(T, Int)] = map.iterator

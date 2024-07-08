@@ -37,3 +37,4 @@ class ProgressiveMapTest extends AnyFlatSpec with should.Matchers:
     val map = ProgressiveMap.from(cons*)
     for (elem, mapping) <- map do
       map(elem) should be(mapping)
+      ()
