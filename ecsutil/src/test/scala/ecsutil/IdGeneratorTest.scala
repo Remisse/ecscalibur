@@ -1,12 +1,10 @@
-package ecscalibur
+package ecsutil
 
 import org.scalatest._
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
 
 class IdGeneratorTests extends AnyFlatSpec with should.Matchers:
-  import ecscalibur.id.IdGenerator
-
   val cons: Seq[Int] = 0 to 9
 
   "An ID generator" should "generate consecutive IDs" in:
@@ -37,3 +35,8 @@ class IdGeneratorTests extends AnyFlatSpec with should.Matchers:
     val reused = gen.next
     id shouldBe reused
     gen.next shouldNot be(reused)
+
+  it should "not recognize negative IDs" in:
+    val gen = IdGenerator()
+    val _ = gen.next
+    gen.isValid(-1) should be(false)

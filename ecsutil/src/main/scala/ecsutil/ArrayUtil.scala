@@ -1,6 +1,4 @@
-package ecscalibur.util
-
-import izumi.reflect.Tag
+package ecsutil
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
@@ -98,12 +96,12 @@ object array:
       if (idx == -1) throw ju.NoSuchElementException("No elements satisfy the given predicate.")
       a(idx)
 
-    inline def aFindOfType[C <: T: Tag]: C =
+    inline def aFindOfType[C <: T: ClassTag]: C =
       val idx = a.aIndexWhere:
         case _: C => true
         case _    => false
       if (idx == -1)
-        throw ju.NoSuchElementException(s"No elements of type ${summon[Tag[T]].toString} found.")
+        throw ju.NoSuchElementException(s"No elements of type ${summon[ClassTag[C]].toString} found.")
       a(idx).asInstanceOf[C]
 
     inline def aFilter(inline p: T => Boolean)(using ClassTag[T]): Array[T] =

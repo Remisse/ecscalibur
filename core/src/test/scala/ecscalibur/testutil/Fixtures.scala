@@ -1,6 +1,6 @@
 package ecscalibur
 
-import ecscalibur.core.CSeq
+import ecsutil.CSeq
 import ecscalibur.core.Entity
 import ecscalibur.core.EntityRequest
 import ecscalibur.core.Mutator
@@ -14,6 +14,7 @@ import ecscalibur.core.context.MetaContext
 
 import CSeq._
 import ecscalibur.core.world.World
+import ecsutil.ProgressiveMap
 
 // 'import core.archetype.Archetypes.Archetype.DefaultFragmentSizeBytes' warns about an unused import
 // for some reason.
@@ -70,7 +71,8 @@ object fixtures:
   ) extends ArchetypeFixture(components*)(nEntities):
     require(nEntities <= maxEntities)
 
-    val fragment = Fragment(Signature(componentIds*), maxEntities)
+    val signature = Signature(componentIds*)
+    val fragment = Fragment(signature, ProgressiveMap.from(signature.underlying*), maxEntities)
     for e <- entities do fragment.add(e, CSeq(components*))
 
   class SystemFixture(nEntities: Int = 1):

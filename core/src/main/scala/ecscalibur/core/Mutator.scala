@@ -2,6 +2,7 @@ package ecscalibur.core
 
 import ecscalibur.core.component.Component
 import ecscalibur.core.component.ComponentType
+import ecsutil.CSeq
 
 /** Handles operations that can cause performance-heavy structural changes to a [[World]]
   * instance and its internal state.

@@ -1,9 +1,9 @@
-package ecscalibur.util
+package ecsutil
 
 /** Tracks the time elapsed between each call to [[FramePacer.pace]] and puts the current thread to
   * sleep if such time falls under a specified frame time.
   */
-private[ecscalibur] trait FramePacer:
+trait FramePacer:
   type DeltaSeconds = Float
 
   /** Returns the amount of time elapsed since the last call to this method. If called for the first
@@ -16,7 +16,7 @@ private[ecscalibur] trait FramePacer:
     */
   def pace(): DeltaSeconds
 
-private[ecscalibur] object FramePacer:
+object FramePacer:
   private inline val Uninitialized = -1
 
   /** Creates a new [[FramePacer]] instance with the given frame rate limit. A limit equal to 0

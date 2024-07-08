@@ -8,7 +8,7 @@ import core.systems.System
 import core.queries.Query
 import core.queries.query
 import testutil.testclasses.Value
-import testutil.shouldNotBeExecuted
+import ecsutil.shouldNotBeExecuted
 import ecscalibur.core.world.World
 
 class SystemTest extends AnyFlatSpec with should.Matchers:

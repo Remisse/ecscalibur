@@ -1,12 +1,13 @@
 package ecscalibur
 
-import ecscalibur.core.CSeq._
 import ecscalibur.core._
-import ecscalibur.util.array._
 import ecscalibur.util.sizeof.sizeOf
 import org.scalatest._
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
+
+import ecsutil.CSeq
+import ecsutil.array._
 
 import component._
 import archetype.Signature

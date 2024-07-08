@@ -1,10 +1,4 @@
-package ecscalibur.core
-
-import ecscalibur.util.array._
-import izumi.reflect.Tag
-
-import scala.annotation.targetName
-import scala.reflect.ClassTag
+package ecsutil
 
 /** Mutable collection based on arrays.
   *
@@ -14,6 +8,11 @@ import scala.reflect.ClassTag
 opaque type CSeq[T] = Array[T]
 
 object CSeq:
+  import ecsutil.array._
+
+  import scala.annotation.targetName
+  import scala.reflect.ClassTag
+
   inline def empty[T: ClassTag] = CSeq(Array.empty[T])
 
   inline def apply[T: ClassTag](elements: T*): CSeq[T] = elements.toArray[T]
@@ -76,7 +75,7 @@ object CSeq:
       * @return
       *   the first element that is instance of the given type
       */
-    inline def findOfType[C <: T: Tag]: C = l.toArray.aFindOfType[C]
+    inline def findOfType[C <: T: ClassTag]: C = l.toArray.aFindOfType[C]
 
     inline def filter(inline p: T => Boolean): CSeq[T] = l.toArray.aFilter(p)
 

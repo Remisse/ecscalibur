@@ -1,10 +1,9 @@
 package ecscalibur
 
-import ecscalibur.core.CSeq
+import ecsutil.CSeq
 import ecscalibur.core.Entity
-import ecscalibur.core.Rw
 import ecscalibur.core.world._
-import ecscalibur.testutil.shouldNotBeExecuted
+import ecsutil.shouldNotBeExecuted
 import ecscalibur.testutil.testclasses.C1
 import ecscalibur.testutil.testclasses.Value
 import org.scalatest._
@@ -12,6 +11,7 @@ import org.scalatest.flatspec._
 import org.scalatest.matchers._
 
 import Loop._
+import ecscalibur.core.Extensions.<==
 
 class WorldTest extends AnyFlatSpec with should.Matchers:
   inline val s1 = "test1"
@@ -54,15 +54,15 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.{Vec2D, Position, Velocity}
 
   it should "correctly execute a classic ECS example program" in:
-    val world = World()
+    given world: World = World()
 
     val pos = Position(Vec2D(10, 20))
     val vel = Velocity(Vec2D(1, 2))
     world.entity withComponents CSeq(pos, vel)
 
     world.withSystem(s1):
-      _ on: (_, v: Velocity, p: Rw[Position]) =>
-        p <== Position(p().vec + v.vec)
+      _ on: (e: Entity, v: Velocity, p: Position) =>
+        e <== Position(p.vec + v.vec)
 
     var vec = Vec2D(0, 0)
     world.withSystem(s2, priority = 1):
@@ -70,7 +70,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
         vec = p.vec
 
     world loop once
-    vec shouldBe (pos.vec + vel.vec)
+    vec should be(pos.vec + vel.vec)
 
   inline val Tolerance = 1e-8
 

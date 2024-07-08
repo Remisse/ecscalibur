@@ -1,18 +1,17 @@
-package ecscalibur
+package ecsutil
 
-import ecscalibur.testutil.shouldNotBeExecuted
-import ecscalibur.util.array._
+import ecsutil.array._
 import org.scalatest._
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
 
 class ArrayTest extends AnyFlatSpec with should.Matchers:
-  import ecscalibur.testutil.testclasses.IntWrapper
-
-  val Min = 0
-  val Max = 100
+  inline val Min = 0
+  inline val Max = 100
   def intArray: Array[Int] = (Min until Max).toArray
   def numArray: Array[IntWrapper] = intArray.map(n => IntWrapper(n)).toArray
+
+  case class IntWrapper(n: Int)
 
   "aForeach" should "work correctly" in:
     val a = intArray
@@ -100,12 +99,15 @@ class ArrayTest extends AnyFlatSpec with should.Matchers:
     arr.aFindUnsafe(_ == Min) shouldBe Min
     a[NoSuchElementException] shouldBe thrownBy(arr.aFindUnsafe(_ == Max))
 
-  import ecscalibur.core.component.Component
-  import ecscalibur.testutil.testclasses.{C1, C2, C3}
+  class C1 extends AnyRef
+  class C2 extends AnyRef
+  class C3 extends AnyRef
 
   "aFindOfType" should "work correctly" in:
-    val arr: Array[Component] = Array(C1(), C2())
-    arr.aFindOfType[C1] isA C1 shouldBe true
+    val arr: Array[AnyRef] = Array(C1(), C2())
+    (arr.aFindOfType[C1] match
+      case _: C1 => true
+      case _ => false) should be(true)
     a[NoSuchElementException] shouldBe thrownBy(arr.aFindOfType[C3])
 
   "aFilter" should "work correctly" in:

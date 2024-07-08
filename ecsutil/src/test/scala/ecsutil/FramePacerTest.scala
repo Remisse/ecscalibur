@@ -1,6 +1,5 @@
-package ecscalibur
+package ecsutil
 
-import ecscalibur.util.FramePacer
 import org.scalatest._
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
@@ -15,8 +14,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     an[IllegalArgumentException] shouldBe thrownBy(FramePacer(incorrect))
 
   it should "return the correct delta time value after a call to pace()" in:
-    def test(pacer: FramePacer) =
+    for pacer <- Seq(FramePacer(defaultCap), FramePacer()) do
       pacer.pace() shouldBe 0
       pacer.pace() should be > 0.0f
 
-    for _ <- Seq(FramePacer(defaultCap), FramePacer()) do test

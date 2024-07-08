@@ -2,7 +2,7 @@ package ecscalibur.core.archetype
 
 import ecscalibur.core.component.ComponentId
 import ecscalibur.core.component.WithType
-import ecscalibur.util.array._
+import ecsutil.array._
 
 import scala.annotation.targetName
 
@@ -12,21 +12,6 @@ import scala.annotation.targetName
   *   ComponentIds out of which this Signature will be made.
   */
 private[ecscalibur] final case class Signature(val underlying: Array[ComponentId]):
-  /** Checks whether the entirety of this Signature is part of another.
-    *
-    * @example
-    * {{{
-    * Signature(C1, C2) isPartOf Signature(C1, C2, C3) => true
-    * Signature(C1, C3) isPartOf Signature(C1, C2, C3) => false
-    * }}}
-    *
-    * @param other
-    *   the Signature which may or may not contain this Signature
-    * @return
-    *   true if this Signature is part of the given one, false otherwise.
-    */
-  inline infix def isPartOf(other: Signature): Boolean = other.underlying.aContainsSlice(underlying)
-
   /** Checks whether this Signature contains at least one of the ComponentIds the given
     * Signature is made of.
     *
@@ -81,7 +66,7 @@ object Signature:
   @targetName("fromIds")
   def apply(ids: Array[ComponentId]): Signature =
     require(ids.nonEmpty, "Failed to make signature: empty sequence.")
-    val res: Array[Int] = ids.distinct.sorted
+    val res: Array[Int] = ids.distinct.sortInPlace().array
     require(res.length == ids.length, "Duplicate types found.")
     new Signature(ComponentId(res))
 

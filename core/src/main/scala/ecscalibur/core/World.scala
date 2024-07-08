@@ -7,6 +7,7 @@ import ecscalibur.core.context.MetaContext
 import ecscalibur.core.queries.Query
 import ecscalibur.core.queries.query
 import ecscalibur.core.systems.System
+import ecsutil.CSeq
 
 object world:
   import builders.*
@@ -40,6 +41,17 @@ object world:
       *   an [[EntityBuilder]] instance
       */
     def entity: EntityBuilder
+
+  /** Updates the reference to the given Component type for the given Entity.
+    *
+    * @param e
+    *   the Entity for which the given Component must be updated
+    * @param c
+    *   the Component to update
+    * @throws IllegalArgumentException
+    *   if the given Entity does not exist
+    */
+    def update(e: Entity, c: Component): Unit
 
     /** Creates a new System with [[System.process]] overridden by the given [[Query]]. Both
       * [[System.onResume]] and [[System.onPause]] do not contain any logic.
@@ -133,16 +145,16 @@ object world:
     private class WorldImpl(frameCap: Int)(using ArchetypeManager, MetaContext)
         extends World,
           Mutator:
-      import ecscalibur.id.IdGenerator
       import scala.collection.mutable
 
       override given archetypeManager: ArchetypeManager = summon[ArchetypeManager]
       override given mutator: Mutator = this
       override given context: MetaContext = summon[MetaContext]
 
-      import ecscalibur.util.FramePacer
+      import ecsutil.FramePacer
       private val pacer = FramePacer(frameCap)
 
+      import ecsutil.IdGenerator
       private val entityIdGenerator = IdGenerator()
 
       import scala.collection.mutable.ArrayBuffer
@@ -159,6 +171,8 @@ object world:
       private var areBuffersDirty = false
 
       override def entity: EntityBuilder = EntityBuilder()(using this)
+
+      override def update(e: Entity, c: Component): Unit = archetypeManager.update(e, c)
 
       override def withSystem(name: String, priority: Int)(qb: QueryBuilder => Query): Unit =
         given World = this

@@ -39,7 +39,6 @@ object testclasses:
   class NotAnnotated extends Component
   object NotAnnotated extends ComponentType
 
-  case class IntWrapper(n: Int)
 
   @component
   class OneKinded[T <: Component] extends Component

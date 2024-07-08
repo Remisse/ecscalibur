@@ -1,12 +1,12 @@
 package ecscalibur.core.archetype
 
-import ecscalibur.core.CSeq
+import ecsutil.CSeq
 import ecscalibur.core.Entity
 import ecscalibur.core.archetype.archetypes.Archetype
 import ecscalibur.core.component.Component
 import ecscalibur.core.component.ComponentId
 import ecscalibur.core.component.ComponentType
-import ecscalibur.util.array._
+import ecsutil.array._
 
 import scala.collection.mutable
 
@@ -73,6 +73,17 @@ trait ArchetypeManager:
     *   if the given Entity is not handled by this manager.
     */
   def delete(e: Entity): Unit
+
+  /** Updates the reference to the given Component type for the given Entity.
+    *
+    * @param e
+    *   the Entity for which the given Component must be updated
+    * @param c
+    *   the Component to update
+    * @throws IllegalArgumentException
+    *   if the given Entity is not handled by this ArchetypeManager
+    */
+  def update(e: Entity, c: Component): Unit
 
   /** Iterates over all Entities across all Archetypes which satisfy the given predicate and selects
     * all Components whose ComponentIds are part of the given Signature.
@@ -147,6 +158,10 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
     ensureEntityIsValid(e)
     archetypes(signaturesByEntity(e)).softRemove(e)
     signaturesByEntity -= e
+
+  override def update(e: Entity, c: Component): Unit =
+    ensureEntityIsValid(e)
+    archetypes(signaturesByEntity(e)).update(e, c)
 
   override def iterate(isSelected: Signature => Boolean, allIds: Signature)(
       f: (Entity, CSeq[Component], Archetype) => Unit

@@ -4,8 +4,7 @@ import org.scalatest._
 import org.scalatest.flatspec._
 import org.scalatest.matchers._
 
-import error.{IllegalDefinitionException, IllegalTypeParameterException}
-import core.Rw
+import error.IllegalDefinitionException
 import core.component._
 import core.component.tpe._
 
@@ -72,12 +71,3 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
   "id0K[T]" should "not return the component ID of a 1-kinded class's type parameter" in:
     id0K[OneKinded[C1]] shouldNot be(~C1)
     id0K[OneKinded[C1]] shouldBe ~OneKinded
-
-  "idRw[T]" should "return the component ID of Rw[T]'s type parameter or fall back to id0K" in:
-    an[IllegalTypeParameterException] should be thrownBy idRw[OneKinded[C1]]
-    idRw[Rw[C1]] shouldBe ~C1
-    idRw[Rw[C1]] shouldNot be(~Rw)
-    idRw[C1] shouldBe id0K[C1]
-
-  "idRw[T]" should "throw if T is a 1- or higher-kinded type" in:
-    an[IllegalTypeParameterException] should be thrownBy idRw[Rw[OneKinded[C1]]]

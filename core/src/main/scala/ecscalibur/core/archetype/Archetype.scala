@@ -1,9 +1,8 @@
 package ecscalibur.core.archetype
 
-import ecscalibur.core.CSeq
+import ecsutil.CSeq
 import ecscalibur.core.Entity
 import ecscalibur.core.component._
-import ecscalibur.id.IdGenerator
 import ecscalibur.util.sizeof.sizeOf
 
 import scala.annotation.tailrec
@@ -13,6 +12,8 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 
 import CSeq._
+
+import ecsutil.ProgressiveMap
 
 private[ecscalibur] object archetypes:
   /** A collection of Entities all featuring a specific combination of [[Component]]s.
@@ -169,9 +170,11 @@ private[ecscalibur] object archetypes:
     private final class AggregateImpl(inSignature: Signature, maxFragmentSizeBytes: Long)
         extends Archetype(inSignature),
           Aggregate:
-      import ecscalibur.util.array.*
+      import ecsutil.array.*
+
       private var _fragments: Vector[Fragment] = Vector.empty
       private val fragmentsByEntity: mutable.Map[Entity, Fragment] = mutable.Map.empty
+      private val componentMappings = ProgressiveMap.from[ComponentId](inSignature.underlying*)
 
       override def fragments: Iterable[Fragment] = _fragments
 
@@ -192,7 +195,7 @@ private[ecscalibur] object archetypes:
             s"Exceeded the maximum fragment size ($sizeBytes > $maxFragmentSizeBytes)."
           )
         val maxEntities = (maxFragmentSizeBytes / sizeBytes).toInt
-        _fragments = Fragment(signature, maxEntities) +: _fragments
+        _fragments = Fragment(signature, componentMappings, maxEntities) +: _fragments
 
       private inline def estimateComponentsSize(components: CSeq[Component]): Long =
         var estimatedComponentsSize: Long = 0
@@ -253,49 +256,43 @@ private[ecscalibur] object archetypes:
       * @return
       *   a new Fragment instance
       */
-    def apply(signature: Signature, maxEntities: Int): Fragment =
-      FragmentImpl(signature, maxEntities)
+    def apply(signature: Signature, mappings: ProgressiveMap[ComponentId], maxEntities: Int): Fragment =
+      FragmentImpl(signature, mappings, maxEntities)
 
-    private final class FragmentImpl(inSignature: Signature, maxEntities: Int)
+    private final class FragmentImpl(inSignature: Signature, componentMappings: ProgressiveMap[ComponentId], maxEntities: Int)
         extends Archetype(inSignature),
           Fragment:
-      import ecscalibur.util.array.*
+      import ecsutil.array.*
 
-      private val idGenerator: IdGenerator = IdGenerator()
-      private val entityIndexes: mutable.Map[Entity, Int] =
-        new mutable.HashMap(maxEntities, FragmentImpl.LoadFactor)
-      private val components: Map[ComponentId, CSeq[Component]] =
-        signature.underlying
-          .aMap(_ -> CSeq.ofDim[Component](maxEntities))
-          .to(HashMap)
+      private val entityIndexes: ProgressiveMap[Entity] = ProgressiveMap()
+      private val components: CSeq[CSeq[Component]] = 
+        CSeq.fill[CSeq[Component]](maxEntities)(CSeq.ofDim[Component](inSignature.underlying.length))
 
       override inline def isFull: Boolean = entityIndexes.size == maxEntities
 
       override def isEmpty: Boolean = entityIndexes.isEmpty
 
       override def update(e: Entity, c: Component): Unit =
-        components(c.typeId)(entityIndexes(e)) = c
+        setComponent(e, c)
+
+      private inline def setComponent(e: Entity, c: Component): Unit =
+        components(entityIndexes(e))(componentMappings(c.typeId)) = c
 
       override def add(e: Entity, entityComponents: CSeq[Component]): Unit =
         // No need to validate the inputs, as Aggregate already takes care of it.
         require(!isFull, s"Cannot add more entities beyond the maximum limit ($maxEntities).")
-        val newEntityIdx = idGenerator.next
-        entityIndexes += e -> newEntityIdx
+        entityIndexes += e
         entityComponents.foreach: (c: Component) =>
-          components(c.typeId)(newEntityIdx) = c
+          setComponent(e, c)
 
       override inline def contains(e: Entity): Boolean =
         entityIndexes.contains(e)
 
       override def remove(e: Entity): CSeq[Component] =
-        val idx = removeEntityFromMap(e)
-        idGenerator.erase(idx) match
-          case false => throw new IllegalArgumentException(removalErrorMsg)
-          case _     => CSeq[Component](components.map((_, comps) => comps(idx)))
+        components(removeEntityFromMap(e))
 
       override def softRemove(e: Entity): Unit =
-        val idx = removeEntityFromMap(e)
-        val _ = idGenerator.erase(idx)
+        val _ = removeEntityFromMap(e)
 
       private inline def removeEntityFromMap(e: Entity): Int =
         val idx = entityIndexes(e)
@@ -306,18 +303,4 @@ private[ecscalibur] object archetypes:
           f: (Entity, CSeq[Component], Archetype) => Unit
       ): Unit =
         for (e, entityIdx) <- entityIndexes do
-          val entityComps = CSeq.ofDim[Component](selectedIds.underlying.length)
-
-          @tailrec
-          def gatherComponentsOfEntity(i: Int): Unit = i match
-            case i if i == entityComps.length => ()
-            case _ =>
-              val componentId = selectedIds.underlying(i)
-              entityComps(i) = components(componentId)(entityIdx)
-              gatherComponentsOfEntity(i + 1)
-
-          gatherComponentsOfEntity(0)
-          f(e, entityComps, this)
-
-    private object FragmentImpl:
-      private val LoadFactor = 0.7
+          f(e, components(entityIdx), this)

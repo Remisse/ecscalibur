@@ -1,4 +1,4 @@
-package ecscalibur.id
+package ecsutil 
 
 /** Models a factory of unique, recyclable [[Int]] IDs.
   */
@@ -60,4 +60,4 @@ object IdGenerator:
       false
 
     override def isValid(id: Int): Boolean =
-      id < highestAvailableIdx && !erasedIds.contains(id)
+      id >= 0 && id < highestAvailableIdx && !erasedIds.contains(id)
