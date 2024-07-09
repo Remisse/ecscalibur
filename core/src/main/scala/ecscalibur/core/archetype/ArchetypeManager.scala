@@ -12,7 +12,7 @@ import CSeq.*
 
 /** A collection of [[Archetype]]s.
   */
-trait ArchetypeManager:
+private[ecscalibur] trait ArchetypeManager:
   /** Adds the given Entity and its Components to the correct Archetype.
     *
     * @param e
