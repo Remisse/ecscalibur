@@ -22,6 +22,11 @@ object annotations:
     ): List[quotes.reflect.Definition] =
       import quotes.reflect.*
 
+      companion match
+        case None => report.errorAndAbort("This class should define a companion object.")
+        case _    => ()
+      val newRhs = Literal(IntConstant(getId(definition.symbol.fullName)))
+
       def ensureExtends[T](cls: Symbol)(using Quotes, Type[T]): Unit =
         cls.typeRef.asType match
           case '[T] => ()
@@ -41,8 +46,6 @@ object annotations:
           )
         ValDef(idOverrideSym, Some(rhs))
 
-      val newRhs = Literal(IntConstant(getId(definition.symbol.fullName)))
-
       def newClassDefinitionWithOverriddenField[typeToExtend](toCopy: Definition)(using
           Type[typeToExtend]
       ): ClassDef =
@@ -58,10 +61,6 @@ object annotations:
               recreateField("_typeId", cls, newRhs) :: body
             )
           case _ => report.errorAndAbort("This annotation only works on classes.")
-
-      companion match
-        case None => report.errorAndAbort("This class should define a companion object.")
-        case _    => ()
 
       List(
         newClassDefinitionWithOverriddenField[Component](definition),
