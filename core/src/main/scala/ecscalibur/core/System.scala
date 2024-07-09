@@ -29,7 +29,7 @@ object systems:
 
     /** Called every loop by a World to let this System update its state.
       */
-    final inline def update(): Unit = _status match
+    private[ecscalibur] final inline def update(): Unit = _status match
       case Status.Starting =>
         onStart()
         _status = Status.Running
