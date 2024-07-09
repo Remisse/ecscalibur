@@ -15,7 +15,7 @@ object systems:
     /** Logic executed once when the system starts and once every time it resumes after being
       * paused.
       */
-    protected val onStart: () => Unit = System.EmptyLogic
+    protected val onStart: Query = Query.None
 
     /** Logic executed every World loop. Override by calling the [[query]] factory method.
       */
@@ -23,7 +23,7 @@ object systems:
 
     /** Logic executed once whenever the system pauses.
       */
-    protected val onPause: () => Unit = System.EmptyLogic
+    protected val onPause: Query = Query.None
 
     private var _status = Status.Starting
 
@@ -87,6 +87,3 @@ object systems:
       case Running
       case Pausing
       case Paused
-
-  object System:
-    private inline def EmptyLogic = () => ()
