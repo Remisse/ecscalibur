@@ -6,10 +6,13 @@ package ecsutil
 trait FramePacer:
   type DeltaSeconds = Float
 
-  /** Returns the amount of time elapsed since the last call to this method. If called for the first
-    * time, it will return 0. If the calculated time falls under the specified frame rate cap, it
-    * will put the current thread to sleep for an amount of time equal to `frameTime - elapsedTime`
-    * and return `frameTime` as delta time, where `frameTime` is equal to `1 / frameCap`.
+  /** Returns the amount of time elapsed since the last call to this method. 
+    * 
+    * If called for the first time, it will return 0. 
+    * 
+    * If the calculated time falls under the specified frame rate cap, it
+    * will put the current thread to sleep for `frameTime - elapsedTime` seconds and return
+    * `frameTime` as the time delta, where `frameTime` is equal to `1 / frameCap`.
     *
     * @return
     *   the amount of time elapsed since the last call.
