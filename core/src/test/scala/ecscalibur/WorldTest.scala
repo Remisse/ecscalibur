@@ -1,17 +1,15 @@
 package ecscalibur
 
-import ecsutil.CSeq
-import ecscalibur.core.Entity
-import ecscalibur.core.world._
-import ecsutil.shouldNotBeExecuted
+import ecscalibur.core.*
 import ecscalibur.testutil.testclasses.C1
 import ecscalibur.testutil.testclasses.Value
-import org.scalatest._
-import org.scalatest.flatspec._
-import org.scalatest.matchers._
+import ecsutil.CSeq
+import ecsutil.shouldNotBeExecuted
+import org.scalatest.*
+import org.scalatest.flatspec.*
+import org.scalatest.matchers.*
 
-import Loop._
-import ecscalibur.core.Extensions.<==
+import Loop.*
 
 class WorldTest extends AnyFlatSpec with should.Matchers:
   inline val s1 = "test1"
@@ -73,6 +71,16 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   inline val Tolerance = 1e-8
 
+  it should "correctly report whether an entity has specific components" in:
+    given world: World = World()
+    world.entity withComponents CSeq(testValue)
+    world.withSystem(s1):
+      _ any Value on: (e: Entity) =>
+        e ?> Value should be(true)
+        ()
+
+    world loop once
+
   it should "update its delta time value on every iteration" in:
     val world = World(frameCap = 60)
     var dt: Float = 0.0
@@ -93,9 +101,9 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.withSystem(s1):
       _ routine: () =>
         sum += 1
-        if (world isSystemRunning s1)
+        if world isSystemRunning s1 then
           val success = world.mutator defer pause(s1)
-          if (!success) shouldNotBeExecuted
+          if !success then shouldNotBeExecuted
 
     world loop once
     sum shouldBe 1
@@ -109,15 +117,15 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.withSystem(s1):
       _ routine: () =>
         sum += 1
-        if (world isSystemRunning s1)
-          val success = world.mutator defer pause(s1)
-          if (!success) shouldNotBeExecuted
+        if world isSystemRunning s1 then
+          (world.mutator defer pause(s1)) shouldNot be(false)
+          ()
 
     world.withSystem(s2):
       _ routine: () =>
-        if (world isSystemPaused s1)
-          val success = world.mutator defer resume(s1)
-          if (!success) shouldNotBeExecuted
+        if world isSystemPaused s1 then
+          (world.mutator defer resume(s1)) shouldNot be(false)
+          ()
 
     world loop 2.times
     sum shouldBe 1
@@ -160,11 +168,12 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     sum shouldBe 2
 
   it should "correctly defer adding components to an entity" in:
-    val world = World()
+    given world: World = World()
     world.entity withComponents CSeq(C1())
     world.withSystem(s1):
       _ on: (e: Entity, _: C1) =>
-        world.mutator defer addComponent(e, testValue, () => shouldNotBeExecuted)
+        e += (testValue, () => shouldNotBeExecuted)
+        // world.mutator defer addComponent(e, testValue, () => shouldNotBeExecuted)
         val _ = world.mutator defer pause(s1)
 
     var test = Value(0)
@@ -177,13 +186,14 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world loop once
     test shouldBe testValue
 
-  it should "correctly defer removing components to an entity" in:
-    val world = World()
+  it should "correctly defer removing components from an entity" in:
+    given world: World = World()
     world.entity withComponents CSeq(C1())
 
     world.withSystem(s1):
       _ on: (e: Entity, _: C1) =>
-        world.mutator defer removeComponent(e, C1, () => shouldNotBeExecuted)
+        e -= (C1, () => shouldNotBeExecuted)
+        // world.mutator defer removeComponent(e, C1, () => shouldNotBeExecuted)
         val _ = world.mutator defer pause(s1)
 
     var sum = 0

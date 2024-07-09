@@ -1,12 +1,11 @@
 package ecscalibur
 
-import ecsutil.CSeq
-import ecscalibur.core.Entity
+import ecscalibur.core.*
 import ecscalibur.core.archetype.ArchetypeManager
+import ecsutil.CSeq
 import ecsutil.shouldNotBeExecuted
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers._
-import ecscalibur.core.QueryBuilder
+import org.scalatest.matchers.*
 
 class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.{Value, C1, C2}
@@ -45,6 +44,17 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     (testquery on: (e, v: Value) =>
       sum += v.x).apply()
     sum shouldBe editedValue.x * fixture.entitiesCount
+
+  it should "correctly report whether an entity has certain components" in:
+    val fixture = ArchetypeManagerFixture(
+      CSeq(testValue, C1())
+    )
+    given am: ArchetypeManager = fixture.archManager
+    (testquery any (C1, C2) on: (e, v: Value) =>
+      am.hasComponents(e, C1) should be(true)
+      am.hasComponents(e, C1, C2) should be(false)
+      ()
+    ).apply()
 
   it should "not add the same entity more than once" in:
     val am = ArchetypeManager()

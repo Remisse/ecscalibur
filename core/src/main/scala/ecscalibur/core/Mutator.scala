@@ -1,11 +1,12 @@
 package ecscalibur.core
 
-import ecscalibur.core.component.Component
-import ecscalibur.core.component.ComponentType
 import ecsutil.CSeq
 
-/** Handles operations that can cause performance-heavy structural changes to a [[World]]
-  * instance and its internal state.
+import entity.Entity
+import components.{Component, ComponentType}
+
+/** Handles operations that can cause performance-heavy structural changes to a [[World]] instance
+  * and its internal state.
   */
 trait Mutator:
   /** Schedules a request for structural changes for execution on the next [[World]] loop. Until

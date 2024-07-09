@@ -1,8 +1,8 @@
 package ecsutil
 
+import java.{util as ju}
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
-import java.{util => ju}
 
 // TODO Push all benchmarks
 
@@ -40,7 +40,7 @@ object array:
 
     inline def aSameElements(other: Array[T]): Boolean =
       var res = false
-      if (a.length != other.length || a.isEmpty || other.isEmpty) res = false
+      if a.length != other.length || a.isEmpty || other.isEmpty then res = false
       else
         @annotation.tailrec
         def same(i: Int): Boolean = i match
@@ -63,8 +63,8 @@ object array:
 
     inline def aContainsSlice(that: Array[T]): Boolean =
       var res = false
-      if (that.length == 0 || a.length < that.length) res = false
-      else if (a.length == that.length) res = a.aSameElements(that)
+      if that.length == 0 || a.length < that.length then res = false
+      else if a.length == that.length then res = a.aSameElements(that)
       else
         @annotation.tailrec
         def containsSlice(i: Int, j: Int): Boolean = j match
@@ -83,7 +83,7 @@ object array:
         case i if i == a.length => -1
         case i if p(a(i))       => i
         case _                  => indexWhere(i + 1)
-      if (a.nonEmpty) indexWhere(0) else -1
+      if a.nonEmpty then indexWhere(0) else -1
 
     inline def aIndexOf(elem: T): Int = a.aIndexWhere(elem == _)
 
@@ -93,23 +93,25 @@ object array:
 
     inline def aFindUnsafe(inline p: T => Boolean): T =
       val idx = a.aIndexWhere(p)
-      if (idx == -1) throw ju.NoSuchElementException("No elements satisfy the given predicate.")
+      if idx == -1 then throw ju.NoSuchElementException("No elements satisfy the given predicate.")
       a(idx)
 
     inline def aFindOfType[C <: T: ClassTag]: C =
       val idx = a.aIndexWhere:
         case _: C => true
         case _    => false
-      if (idx == -1)
-        throw ju.NoSuchElementException(s"No elements of type ${summon[ClassTag[C]].toString} found.")
+      if idx == -1 then
+        throw ju.NoSuchElementException(
+          s"No elements of type ${summon[ClassTag[C]].toString} found."
+        )
       a(idx).asInstanceOf[C]
 
     inline def aFilter(inline p: T => Boolean)(using ClassTag[T]): Array[T] =
-      if (a.isEmpty) a
+      if a.isEmpty then a
       else
         val buffer = ArrayBuffer.empty[T]
         a.aForeach: elem =>
-          if (p(elem)) buffer += elem
+          if p(elem) then buffer += elem
         buffer.toArray
 
     private inline def negate(inline p: T => Boolean)(using ClassTag[T]): T => Boolean = elem =>

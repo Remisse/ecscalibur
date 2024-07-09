@@ -1,7 +1,7 @@
 package ecscalibur.util
 
-import ecscalibur.core.component.Component
-import ecscalibur.core.component.ComponentId
+import ecscalibur.core.components.Component
+import ecscalibur.core.components.ComponentId
 import ecscalibur.util.spark.SizeEstimator
 
 object sizeof:
@@ -12,7 +12,7 @@ object sizeof:
     * Incorrectly reports sizes greater than 4900 bytes for classes declared within test classes.
     */
   def sizeOf(c: Component): Long =
-    if (cache.contains(~c)) cache(~c)
+    if cache.contains(~c) then cache(~c)
     else
       val size = SizeEstimator.estimate(c)
       cache = cache + (~c -> size)

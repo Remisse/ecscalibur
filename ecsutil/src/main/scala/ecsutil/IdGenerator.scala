@@ -1,4 +1,4 @@
-package ecsutil 
+package ecsutil
 
 /** Models a factory of unique, recyclable [[Int]] IDs.
   */

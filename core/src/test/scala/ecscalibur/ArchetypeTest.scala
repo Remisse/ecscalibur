@@ -1,22 +1,20 @@
 package ecscalibur
 
-import ecscalibur.core._
+import ecscalibur.core.*
 import ecscalibur.util.sizeof.sizeOf
-import org.scalatest._
-import org.scalatest.flatspec._
-import org.scalatest.matchers._
-
 import ecsutil.CSeq
-import ecsutil.array._
+import ecsutil.array.*
+import org.scalatest.*
+import org.scalatest.flatspec.*
+import org.scalatest.matchers.*
 
-import component._
 import archetype.Signature
 import archetype.archetypes.Aggregate
 
 class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.*
 
-  val DefaultFragmentSizeBytes = ecscalibur.core.archetype.archetypes.Archetype.DefaultFragmentSizeBytes
+  val DefaultFragmentSizeBytes = archetype.archetypes.Archetype.DefaultFragmentSizeBytes
   inline val KindaSmallFragmentSizeBytes = 64
   inline val ExtremelySmallFragmentSizeBytes = 1
 
@@ -45,7 +43,6 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     an[IllegalArgumentException] should be thrownBy fixture.archetype.add(entity, CSeq(C2()))
     an[IllegalArgumentException] should be thrownBy
       fixture.archetype.add(entity, CSeq(testValue, C2(), C3()))
-
 
   it should "correctly remove stored entities" in:
     val fixture = fixtures.StandardArchetypeFixture(C1())(nEntities = 1)
@@ -82,14 +79,20 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
 
   it should "correctly return its Fragments" in:
     val fixture =
-      fixtures.StandardArchetypeFixture(defaultComponent)(nEntities = 1000, KindaSmallFragmentSizeBytes)
+      fixtures.StandardArchetypeFixture(defaultComponent)(
+        nEntities = 1000,
+        KindaSmallFragmentSizeBytes
+      )
     val expectedNumberOfFragments =
       fixture.entities.length / (KindaSmallFragmentSizeBytes / sizeOf(defaultComponent))
     fixture.archetype.fragments.size shouldBe expectedNumberOfFragments
 
   it should "remove all empty Fragments but one" in:
     val fixture =
-      fixtures.StandardArchetypeFixture(defaultComponent)(nEntities = 1000, KindaSmallFragmentSizeBytes)
+      fixtures.StandardArchetypeFixture(defaultComponent)(
+        nEntities = 1000,
+        KindaSmallFragmentSizeBytes
+      )
     for e <- fixture.entities do fixture.archetype.remove(e)
     fixture.archetype.fragments.size shouldBe 1
 

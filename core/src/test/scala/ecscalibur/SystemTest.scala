@@ -1,15 +1,12 @@
 package ecscalibur
 
-import org.scalatest._
-import org.scalatest.flatspec._
-import org.scalatest.matchers._
-
-import core.systems.System
-import core.queries.Query
-import core.queries.query
-import testutil.testclasses.Value
+import ecscalibur.core.*
 import ecsutil.shouldNotBeExecuted
-import ecscalibur.core.world.World
+import org.scalatest.*
+import org.scalatest.flatspec.*
+import org.scalatest.matchers.*
+
+import testutil.testclasses.Value
 
 class SystemTest extends AnyFlatSpec with should.Matchers:
   import fixtures.SystemFixture

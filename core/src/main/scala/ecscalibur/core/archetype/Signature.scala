@@ -1,10 +1,9 @@
 package ecscalibur.core.archetype
 
-import ecscalibur.core.component.ComponentId
-import ecscalibur.core.component.WithType
+import ecscalibur.core.components.*
+import ecsutil.CSeq
 
 import scala.annotation.targetName
-import ecsutil.CSeq
 import scala.reflect.ClassTag
 
 /** Ordered sequence of distinct [[ComponentId]]s.
@@ -13,8 +12,8 @@ import scala.reflect.ClassTag
   *   ComponentIds out of which this Signature will be made.
   */
 private[ecscalibur] final case class Signature(val underlying: CSeq[ComponentId]):
-  /** Checks whether this Signature contains at least one of the ComponentIds the given
-    * Signature is made of.
+  /** Checks whether this Signature contains at least one of the ComponentIds the given Signature is
+    * made of.
     *
     * @param other
     *   the Signature whose ComponentIds may or may not be included in this Signature
@@ -25,8 +24,7 @@ private[ecscalibur] final case class Signature(val underlying: CSeq[ComponentId]
   inline infix def containsAny(other: Signature): Boolean =
     other.underlying.exists(underlying.contains)
 
-  /** Checks whether this Signature contains all of the ComponentIds the given Signature is
-    * made of.
+  /** Checks whether this Signature contains all of the ComponentIds the given Signature is made of.
     *
     * @param other
     *   the Signature whose ComponentIds may or may not be included in this Signature
@@ -36,6 +34,16 @@ private[ecscalibur] final case class Signature(val underlying: CSeq[ComponentId]
     */
   inline infix def containsAll(other: Signature): Boolean =
     other.underlying.forall(underlying.contains)
+
+  /** Checks whether this Signature contains all of the ComponentIds of the given types.
+    *
+    * @param types
+    *   the types whose ComponentIds may or may not be included in this Signature
+    * @return
+    *   true if this Signature contains all of the ComponentIds of the given types, false otherwise.
+    */
+  inline infix def containsAll(types: ComponentType*): Boolean =
+    types.map(~_).forall(underlying.contains)
 
   /** Checks whether this Signature is empty.
     *

@@ -41,12 +41,12 @@ object FramePacer:
     override def pace(): DeltaSeconds =
       val time = nanoTime()
       var newDtNanos: Long = 0
-      if (lastUpdateTime != Uninitialized)
+      if lastUpdateTime != Uninitialized then
         val elapsed = time - lastUpdateTime
         frameTime match
           case Some(ft) =>
             val overhead = math.max(ft - elapsed, 0)
-            if (overhead > 0) Thread.sleep(Duration.ofNanos(overhead))
+            if overhead > 0 then Thread.sleep(Duration.ofNanos(overhead))
             newDtNanos = ft
           case None => newDtNanos = elapsed
       lastUpdateTime = time

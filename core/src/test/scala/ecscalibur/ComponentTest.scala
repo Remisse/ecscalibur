@@ -1,12 +1,11 @@
 package ecscalibur
 
-import org.scalatest._
-import org.scalatest.flatspec._
-import org.scalatest.matchers._
+import org.scalatest.*
+import org.scalatest.flatspec.*
+import org.scalatest.matchers.*
 
 import error.IllegalDefinitionException
-import core.component._
-import core.component.tpe._
+import util.tpe.*
 
 class ComponentTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses

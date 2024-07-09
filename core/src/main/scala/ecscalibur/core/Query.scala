@@ -1,16 +1,14 @@
 package ecscalibur.core
 
-import ecscalibur.core.Entity
 import ecscalibur.core.archetype.ArchetypeManager
 import ecscalibur.core.archetype.Signature
-import ecscalibur.core.component.Component
-import ecscalibur.core.component.ComponentId
-import ecscalibur.core.component.ComponentType
-import ecscalibur.core.component.tpe._
+import ecscalibur.core.components.*
+import ecscalibur.util.tpe.*
+import ecsutil.CSeq.*
 
-import ecsutil.CSeq._
-import ecscalibur.core.world.World
 import scala.reflect.ClassTag
+
+export queries.*
 
 object queries:
   /** Queries allow users to iterate on a subset of the Components of every Entity stored in a
@@ -102,7 +100,9 @@ private[ecscalibur] trait QueryBuilder:
     * @return
     *   a new Query
     */
-  infix def on[C0 <: Component: ClassTag, C1 <: Component: ClassTag](f: (Entity, C0, C1) => Unit): Query
+  infix def on[C0 <: Component: ClassTag, C1 <: Component: ClassTag](
+      f: (Entity, C0, C1) => Unit
+  ): Query
 
   /** Iterates on all Entities with Components that are instances of the 3 given type parameters.
     *
@@ -230,11 +230,15 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
         f(
           e,
           components.findOfType[C0],
-          components.findOfType[C1],
+          components.findOfType[C1]
         )
     )
 
-  override infix def on[C0 <: Component: ClassTag, C1 <: Component: ClassTag, C2 <: Component: ClassTag](
+  override infix def on[
+      C0 <: Component: ClassTag,
+      C1 <: Component: ClassTag,
+      C2 <: Component: ClassTag
+  ](
       f: (Entity, C0, C1, C2) => Unit
   ): Query =
     idCache = CSeq(id0K[C0], id0K[C1], id0K[C2])
@@ -245,7 +249,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
           e,
           components.findOfType[C0],
           components.findOfType[C1],
-          components.findOfType[C2],
+          components.findOfType[C2]
         )
     )
 
@@ -264,7 +268,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
           components.findOfType[C0],
           components.findOfType[C1],
           components.findOfType[C2],
-          components.findOfType[C3],
+          components.findOfType[C3]
         )
     )
 
@@ -285,7 +289,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
           components.findOfType[C1],
           components.findOfType[C2],
           components.findOfType[C3],
-          components.findOfType[C4],
+          components.findOfType[C4]
         )
     )
 
@@ -308,7 +312,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
           components.findOfType[C2],
           components.findOfType[C3],
           components.findOfType[C4],
-          components.findOfType[C5],
+          components.findOfType[C5]
         )
     )
 
@@ -333,7 +337,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
           components.findOfType[C3],
           components.findOfType[C4],
           components.findOfType[C5],
-          components.findOfType[C6],
+          components.findOfType[C6]
         )
     )
 

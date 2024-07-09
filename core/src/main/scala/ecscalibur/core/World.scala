@@ -1,13 +1,12 @@
 package ecscalibur.core
 
 import ecscalibur.core.archetype.ArchetypeManager
-import ecscalibur.core.component.Component
-import ecscalibur.core.component.ComponentType
+import ecscalibur.core.components.Component
+import ecscalibur.core.components.ComponentType
 import ecscalibur.core.context.MetaContext
-import ecscalibur.core.queries.Query
-import ecscalibur.core.queries.query
-import ecscalibur.core.systems.System
 import ecsutil.CSeq
+
+export world.*
 
 object world:
   import builders.*
@@ -42,16 +41,27 @@ object world:
       */
     def entity: EntityBuilder
 
-  /** Updates the reference to the given Component type for the given Entity.
-    *
-    * @param e
-    *   the Entity for which the given Component must be updated
-    * @param c
-    *   the Component to update
-    * @throws IllegalArgumentException
-    *   if the given Entity does not exist
-    */
+    /** Updates the reference to the given Component type for the given Entity.
+      *
+      * @param e
+      *   the Entity for which the given Component must be updated
+      * @param c
+      *   the Component to update
+      * @throws IllegalArgumentException
+      *   if the given Entity does not exist
+      */
     def update(e: Entity, c: Component): Unit
+
+    /** Checks whether the given Entity has all of the given Components.
+      *
+      * @param e
+      *   the Entity on which to perform the check
+      * @param types
+      *   the ComponentTypes of the Components the given Entity should have
+      * @return
+      *   true if the Entity has all of the specified Components, false otherwise
+      */
+    def hasComponents(e: Entity, types: ComponentType*): Boolean
 
     /** Creates a new System with [[System.process]] overridden by the given [[Query]]. Both
       * [[System.onResume]] and [[System.onPause]] do not contain any logic.
@@ -174,6 +184,9 @@ object world:
 
       override def update(e: Entity, c: Component): Unit = archetypeManager.update(e, c)
 
+      override def hasComponents(e: Entity, types: ComponentType*): Boolean =
+        archetypeManager.hasComponents(e, types*)
+
       override def withSystem(name: String, priority: Int)(qb: QueryBuilder => Query): Unit =
         given World = this
         withSystem:
@@ -190,13 +203,13 @@ object world:
       override def loop(loopType: Loop): Unit =
         inline def _loop(): Unit =
           updateDeltaTime()
-          if (areBuffersDirty)
+          if areBuffersDirty then
             areBuffersDirty = false
             processPendingEntityOperations()
           processPendingSystems()
           for s <- activeSystems do s.update()
         loopType match
-          case Loop.Forever      => while (true) _loop()
+          case Loop.Forever      => while true do _loop()
           case Loop.Times(times) => for _ <- 0 until times do _loop()
 
       private inline def processPendingEntityOperations(): Unit =
@@ -206,10 +219,10 @@ object world:
         for e <- entityDelete do
           archetypeManager.delete(e)
           val _ = entityIdGenerator.erase(e.id)
-          if (entityAddComps.contains(e))
+          if entityAddComps.contains(e) then
             for (_, orElse) <- entityAddComps(e) do orElse()
             entityAddComps -= e
-          if (entityRemoveComps.contains(e))
+          if entityRemoveComps.contains(e) then
             for (_, orElse) <- entityRemoveComps(e) do orElse()
             entityRemoveComps -= e
         entityDelete.clear
@@ -242,7 +255,7 @@ object world:
             areBuffersDirty = true
             true
           case EntityRequest.delete(e) =>
-            if (isEntityValid(e) && !entityDelete.contains(e))
+            if isEntityValid(e) && !entityDelete.contains(e) then
               entityDelete += e
               areBuffersDirty = true
               return true
@@ -258,12 +271,12 @@ object world:
 
       override def isSystemRunning(name: String): Boolean =
         val idx = activeSystems.indexWhere(_.name == name)
-        if (idx != -1) return activeSystems(idx).isRunning
+        if idx != -1 then return activeSystems(idx).isRunning
         false
 
       override def isSystemPaused(name: String): Boolean =
         val idx = activeSystems.indexWhere(_.name == name)
-        if (idx != -1) return activeSystems(idx).isPaused
+        if idx != -1 then return activeSystems(idx).isPaused
         false
 
       private inline def isEntityValid(e: Entity) = entityIdGenerator.isValid(e.id)
@@ -278,7 +291,7 @@ object world:
             true
           case _ => false
 
-      import ecscalibur.core.component.WithType
+      import ecscalibur.core.components.WithType
 
       private inline def tryScheduleAddOrRemoveComponent[T <: WithType](
           buffer: mutable.Map[Entity, ArrayBuffer[(T, () => Unit)]],
@@ -287,12 +300,12 @@ object world:
           orElse: () => Unit
       ): Boolean =
         var res = false
-        if (isEntityValid(e))
+        if isEntityValid(e) then
           val arrayBuf: ArrayBuffer[(T, () => Unit)] = buffer.getOrElseUpdate(e, ArrayBuffer.empty)
-          if (!arrayBuf.exists(_._1.typeId == comp.typeId))
+          if !arrayBuf.exists(_._1.typeId == comp.typeId) then
             arrayBuf += ((comp, orElse))
             res = true
-        if (!res) orElse()
+        if !res then orElse()
         res
 
       private inline def updateDeltaTime(): Unit = context.setDeltaTime(pacer.pace())

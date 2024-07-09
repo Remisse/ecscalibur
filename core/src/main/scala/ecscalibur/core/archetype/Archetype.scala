@@ -1,19 +1,18 @@
 package ecscalibur.core.archetype
 
-import ecsutil.CSeq
-import ecscalibur.core.Entity
-import ecscalibur.core.component._
+import ecscalibur.core.components.*
+import ecscalibur.core.entity.Entity
 import ecscalibur.util.sizeof.sizeOf
+import ecsutil.CSeq
+import ecsutil.ProgressiveMap
 
 import scala.annotation.tailrec
 import scala.annotation.targetName
-import scala.collection.immutable._
+import scala.collection.immutable.*
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
-import CSeq._
-
-import ecsutil.ProgressiveMap
+import CSeq.*
 
 private[ecscalibur] object archetypes:
   /** A collection of Entities all featuring a specific combination of [[Component]]s.
@@ -174,7 +173,8 @@ private[ecscalibur] object archetypes:
 
       private var _fragments: Vector[Fragment] = Vector.empty
       private val fragmentsByEntity: mutable.Map[Entity, Fragment] = mutable.Map.empty
-      private val componentMappings = ProgressiveMap.from[ComponentId](inSignature.underlying.toArray*)
+      private val componentMappings =
+        ProgressiveMap.from[ComponentId](inSignature.underlying.toArray*)
 
       override def fragments: Iterable[Fragment] = _fragments
 
@@ -184,13 +184,13 @@ private[ecscalibur] object archetypes:
           signature == Signature(entityComponents.map(~_)),
           "Given component types do not correspond to this archetype's signature."
         )
-        if (_fragments.isEmpty || _fragments.head.isFull) prependNewFragment(entityComponents)
+        if _fragments.isEmpty || _fragments.head.isFull then prependNewFragment(entityComponents)
         _fragments.head.add(e, entityComponents)
         fragmentsByEntity += e -> _fragments.head
 
       private inline def prependNewFragment(components: CSeq[Component]): Unit =
         val sizeBytes = estimateComponentsSize(components)
-        if (sizeBytes > maxFragmentSizeBytes)
+        if sizeBytes > maxFragmentSizeBytes then
           throw IllegalStateException(
             s"Exceeded the maximum fragment size ($sizeBytes > $maxFragmentSizeBytes)."
           )
@@ -222,8 +222,7 @@ private[ecscalibur] object archetypes:
         fragment
 
       private inline def maybeDeleteFragment(fr: Fragment): Unit =
-        if (fr.isEmpty && fr != _fragments.head)
-          _fragments = _fragments.filterNot(_ == fr)
+        if fr.isEmpty && fr != _fragments.head then _fragments = _fragments.filterNot(_ == fr)
 
       override def iterate(selectedIds: Signature)(
           f: (Entity, CSeq[Component], Archetype) => Unit
@@ -256,17 +255,26 @@ private[ecscalibur] object archetypes:
       * @return
       *   a new Fragment instance
       */
-    def apply(signature: Signature, mappings: ProgressiveMap[ComponentId], maxEntities: Int): Fragment =
+    def apply(
+        signature: Signature,
+        mappings: ProgressiveMap[ComponentId],
+        maxEntities: Int
+    ): Fragment =
       FragmentImpl(signature, mappings, maxEntities)
 
-    private final class FragmentImpl(inSignature: Signature, componentMappings: ProgressiveMap[ComponentId], maxEntities: Int)
-        extends Archetype(inSignature),
+    private final class FragmentImpl(
+        inSignature: Signature,
+        componentMappings: ProgressiveMap[ComponentId],
+        maxEntities: Int
+    ) extends Archetype(inSignature),
           Fragment:
       import ecsutil.array.*
 
       private val entityIndexes: ProgressiveMap[Entity] = ProgressiveMap()
-      private val components: CSeq[CSeq[Component]] = 
-        CSeq.fill[CSeq[Component]](maxEntities)(CSeq.ofDim[Component](inSignature.underlying.length))
+      private val components: CSeq[CSeq[Component]] =
+        CSeq.fill[CSeq[Component]](maxEntities)(
+          CSeq.ofDim[Component](inSignature.underlying.length)
+        )
 
       override inline def isFull: Boolean = entityIndexes.size == maxEntities
 
@@ -302,5 +310,4 @@ private[ecscalibur] object archetypes:
       override def iterate(selectedIds: Signature)(
           f: (Entity, CSeq[Component], Archetype) => Unit
       ): Unit =
-        for (e, entityIdx) <- entityIndexes do
-          f(e, components(entityIdx), this)
+        for (e, entityIdx) <- entityIndexes do f(e, components(entityIdx), this)

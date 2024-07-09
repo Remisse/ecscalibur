@@ -2,13 +2,13 @@ package ecsutil
 
 /** Mutable collection based on arrays.
   *
-  * Provides a few reimplemented array operations due to weird performance issues when using
-  * library methods on arrays of primitives.
+  * Provides a few reimplemented array operations due to weird performance issues when using library
+  * methods on arrays of primitives.
   */
 opaque type CSeq[T] = Array[T]
 
 object CSeq:
-  import ecsutil.array._
+  import ecsutil.array.*
 
   import scala.annotation.targetName
   import scala.reflect.ClassTag

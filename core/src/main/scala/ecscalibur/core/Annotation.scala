@@ -1,4 +1,8 @@
-package ecscalibur.core.component
+package ecscalibur.core
+
+import ecscalibur.util.tpe
+
+export annotations.*
 
 object annotations:
   import scala.annotation.MacroAnnotation

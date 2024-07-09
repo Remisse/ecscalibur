@@ -1,7 +1,10 @@
-package ecscalibur.core.component
+package ecscalibur.util
 
-import scala.util.hashing.MurmurHash3
+import ecscalibur.core.components.ComponentId
+import ecscalibur.core.components.WithType
+
 import scala.reflect.ClassTag
+import scala.util.hashing.MurmurHash3
 
 private[ecscalibur] object tpe:
   /** Generates a ComponentId for the given class.

@@ -1,6 +1,6 @@
 package ecscalibur.core
 
-import ecscalibur.core.queries.Query
+export systems.*
 
 object systems:
   /** Systems contain logic that is executed every World loop.
@@ -8,8 +8,8 @@ object systems:
     * @param name
     *   a unique name identifying this System
     * @param priority
-    *   value that dictates when this System will be executed relative
-    *   to the others stored in the same World instance
+    *   value that dictates when this System will be executed relative to the others stored in the
+    *   same World instance
     */
   trait System(val name: String, val priority: Int):
     /** Logic executed once when the system starts and once every time it resumes after being
@@ -40,16 +40,16 @@ object systems:
         _status = Status.Paused
       case Status.Paused => ()
 
-    /** Pauses this System or throws if called while the System is not running. 
-      * Also causes [[System.onPause]] to execute.
+    /** Pauses this System or throws if called while the System is not running. Also causes
+      * [[System.onPause]] to execute.
       */
     private[ecscalibur] final inline def pause(): Unit = _status match
       case Status.Running => _status = Status.Pausing
       case _ =>
         throw IllegalStateException(s"A System may only pause while Running ($name was $_status)")
 
-    /** Resumes this System or throws if called while the System is not paused. 
-      * Also causes [[System.onResume]] to execute.
+    /** Resumes this System or throws if called while the System is not paused. Also causes
+      * [[System.onResume]] to execute.
       */
     private[ecscalibur] final inline def resume(): Unit = _status match
       case Status.Paused => _status = Status.Starting
