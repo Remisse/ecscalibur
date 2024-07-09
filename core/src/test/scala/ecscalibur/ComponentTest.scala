@@ -1,5 +1,7 @@
 package ecscalibur
 
+import ecscalibur.core.*
+
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
@@ -17,13 +19,13 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
 
   it must "extend Component" in:
     """
-    @ecscalibur.core.component.annotations.component 
+    @component 
     class BadComponent
     """ shouldNot compile
 
   it must "define a companion object" in:
     """
-    @ecscalibur.core.component.annotations.component 
+    @component 
     class BadComponent extends Component
     """ shouldNot compile
 
@@ -31,12 +33,12 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     // Compilation silently fails if object BadComponent extends nothing or
     // something other than Component (why?).
     """
-    @ecscalibur.core.component.annotations.component 
+    @component 
     class BadComponent extends Component
     object BadComponent extends Component
     """ shouldNot compile
     """
-    @ecscalibur.core.component.annotations.component 
+    @component 
     class C extends Component
     object C extends ComponentType
     """ should compile
