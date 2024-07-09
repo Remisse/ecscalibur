@@ -11,7 +11,7 @@ import scala.reflect.ClassTag
   * @param underlying
   *   ComponentIds out of which this Signature will be made.
   */
-private[ecscalibur] final case class Signature(val underlying: CSeq[ComponentId]):
+private[ecscalibur] trait Signature(val underlying: CSeq[ComponentId]):
   /** Checks whether this Signature contains at least one of the ComponentIds the given Signature is
     * made of.
     *
@@ -21,7 +21,7 @@ private[ecscalibur] final case class Signature(val underlying: CSeq[ComponentId]
     *   true if this Signature contains at least one of the ComponentIds the given Signature is made
     *   of, false otherwise.
     */
-  inline infix def containsAny(other: Signature): Boolean =
+  final inline infix def containsAny(other: Signature): Boolean =
     other.underlying.exists(underlying.contains)
 
   /** Checks whether this Signature contains all of the ComponentIds the given Signature is made of.
@@ -32,7 +32,7 @@ private[ecscalibur] final case class Signature(val underlying: CSeq[ComponentId]
     *   true if this Signature contains all of the ComponentIds the given Signature is made of,
     *   false otherwise.
     */
-  inline infix def containsAll(other: Signature): Boolean =
+  final inline infix def containsAll(other: Signature): Boolean =
     other.underlying.forall(underlying.contains)
 
   /** Checks whether this Signature contains all of the ComponentIds of the given types.
@@ -42,7 +42,7 @@ private[ecscalibur] final case class Signature(val underlying: CSeq[ComponentId]
     * @return
     *   true if this Signature contains all of the ComponentIds of the given types, false otherwise.
     */
-  inline infix def containsAll(types: ComponentType*): Boolean =
+  final inline infix def containsAll(types: ComponentType*): Boolean =
     types.map(~_).forall(underlying.contains)
 
   /** Checks whether this Signature is empty.
@@ -50,18 +50,19 @@ private[ecscalibur] final case class Signature(val underlying: CSeq[ComponentId]
     * @return
     *   true if this Signature is empty, false otherwise.
     */
-  inline def isNil: Boolean = underlying.isEmpty
+  final inline def isNil: Boolean = underlying.isEmpty
 
+private[ecscalibur] final case class SignatureImpl(u: CSeq[ComponentId]) extends Signature(u):
   override def equals(other: Any): Boolean = other match
-    case Signature(u) => underlying.sameElements(u)
-    case _            => false
+    case SignatureImpl(u) => underlying.sameElements(u)
+    case _                => false
 
   override def hashCode(): Int = java.util.Arrays.hashCode(underlying.toArray)
 
 object Signature:
   /** Empty signature.
     */
-  val Nil: Signature = new Signature(CSeq.empty[ComponentId])
+  val Nil: Signature = new SignatureImpl(CSeq.empty[ComponentId])
 
   /** Creates a new Signature from the given ComponentIds.
     *
@@ -75,9 +76,9 @@ object Signature:
   @targetName("fromIds")
   def apply(ids: CSeq[ComponentId]): Signature =
     require(ids.nonEmpty, "Failed to make signature: empty sequence.")
-    val res: Array[Int] = ids.toArray.distinct.sortInPlace().array
+    val res: Array[ComponentId] = ids.toArray.distinct.sortInPlace().array
     require(res.length == ids.length, "Duplicate types found.")
-    new Signature(CSeq(ComponentId(res)))
+    new SignatureImpl(CSeq(ComponentId(res)))
 
   /** Creates a new Signature from the given ComponentIds.
     *
