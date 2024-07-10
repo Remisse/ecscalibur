@@ -82,16 +82,15 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world loop once
 
   it should "update its delta time value on every iteration" in:
-    val world = World(frameCap = 60)
-    var dt: Float = 0.0
+    val world = World(iterationsPerSecond = 60)
     world.withSystem(s1):
       _ routine: () =>
-        dt = world.context.deltaTime
+        ()
 
-    // TODO Find out why dt === 0.0 +- Tolerance returns false after 1 iteration
-    world loop 2.times
-    dt === 0.0 +- Tolerance shouldBe false
-    dt should be(world.context.deltaTime)
+    world loop once
+    world.context.deltaTime should be(0f)
+    world loop once
+    world.context.deltaTime === 0.0 +- Tolerance shouldBe false
 
   import ecscalibur.core.SystemRequest.*
 

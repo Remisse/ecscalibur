@@ -13,8 +13,9 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     inline val incorrect = -1
     an[IllegalArgumentException] shouldBe thrownBy(FramePacer(incorrect))
 
-  it should "return the correct delta time value after a call to pace()" in:
-    for pacer <- Seq(FramePacer(defaultCap), FramePacer()) do
-      pacer.pace() shouldBe 0
-      pacer.pace() should be > 0.0f
+  inline val Tolerance = 1e-4f
 
+  it should "return the correct delta time value after a call to pace()" in:
+    val pacer = FramePacer(defaultCap)
+    pacer.pace() should be(0f)
+    pacer.pace() === (1f / defaultCap) +- Tolerance should be(true)

@@ -73,7 +73,7 @@ trait ProgressiveMap[T]:
 object ProgressiveMap:
   /** Creates an empty [[ProgressiveMap]] of T.
     *
-    * @tparam the
+    * @tparam T
     *   type of the elements of this map
     * @return
     *   an empty ProgressiveMap
@@ -111,7 +111,7 @@ object ProgressiveMap:
     @targetName("remove")
     override def -=(elem: T): ProgressiveMap[T] =
       val id = map(elem)
-      require(id != Uninitialized, s"Element $elem has not been mapped.")
+      require(id != Uninitialized, notMappedErrorMsg(elem))
       idGenerator.erase(id)
       map -= elem
       this
@@ -120,13 +120,14 @@ object ProgressiveMap:
 
     override def apply(elem: T): Int =
       val res = map(elem)
-      require(res != Uninitialized, s"Element $elem not mapped.")
+      require(res != Uninitialized, notMappedErrorMsg(elem))
       res
 
     override def foreach(f: (T, Int) => Unit): Unit =
-      for e <- map do
-        f(e._1, e._2)
+      for e <- map do f(e._1, e._2)
 
     override def size: Int = map.size
 
     override def isEmpty: Boolean = map.isEmpty
+
+    private inline def notMappedErrorMsg[T](elem: T) = s"Element $elem has not been mapped."

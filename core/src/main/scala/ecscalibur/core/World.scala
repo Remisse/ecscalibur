@@ -144,13 +144,14 @@ object world:
   object World:
     // TODO Pass a Configuration object instead
 
-    /** @param frameCap
-      *   Frame rate limit expressed as Frames Per Second (FPS). A value of 0 means no limit.
+    /** @param iterationsPerSecond
+      *   maximum number of iterations per second this World will perform. A value of 0 will not
+      *   enforce any limit.
       * @return
       *   a new World instance
       */
-    def apply(frameCap: Int = 0): World =
-      WorldImpl(frameCap)(using ArchetypeManager(), MetaContext())
+    def apply(iterationsPerSecond: Int = 0): World =
+      WorldImpl(iterationsPerSecond)(using ArchetypeManager(), MetaContext())
 
     private class WorldImpl(frameCap: Int)(using ArchetypeManager, MetaContext)
         extends World,
