@@ -169,11 +169,11 @@ object world:
 
       import scala.collection.mutable.ArrayBuffer
 
-      private val activeSystems: ArrayBuffer[System] = ArrayBuffer.empty
-      private val pendingSystems: ArrayBuffer[System] = ArrayBuffer.empty
+      private var activeSystems: Vector[System] = Vector.empty
+      private var pendingSystems: Vector[System] = Vector.empty
 
       private val entityCreate: mutable.Map[Entity, CSeq[Component]] = mutable.Map.empty
-      private val entityDelete: ArrayBuffer[Entity] = ArrayBuffer.empty
+      private var entityDelete: Vector[Entity] = Vector.empty
       private val entityAddComps: mutable.Map[Entity, ArrayBuffer[(Component, () => Unit)]] =
         mutable.Map.empty
       private val entityRemoveComps: mutable.Map[Entity, ArrayBuffer[(ComponentType, () => Unit)]] =
@@ -198,7 +198,7 @@ object world:
           !(activeSystems.contains(s) || pendingSystems.contains(s)),
           s"System \"${s.name}\" already exists."
         )
-        pendingSystems += s
+        pendingSystems = s +: pendingSystems
 
       override def loop(loopType: Loop): Unit =
         inline def _loop(): Unit =
@@ -225,7 +225,7 @@ object world:
           if entityRemoveComps.contains(e) then
             for (_, orElse) <- entityRemoveComps(e) do orElse()
             entityRemoveComps -= e
-        entityDelete.clear
+        entityDelete = Vector.empty
 
         for (e, comps) <- entityAddComps do
           archetypeManager.addComponents(e, CSeq(comps.map(_._1).toArray))
@@ -236,9 +236,9 @@ object world:
         entityRemoveComps.clear
 
       private inline def processPendingSystems(): Unit =
-        for s <- pendingSystems do activeSystems += s
-        pendingSystems.clear()
-        activeSystems.sortInPlaceBy(_.priority)
+        for s <- pendingSystems do activeSystems = s +: activeSystems
+        pendingSystems = Vector.empty
+        activeSystems = activeSystems.sortBy(_.priority)
 
       import EntityRequest.*
       import SystemRequest.*
@@ -256,7 +256,7 @@ object world:
             true
           case EntityRequest.delete(e) =>
             if isEntityValid(e) && !entityDelete.contains(e) then
-              entityDelete += e
+              entityDelete = e +: entityDelete
               areBuffersDirty = true
               return true
             false

@@ -31,7 +31,7 @@ object queries:
       */
     def None: Query = Query(() => ())
 
-  private[core] inline def make(q: () => Unit): Query = Query(q)
+  private[core] inline def make(inline q: () => Unit): Query = Query(q)
 
   /** Factory method for [[Query]]. Needed when overriding [[System.process]].
     *
@@ -206,7 +206,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
 
   override infix def on(f: Entity => Unit): Query =
     queries.make: () =>
-      am.iterate(matches, selected): (e, _, _) =>
+      am.iterate(matches): (e, _) =>
         f(e)
 
   private inline def initSignature(cache: CSeq[ComponentId]): Unit =
@@ -216,7 +216,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
     idCache = CSeq(id0K[C0])
     initSignature(idCache)
     queries.make(() =>
-      am.iterate(matches, selected): (e, components, _) =>
+      am.iterate(matches): (e, components) =>
         f(e, components.findOfType[C0])
     )
 
@@ -226,7 +226,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
     idCache = CSeq(id0K[C0], id0K[C1])
     initSignature(idCache)
     queries.make(() =>
-      am.iterate(matches, selected): (e, components, _) =>
+      am.iterate(matches): (e, components) =>
         f(
           e,
           components.findOfType[C0],
@@ -244,7 +244,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
     idCache = CSeq(id0K[C0], id0K[C1], id0K[C2])
     initSignature(idCache)
     queries.make(() =>
-      am.iterate(matches, selected): (e, components, _) =>
+      am.iterate(matches): (e, components) =>
         f(
           e,
           components.findOfType[C0],
@@ -262,7 +262,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
     idCache = CSeq(id0K[C0], id0K[C1], id0K[C2], id0K[C3])
     initSignature(idCache)
     queries.make(() =>
-      am.iterate(matches, selected): (e, components, _) =>
+      am.iterate(matches): (e, components) =>
         f(
           e,
           components.findOfType[C0],
@@ -282,7 +282,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
     idCache = CSeq(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4])
     initSignature(idCache)
     queries.make(() =>
-      am.iterate(matches, selected): (e, components, _) =>
+      am.iterate(matches): (e, components) =>
         f(
           e,
           components.findOfType[C0],
@@ -304,7 +304,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
     idCache = CSeq(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4], id0K[C5])
     initSignature(idCache)
     queries.make(() =>
-      am.iterate(matches, selected): (e, components, _) =>
+      am.iterate(matches): (e, components) =>
         f(
           e,
           components.findOfType[C0],
@@ -328,7 +328,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
     idCache = CSeq(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4], id0K[C5], id0K[C6])
     initSignature(idCache)
     queries.make(() =>
-      am.iterate(matches, selected): (e, components, _) =>
+      am.iterate(matches): (e, components) =>
         f(
           e,
           components.findOfType[C0],

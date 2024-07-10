@@ -6,8 +6,6 @@ import ecscalibur.core.entity.Entity
 import ecsutil.CSeq
 import ecsutil.array.*
 
-import scala.collection.mutable
-
 import CSeq.*
 
 /** A collection of [[Archetype]]s.
@@ -94,19 +92,14 @@ private[ecscalibur] trait ArchetypeManager:
     */
   def update(e: Entity, c: Component): Unit
 
-  /** Iterates over all Entities across all Archetypes which satisfy the given predicate and selects
-    * all Components whose ComponentIds are part of the given Signature.
+  /** Iterates over all Entities across all Archetypes which satisfy the given predicate.
     *
     * @param isSelected
     *   the predicate on which all Archetypes are to be tested
-    * @param allIds
-    *   Components that must be selected
     * @param f
     *   function to be executed on all selected Entities
     */
-  def iterate(isSelected: Signature => Boolean, allIds: Signature)(
-      f: (Entity, CSeq[Component], Archetype) => Unit
-  ): Unit
+  def iterate(isSelected: Signature => Boolean)(f: (Entity, CSeq[Component]) => Unit): Unit
 
 object ArchetypeManager:
   /** Creates a new instance of [[ArchetypeManager]].
@@ -117,69 +110,73 @@ object ArchetypeManager:
   def apply(): ArchetypeManager = ArchetypeManagerImpl()
 
 private final class ArchetypeManagerImpl extends ArchetypeManager:
-  private var archetypeBuffer: Vector[Archetype] = Vector.empty
-  private val archetypes: mutable.Map[Signature, Archetype] = mutable.HashMap.empty
-  private val signaturesByEntity: mutable.Map[Entity, Signature] = mutable.HashMap.empty
+  import scala.collection.mutable
+
+  private var archetypes: Vector[Archetype] = Vector.empty
+  private val archetypesBySignature: mutable.Map[Signature, Archetype] = mutable.HashMap.empty
+  private val archetypesByEntity: mutable.Map[Entity, Archetype] = mutable.HashMap.empty
 
   override inline def addEntity(e: Entity, components: CSeq[Component]): Unit =
     require(
-      !signaturesByEntity.contains(e),
+      !archetypesByEntity.contains(e),
       "Attempted to add an already existing entity."
     )
     newEntityToArchetype(e, components)
 
   private inline def newEntityToArchetype(e: Entity, components: CSeq[Component]): Unit =
     val entitySignature: Signature = Signature(components.map(~_))
-    if !archetypes.contains(entitySignature) then
-      val newArchetype = Archetype(entitySignature)
-      archetypes += entitySignature -> newArchetype
-      archetypeBuffer = archetypeBuffer :+ newArchetype
-    archetypes(entitySignature).add(e, components)
-    signaturesByEntity.update(e, entitySignature)
+    val desiredArchetype = archetypesBySignature.getOrElseUpdate(
+      entitySignature, {
+        val newArchetype = Archetype(entitySignature)
+        archetypesBySignature += entitySignature -> newArchetype
+        archetypes = newArchetype +: archetypes
+        newArchetype
+      }
+    )
+    desiredArchetype.add(e, components)
+    archetypesByEntity.update(e, desiredArchetype)
 
   override def addComponents(e: Entity, components: CSeq[Component]): Boolean =
     ensureEntityIsValid(e)
     require(components.nonEmpty, "Component list is empty.")
-    val existing: CSeq[Component] = archetypes(signaturesByEntity(e)).remove(e)
-    if filterOutExistingComponents(existing, components.map(~_).toArray).isEmpty then return false
-    signaturesByEntity -= e
+    val existing: CSeq[Component] = archetypesByEntity(e).remove(e)
+    if filterOutExistingComponents(existing, components.map(~_)).isEmpty then return false
+    archetypesByEntity -= e
     newEntityToArchetype(e, existing concat components)
     true
 
   override def removeComponents(e: Entity, compTypes: ComponentType*): Boolean =
     ensureEntityIsValid(e)
-    if !signaturesByEntity(e).containsAny(Signature(compTypes*)) then return false
-    val entityComps: CSeq[Component] = archetypes(signaturesByEntity(e)).remove(e)
-    signaturesByEntity -= e
-    val filtered = filterOutExistingComponents(entityComps, compTypes.toArray.aMap(~_))
+    if !archetypesByEntity(e).signature.containsAny(Signature(compTypes*)) then return false
+    val entityComps: CSeq[Component] = archetypesByEntity(e).remove(e)
+    archetypesByEntity -= e
+    val filtered = filterOutExistingComponents(entityComps, CSeq(compTypes*).map(~_))
     if filtered.nonEmpty then newEntityToArchetype(e, filtered)
     true
 
   private inline def filterOutExistingComponents(
       toBeFiltered: CSeq[Component],
-      ids: Array[ComponentId]
+      ids: CSeq[ComponentId]
   ): CSeq[Component] =
-    toBeFiltered.filterNot(c => ids.aContains(~c))
+    toBeFiltered.filterNot(c => ids.contains(~c))
 
   override def hasComponents(e: Entity, types: ComponentType*): Boolean =
     ensureEntityIsValid(e)
-    signaturesByEntity(e).containsAll(types*)
+    archetypesByEntity(e).signature.containsAll(types*)
 
   override def delete(e: Entity): Unit =
     ensureEntityIsValid(e)
-    archetypes(signaturesByEntity(e)).softRemove(e)
-    signaturesByEntity -= e
+    archetypesByEntity(e).softRemove(e)
+    archetypesByEntity -= e
 
   override def update(e: Entity, c: Component): Unit =
     ensureEntityIsValid(e)
-    archetypes(signaturesByEntity(e)).update(e, c)
+    archetypesByEntity(e).update(e, c)
 
-  override def iterate(isSelected: Signature => Boolean, allIds: Signature)(
-      f: (Entity, CSeq[Component], Archetype) => Unit
+  override def iterate(isSelected: Signature => Boolean)(
+      f: (Entity, CSeq[Component]) => Unit
   ): Unit =
-    archetypeBuffer foreach:
-      case a if isSelected(a.signature) => a.iterate(allIds)(f)
-      case _                            => ()
+    for a <- archetypes if isSelected(a.signature) do a.iterate(f)
 
   private inline def ensureEntityIsValid(e: Entity): Unit =
-    require(signaturesByEntity.contains(e), "Given entity does not exist.")
+    require(archetypesByEntity.contains(e), "Given entity does not exist.")

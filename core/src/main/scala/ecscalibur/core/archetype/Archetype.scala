@@ -2,11 +2,9 @@ package ecscalibur.core.archetype
 
 import ecscalibur.core.components.*
 import ecscalibur.core.entity.Entity
-import ecscalibur.util.sizeof.sizeOf
 import ecsutil.CSeq
 import ecsutil.ProgressiveMap
 
-import scala.annotation.tailrec
 import scala.annotation.targetName
 import scala.collection.immutable.*
 import scala.collection.mutable
@@ -63,14 +61,12 @@ private[ecscalibur] object archetypes:
     def softRemove(e: Entity): Unit
 
     /** Iterates over all entities stored in this Archetype and calls the given function on them and
-      * all of their Components whose [[ComponentId]]s are part of the given [[Signature]].
+      * all of their Components.
       *
-      * @param selectedIds
-      *   the ComponentIds of the Components that must be iterated over
       * @param f
       *   the function to be applied to all Entities and their Components
       */
-    def iterate(selectedIds: Signature)(f: (Entity, CSeq[Component], Archetype) => Unit): Unit
+    def iterate(f: (Entity, CSeq[Component]) => Unit): Unit
 
     /** Replaces the given Entity's Component with the given value.
       *
@@ -88,7 +84,7 @@ private[ecscalibur] object archetypes:
     // TODO Make this parameter configurable
     /** Default maximum size of a [[Fragment]].
       */
-    inline val DefaultFragmentSizeBytes = 16384
+    inline val DefaultFragmentSize = 50
 
     /** Creates an [[Aggregate]] archetype with a [[Signature]] derived from the given types.
       *
@@ -99,7 +95,7 @@ private[ecscalibur] object archetypes:
       */
     @targetName("fromTypes")
     def apply(types: ComponentType*): Aggregate =
-      Aggregate(Signature(types*))(DefaultFragmentSizeBytes)
+      Aggregate(Signature(types*))(DefaultFragmentSize)
 
     /** Creates an [[Aggregate]] archetype with the given [[Signature]].
       *
@@ -109,16 +105,16 @@ private[ecscalibur] object archetypes:
       *   a new instance of [[Aggregate]]
       */
     @targetName("fromSignature")
-    def apply(signature: Signature): Aggregate = Aggregate(signature)(DefaultFragmentSizeBytes)
+    def apply(signature: Signature): Aggregate = Aggregate(signature)(DefaultFragmentSize)
 
   /** Models an Archetype made of multiple [[Fragment]]s
     */
   trait Aggregate extends Archetype:
 
     /** @return
-      *   all [[Fragment]]s stored in this Aggregate archetype.
+      *   an Iterator over the [[Fragment]]s stored in this Aggregate archetype.
       */
-    def fragments: Iterable[Fragment]
+    def fragments: Iterator[Fragment]
 
   /** Models an Archetype that can store a fixed number of entities and components.
     */
@@ -166,17 +162,18 @@ private[ecscalibur] object archetypes:
     def apply(signature: Signature)(maxFragmentSizeBytes: Long): Aggregate =
       AggregateImpl(signature, maxFragmentSizeBytes)
 
-    private final class AggregateImpl(inSignature: Signature, maxFragmentSizeBytes: Long)
+    private final class AggregateImpl(inSignature: Signature, maxFragmentSize: Long)
         extends Archetype(inSignature),
           Aggregate:
       import ecsutil.array.*
+      import scala.collection.mutable.ArrayBuffer
 
-      private var _fragments: Vector[Fragment] = Vector.empty
+      private val _fragments: ArrayBuffer[Fragment] = ArrayBuffer.empty
       private val fragmentsByEntity: mutable.Map[Entity, Fragment] = mutable.Map.empty
       private val componentMappings =
         ProgressiveMap.from[ComponentId](inSignature.underlying.toArray*)
 
-      override def fragments: Iterable[Fragment] = _fragments
+      override def fragments: Iterator[Fragment] = _fragments.iterator
 
       override def add(e: Entity, entityComponents: CSeq[Component]): Unit =
         require(!contains(e), "Attempted to add an already existing entity.")
@@ -184,23 +181,14 @@ private[ecscalibur] object archetypes:
           signature == Signature(entityComponents.map(~_)),
           "Given component types do not correspond to this archetype's signature."
         )
-        if _fragments.isEmpty || _fragments.head.isFull then prependNewFragment(entityComponents)
-        _fragments.head.add(e, entityComponents)
-        fragmentsByEntity += e -> _fragments.head
+        if _fragments.isEmpty || lastFragment.isFull then appendNewFragment
+        lastFragment.add(e, entityComponents)
+        fragmentsByEntity += e -> lastFragment
 
-      private inline def prependNewFragment(components: CSeq[Component]): Unit =
-        val sizeBytes = estimateComponentsSize(components)
-        if sizeBytes > maxFragmentSizeBytes then
-          throw IllegalStateException(
-            s"Exceeded the maximum fragment size ($sizeBytes > $maxFragmentSizeBytes)."
-          )
-        val maxEntities = (maxFragmentSizeBytes / sizeBytes).toInt
-        _fragments = Fragment(signature, componentMappings, maxEntities) +: _fragments
+      private inline def lastFragment: Fragment = _fragments.last
 
-      private inline def estimateComponentsSize(components: CSeq[Component]): Long =
-        var estimatedComponentsSize: Long = 0
-        components.foreach(c => estimatedComponentsSize += sizeOf(c))
-        estimatedComponentsSize
+      private inline def appendNewFragment: Unit =
+        _fragments += Fragment(signature, componentMappings, maxFragmentSize.toInt)
 
       override inline def contains(e: Entity): Boolean = fragmentsByEntity.contains(e)
 
@@ -222,12 +210,10 @@ private[ecscalibur] object archetypes:
         fragment
 
       private inline def maybeDeleteFragment(fr: Fragment): Unit =
-        if fr.isEmpty && fr != _fragments.head then _fragments = _fragments.filterNot(_ == fr)
+        if fr.isEmpty && fr != lastFragment then _fragments -= fr
 
-      override def iterate(selectedIds: Signature)(
-          f: (Entity, CSeq[Component], Archetype) => Unit
-      ): Unit =
-        _fragments.foreach(fr => fr.iterate(selectedIds)(f))
+      override def iterate(f: (Entity, CSeq[Component]) => Unit): Unit =
+        _fragments.foreach(_.iterate(f))
 
       override def update(e: Entity, c: Component): Unit =
         require(fragmentsByEntity.contains(e), "Given entity is not stored in this archetype.")
@@ -307,7 +293,5 @@ private[ecscalibur] object archetypes:
         entityIndexes -= e
         idx
 
-      override def iterate(selectedIds: Signature)(
-          f: (Entity, CSeq[Component], Archetype) => Unit
-      ): Unit =
-        for (e, entityIdx) <- entityIndexes do f(e, components(entityIdx), this)
+      override def iterate(f: (Entity, CSeq[Component]) => Unit): Unit =
+        for (e, entityIdx) <- entityIndexes do f(e, components(entityIdx))

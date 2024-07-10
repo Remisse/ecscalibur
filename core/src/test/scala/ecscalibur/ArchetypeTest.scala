@@ -1,7 +1,6 @@
 package ecscalibur
 
 import ecscalibur.core.*
-import ecscalibur.util.sizeof.sizeOf
 import ecsutil.CSeq
 import ecsutil.array.*
 import org.scalatest.*
@@ -14,24 +13,24 @@ import archetype.archetypes.Aggregate
 class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.*
 
-  val DefaultFragmentSizeBytes = archetype.archetypes.Archetype.DefaultFragmentSizeBytes
-  inline val KindaSmallFragmentSizeBytes = 64
-  inline val ExtremelySmallFragmentSizeBytes = 1
+  val DefaultFragmentSize = archetype.archetypes.Archetype.DefaultFragmentSize
+  inline val KindaSmallFragmentSize = 10
+  inline val ExtremelySmallFragmentSize = 1
 
   val testValue: Value = Value(1)
 
   "An Aggregate archetype with no signature" should "throw when created" in:
-    an[IllegalArgumentException] should be thrownBy Aggregate()(DefaultFragmentSizeBytes)
+    an[IllegalArgumentException] should be thrownBy Aggregate()(DefaultFragmentSize)
 
   "An Aggregate archetype" should "be identified by the component classes it holds" in:
-    val archetype = Aggregate(C1, C2)(DefaultFragmentSizeBytes)
+    val archetype = Aggregate(C1, C2)(DefaultFragmentSize)
     archetype.signature shouldBe Signature(C1, C2)
     archetype.signature shouldBe Signature(C2, C1)
     archetype.signature shouldNot be(Signature(C1))
     archetype.signature shouldNot be(Signature(C1, C2, C3))
 
   it should "have a signature made of distinct component types only" in:
-    an[IllegalArgumentException] shouldBe thrownBy(Aggregate(C1, C1, C2)(DefaultFragmentSizeBytes))
+    an[IllegalArgumentException] shouldBe thrownBy(Aggregate(C1, C1, C2)(DefaultFragmentSize))
 
   it should "correctly store entities and their components" in:
     val fixture = fixtures.StandardArchetypeFixture(C1(), C2())(nEntities = 1)
@@ -63,11 +62,12 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     fixture.archetype.softRemove(entity)
     fixture.archetype.contains(entity) shouldBe false
 
+  inline val nEntities = 1000
+
   it should "correctly iterate over all selected entities and components in read-only mode" in:
-    inline val nEntities = 3
     val fixture = fixtures.StandardArchetypeFixture(testValue, C1())(nEntities = nEntities)
     var sum = 0
-    fixture.archetype.iterate(Signature(Value)): (e, comps, _) =>
+    fixture.archetype.iterate: (e, comps) =>
       val c = comps.findOfType[Value]
       sum += c.x
     sum shouldBe testValue.x * nEntities
@@ -80,26 +80,25 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   it should "correctly return its Fragments" in:
     val fixture =
       fixtures.StandardArchetypeFixture(defaultComponent)(
-        nEntities = 1000,
-        KindaSmallFragmentSizeBytes
+        nEntities = nEntities,
+        KindaSmallFragmentSize
       )
-    val expectedNumberOfFragments =
-      fixture.entities.length / (KindaSmallFragmentSizeBytes / sizeOf(defaultComponent))
+    val expectedNumberOfFragments = nEntities / KindaSmallFragmentSize
     fixture.archetype.fragments.size shouldBe expectedNumberOfFragments
 
   it should "remove all empty Fragments but one" in:
     val fixture =
       fixtures.StandardArchetypeFixture(defaultComponent)(
-        nEntities = 1000,
-        KindaSmallFragmentSizeBytes
+        nEntities = nEntities,
+        KindaSmallFragmentSize
       )
     for e <- fixture.entities do fixture.archetype.remove(e)
     fixture.archetype.fragments.size shouldBe 1
 
-  it should "throw if the size of a component is greather than the maximum size limit" in:
-    an[IllegalStateException] shouldBe thrownBy(
-      fixtures.StandardArchetypeFixture(Value(0))(nEntities = 1, ExtremelySmallFragmentSizeBytes)
-    )
+  // it should "throw if the size of a component is greather than the maximum size limit" in:
+  //   an[IllegalStateException] shouldBe thrownBy(
+  //     fixtures.StandardArchetypeFixture(Value(0))(nEntities = 1, ExtremelySmallFragmentSize)
+  //   )
 
   "A Fragment" should "correctly report whether it is full or not" in:
     val fixture = fixtures.StandardFragmentFixture(defaultComponent)(nEntities = 0, maxEntities = 1)

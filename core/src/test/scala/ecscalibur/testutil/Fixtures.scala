@@ -14,7 +14,7 @@ import CSeq.*
 
 // 'import core.archetype.Archetypes.Archetype.DefaultFragmentSizeBytes' warns about an unused import
 // for some reason.
-val DefaultFragmentSizeBytes = core.archetype.archetypes.Archetype.DefaultFragmentSizeBytes
+val DefaultFragmentSize = core.archetype.archetypes.Archetype.DefaultFragmentSize
 
 object fixtures:
   import ecscalibur.testutil.testclasses.Value
@@ -56,7 +56,7 @@ object fixtures:
 
   class StandardArchetypeFixture(components: Component*)(
       nEntities: Int = 100,
-      fragmentSize: Long = DefaultFragmentSizeBytes
+      fragmentSize: Long = DefaultFragmentSize
   ) extends ArchetypeFixture(components*)(nEntities):
     val archetype = Aggregate(Signature(componentIds*))(fragmentSize)
     for e <- entities do archetype.add(e, CSeq(components*))
