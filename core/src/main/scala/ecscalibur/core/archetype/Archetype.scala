@@ -86,7 +86,7 @@ private[ecscalibur] object archetypes:
     // TODO Make this parameter configurable
     /** Default maximum size of a [[Fragment]].
       */
-    inline val DefaultFragmentSize = 100
+    inline val DefaultFragmentSize = 50
 
     /** Creates an [[Aggregate]] archetype with a [[Signature]] derived from the given types.
       *
