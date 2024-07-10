@@ -13,7 +13,7 @@ object CSeq:
   import scala.annotation.targetName
   import scala.reflect.ClassTag
 
-  inline def empty[T: ClassTag] = CSeq(Array.empty[T])
+  inline def empty[T: ClassTag]: CSeq[T] = CSeq(Array.empty[T])
 
   inline def apply[T: ClassTag](elements: T*): CSeq[T] = elements.toArray[T]
 
@@ -30,7 +30,7 @@ object CSeq:
 
     inline def apply(i: Int): T = l(i)
 
-    inline def update(i: Int, c: T) = l.update(i, c)
+    inline def update(i: Int, c: T): Unit = l.update(i, c)
 
     inline def isEmpty: Boolean = l.toArray.length == 0
 

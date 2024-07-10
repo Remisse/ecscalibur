@@ -13,7 +13,7 @@ import archetype.archetypes.Aggregate
 class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.*
 
-  val DefaultFragmentSize = archetype.archetypes.Archetype.DefaultFragmentSize
+  val DefaultFragmentSize: Int = archetype.archetypes.Archetype.DefaultFragmentSize
   inline val KindaSmallFragmentSize = 10
   inline val ExtremelySmallFragmentSize = 1
 

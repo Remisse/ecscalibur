@@ -51,7 +51,7 @@ private[ecscalibur] trait ArchetypeManager:
     *
     * @param e
     *   the Entity from which the given components must be removed
-    * @param components
+    * @param compTypes
     *   the Components to be removed
     * @throws IllegalArgumentException
     *   if the given Entity is not handled by this manager or if the given component sequence is
@@ -133,8 +133,7 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
         newArchetype
       }
     )
-    desiredArchetype.add(e, components)
-    archetypesByEntity.update(e, desiredArchetype)
+    archetypesByEntity.update(e, desiredArchetype.add(e, components))
 
   override def addComponents(e: Entity, components: CSeq[Component]): Boolean =
     ensureEntityIsValid(e)
@@ -170,7 +169,6 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
     archetypesByEntity -= e
 
   override def update(e: Entity, c: Component): Unit =
-    ensureEntityIsValid(e)
     archetypesByEntity(e).update(e, c)
 
   override def iterate(isSelected: Signature => Boolean)(

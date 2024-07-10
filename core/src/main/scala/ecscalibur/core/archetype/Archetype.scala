@@ -18,9 +18,9 @@ private[ecscalibur] object archetypes:
     * @param signature
     *   this Archetype's [[Signature]].
     */
-  trait Archetype private[archetype] (val signature: Signature):
+  sealed trait Archetype private[archetype] (val signature: Signature):
     /** Adds an [[Entity]] to this Archetype along with the given [[Component]]s. The sequence of
-      * components must satisfy this Archetypes's [[Signature]].
+      * components must satisfy this Archetype's [[Signature]].
       *
       * @param e
       *   the Entity to be added
@@ -28,8 +28,10 @@ private[ecscalibur] object archetypes:
       *   if the given components do not satisfy this archetype's signature.
       * @param entityComponents
       *   the Components to be added
+      * @return
+      *   this Archetype
       */
-    def add(e: Entity, entityComponents: CSeq[Component]): Unit
+    def add(e: Entity, entityComponents: CSeq[Component]): Archetype
 
     /** Checks whether the given Entity is stored in this Archetype.
       *
@@ -84,7 +86,7 @@ private[ecscalibur] object archetypes:
     // TODO Make this parameter configurable
     /** Default maximum size of a [[Fragment]].
       */
-    inline val DefaultFragmentSize = 50
+    inline val DefaultFragmentSize = 100
 
     /** Creates an [[Aggregate]] archetype with a [[Signature]] derived from the given types.
       *
@@ -175,19 +177,20 @@ private[ecscalibur] object archetypes:
 
       override def fragments: Iterator[Fragment] = _fragments.iterator
 
-      override def add(e: Entity, entityComponents: CSeq[Component]): Unit =
+      override def add(e: Entity, entityComponents: CSeq[Component]): Archetype =
         require(!contains(e), "Attempted to add an already existing entity.")
         require(
           signature == Signature(entityComponents.map(~_)),
           "Given component types do not correspond to this archetype's signature."
         )
-        if _fragments.isEmpty || lastFragment.isFull then appendNewFragment
+        if _fragments.isEmpty || lastFragment.isFull then appendNewFragment()
         lastFragment.add(e, entityComponents)
         fragmentsByEntity += e -> lastFragment
+        lastFragment
 
       private inline def lastFragment: Fragment = _fragments.last
 
-      private inline def appendNewFragment: Unit =
+      private inline def appendNewFragment(): Unit =
         _fragments += Fragment(signature, componentMappings, maxFragmentSize.toInt)
 
       override inline def contains(e: Entity): Boolean = fragmentsByEntity.contains(e)
@@ -216,7 +219,7 @@ private[ecscalibur] object archetypes:
         _fragments.foreach(_.iterate(f))
 
       override def update(e: Entity, c: Component): Unit =
-        require(fragmentsByEntity.contains(e), "Given entity is not stored in this archetype.")
+        // No need to check whether this archetype contains e, as AggregateManager takes care of it
         require(
           signature.underlying.contains(c.typeId),
           "Attempted to update the value of a non-existing component."
@@ -272,12 +275,13 @@ private[ecscalibur] object archetypes:
       private inline def setComponent(e: Entity, c: Component): Unit =
         components(entityIndexes(e))(componentMappings(c.typeId)) = c
 
-      override def add(e: Entity, entityComponents: CSeq[Component]): Unit =
+      override def add(e: Entity, entityComponents: CSeq[Component]): Archetype =
         // No need to validate the inputs, as Aggregate already takes care of it.
         require(!isFull, s"Cannot add more entities beyond the maximum limit ($maxEntities).")
         entityIndexes += e
-        entityComponents.foreach: (c: Component) =>
+        for c <- entityComponents do
           setComponent(e, c)
+        this
 
       override inline def contains(e: Entity): Boolean =
         entityIndexes.contains(e)

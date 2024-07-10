@@ -1,6 +1,8 @@
 package ecsutil
 
-/** Defines a bidirectional map where each element is mapped to a unique, autoincrementing number.
+import scala.annotation.targetName
+
+/** Defines a map where each element is mapped to a unique, autoincrementing number.
   */
 trait ProgressiveMap[T]:
   /** Adds an element to this map.
@@ -12,6 +14,7 @@ trait ProgressiveMap[T]:
     * @return
     *   this map
     */
+  @targetName("add")
   def +=(elem: T): ProgressiveMap[T]
 
   /** Removes an element from this map.
@@ -23,6 +26,7 @@ trait ProgressiveMap[T]:
     * @return
     *   this map
     */
+  @targetName("remove")
   def -=(elem: T): ProgressiveMap[T]
 
   /** Checks whether this map contains the given element.
@@ -44,17 +48,6 @@ trait ProgressiveMap[T]:
     *   the given element's mapping
     */
   def apply(elem: T): Int
-
-  /** Returns the element corresponding to the given mapping.
-    *
-    * @param id
-    *   the mapping corresponding to the desired element
-    * @throws IllegalArgumentException
-    *   if this map does not contain the given mapping
-    * @return
-    *   the element corresponding to the given mapping
-    */
-  infix def ofId(id: Int): T
 
   /** Iterates over all elements in this map and executes `f` for each of them
     *
@@ -100,41 +93,40 @@ object ProgressiveMap:
       val _ = res += e
     res
 
-  final class ProgressiveMapImpl[T] extends ProgressiveMap[T]:
-    import com.google.common.collect.HashBiMap
-    import com.google.common.collect.BiMap
+  private inline val Uninitialized = -1
 
-    private var effectiveSize = 0
-    private val bimap: BiMap[T, Int] = HashBiMap.create()
+  private final class ProgressiveMapImpl[T] extends ProgressiveMap[T]:
+    import scala.collection.mutable
+
+    private val map: mutable.Map[T, Int] = mutable.Map.empty.withDefaultValue(Uninitialized)
     private val idGenerator = IdGenerator()
 
+    @targetName("add")
     override def +=(elem: T): ProgressiveMap[T] =
       require(!contains(elem), s"Element $elem has already been mapped.")
-      bimap.put(elem, idGenerator.next)
-      effectiveSize += 1
+      val t = elem -> idGenerator.next
+      map += t
       this
 
+    @targetName("remove")
     override def -=(elem: T): ProgressiveMap[T] =
-      require(contains(elem), s"Element $elem has not been mapped.")
-      val id = bimap.remove(elem)
+      val id = map(elem)
+      require(id != Uninitialized, s"Element $elem has not been mapped.")
       idGenerator.erase(id)
-      effectiveSize -= 1
+      map -= elem
       this
 
-    override inline def contains(elem: T): Boolean = bimap.containsKey(elem)
+    override inline def contains(elem: T): Boolean = map(elem) != Uninitialized
 
     override def apply(elem: T): Int =
-      require(contains(elem), s"Element $elem not mapped.")
-      bimap.get(elem)
-
-    override def ofId(id: Int): T =
-      require(bimap.containsValue(id), s"No elements with id $id.")
-      bimap.inverse().get(id)
+      val res = map(elem)
+      require(res != Uninitialized, s"Element $elem not mapped.")
+      res
 
     override def foreach(f: (T, Int) => Unit): Unit =
-      bimap.forEach: (k, v) =>
-        f(k, v)
+      for e <- map do
+        f(e._1, e._2)
 
-    override def size: Int = effectiveSize
+    override def size: Int = map.size
 
-    override def isEmpty: Boolean = effectiveSize == 0
+    override def isEmpty: Boolean = map.isEmpty

@@ -76,8 +76,8 @@ object Signature:
   @targetName("fromIds")
   def apply(ids: CSeq[ComponentId]): Signature =
     require(ids.nonEmpty, "Failed to make signature: empty sequence.")
-    val res: Array[ComponentId] = ids.toArray.distinct.sortInPlace().array
-    require(res.length == ids.length, "Duplicate types found.")
+    require(ids.toArray.toSet.size == ids.length, "Duplicate types found.")
+    val res: Array[ComponentId] = ids.toArray.sortInPlace().array
     new SignatureImpl(CSeq(ComponentId(res)))
 
   /** Creates a new Signature from the given ComponentIds.

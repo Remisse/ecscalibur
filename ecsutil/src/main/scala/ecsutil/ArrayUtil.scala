@@ -1,6 +1,6 @@
 package ecsutil
 
-import java.{util as ju}
+import java.util as ju
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 

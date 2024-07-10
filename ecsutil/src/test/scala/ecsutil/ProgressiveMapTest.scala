@@ -6,7 +6,7 @@ import org.scalatest.matchers._
 
 class ProgressiveMapTest extends AnyFlatSpec with should.Matchers:
   inline val defaultValue = 10
-  val cons = -defaultValue until defaultValue
+  val cons: Seq[Int] = -defaultValue until defaultValue
 
   "A ProgressiveMap" should "be correctly initialized with no elements" in:
     val map = ProgressiveMap[Int]()
@@ -24,14 +24,12 @@ class ProgressiveMapTest extends AnyFlatSpec with should.Matchers:
     map += defaultValue
     map.contains(defaultValue) should be(true)
     map(defaultValue) should be(0)
-    map.ofId(0) should be(defaultValue)
 
   it should "correctly remove existing elements" in:
     val map = ProgressiveMap.from(defaultValue)
     map -= defaultValue
     map.contains(defaultValue) should be(false)
     an[IllegalArgumentException] shouldBe thrownBy(map(defaultValue))
-    an[IllegalArgumentException] shouldBe thrownBy(map.ofId(0))
 
   it should "correctly iterate over all mapped elements" in:
     val map = ProgressiveMap.from(cons*)

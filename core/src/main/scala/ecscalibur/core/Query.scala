@@ -18,13 +18,24 @@ object queries:
     *
     * Queries have to be built through Systems: users must create either a class extending the
     * [[System]] trait and override [[System.process]] by calling the [[query]] factory method, or a
-    * simple System through the [[World.withSystem]] method. A Query without a System cannot exist.
+    * simple System by calling the [[World.withSystem]] method. A Query without a System cannot
+    * exist.
     */
-  final case class Query private[queries] (val query: () => Unit):
-    inline def apply(): Unit = query()
+  opaque type Query <: () => Unit = () => Unit
 
+  /** Factory for [[Query]].
+    */
   object Query:
-    /** Makes an empty Query. Does nothing when executed.
+    /** Creates a new [[Query]] with the given lambda function.
+      *
+      * @param q
+      *   the lambda function of the new Query
+      * @return
+      *   a new Query instance
+      */
+    inline def apply(inline q: () => Unit): Query = q
+
+    /** Creates an empty Query.
       *
       * @return
       *   an empty Query
@@ -46,8 +57,8 @@ import ecsutil.CSeq
 /** Builder for [[Query]].
   */
 private[ecscalibur] trait QueryBuilder:
-  /** Excludes all the Components with the given types from the final Query. Entities with at least
-    * one of the specified Components will not be selected.
+  /** Excludes from the final Query all Components whose types match the given ones. Entities
+    * with at least one of the specified Components will not be selected.
     *
     * @param types
     *   the types of Components to exclude
@@ -56,7 +67,8 @@ private[ecscalibur] trait QueryBuilder:
     */
   infix def except(types: ComponentType*): QueryBuilder
 
-  /** Includes all entities with at least one Component with the given types.
+  /** Includes in the final Query all entities with at least one Component whose type matches any
+    * of the given ones.
     *
     * @param types
     *   the types of Components to include
