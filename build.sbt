@@ -19,10 +19,6 @@ ThisBuild / scalacOptions ++= Seq(
   "-Ycheck:all", 
 )
 
-val runtimeDependencies = Seq(
-  "com.google.guava" % "guava" % "33.2.1-jre",
-)
-
 val testDependencies = Seq(
   "org.scalatest" %% "scalatest" % "3.2.18" % Test,
 )
@@ -34,7 +30,6 @@ lazy val ecsutil = project
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
 
-    libraryDependencies ++= runtimeDependencies,
     libraryDependencies ++= testDependencies,
   )
 
@@ -46,7 +41,6 @@ lazy val core = project
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
 
-    libraryDependencies ++= runtimeDependencies,
     libraryDependencies ++= testDependencies,
 
     scalacOptions ++= Seq(
