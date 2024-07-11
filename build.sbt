@@ -1,6 +1,6 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "3.5.0-RC2"
+ThisBuild / scalaVersion := "3.5.0-RC4"
 
 ThisBuild / scalacOptions ++= Seq(
   "-deprecation",
@@ -52,14 +52,24 @@ lazy val core = project
     assembly / assemblyJarName := "ecscalibur.jar",
   )
 
+lazy val demo_util = (project in file("./demo/util"))
+  .settings(
+    name := "Demo utils"
+  )
+
 lazy val demo_ecs = (project in file("./demo/ecs"))
-  .dependsOn(core)
+  .dependsOn(core, demo_util)
   .settings(
     name := "ecscalibur Demo",
     assembly / assemblyJarName := "demo_ecs.jar",
+
+    scalacOptions ++= Seq(
+      "-experimental"
+    )
   )
 
 lazy val demo_oop = (project in file("./demo/oop"))
+  .dependsOn(ecsutil, demo_util)
   .settings(
     name := "OOP Demo",
     assembly / assemblyJarName := "demo_oop.jar",
