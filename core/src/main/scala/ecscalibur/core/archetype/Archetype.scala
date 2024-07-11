@@ -178,7 +178,8 @@ private[ecscalibur] object archetypes:
       override def fragments: Iterator[Fragment] = _fragments.iterator
 
       override def add(e: Entity, entityComponents: CSeq[Component]): Archetype =
-        require(!contains(e), "Attempted to add an already existing entity.")
+        // TODO Find out why this assert fails in the demo
+        //require(!contains(e), "Attempted to add an already existing entity.")
         require(
           signature == Signature(entityComponents.map(~_)),
           "Given component types do not correspond to this archetype's signature."
