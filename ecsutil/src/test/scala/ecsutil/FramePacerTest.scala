@@ -17,5 +17,6 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
 
   it should "return the correct delta time value after a call to pace()" in:
     val pacer = FramePacer(defaultCap)
-    pacer.pace() should be(0f)
-    pacer.pace() === (1f / defaultCap) +- Tolerance should be(true)
+    pacer.pace(()) === (1f / defaultCap) +- Tolerance should be(true)
+    val pacerNoCap = FramePacer(cap = 0)
+    pacerNoCap.pace(()) should be > 0f

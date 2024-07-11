@@ -1,27 +1,25 @@
 package ecsutil
 
-/** Tracks the time elapsed between each call to [[FramePacer.pace]] and puts the current thread to
+/** Measures the time required to run a function and puts the current thread to
   * sleep if such time falls under a specified frame time.
   */
 trait FramePacer:
   type DeltaSeconds = Float
 
-  /** Returns the amount of time elapsed since the last call to this method.
-    *
-    * If called for the first time, it will return 0.
+  /** Executes `f` and returns the amount of time that was required for `f` to complete.
     *
     * If the calculated time falls under the specified frame rate cap, it will put the current
     * thread to sleep for `frameTime - elapsedTime` seconds and return `frameTime` as the time
     * delta, where `frameTime` is equal to `1 / frameCap`.
     *
+    * @param f
+    *   the function whose execution time must be measured
     * @return
-    *   the amount of time elapsed since the last call.
+    *   the amount of time that was required for `f` to complete
     */
-  def pace(): DeltaSeconds
+  def pace(f: => Unit): DeltaSeconds
 
 object FramePacer:
-  private inline val Uninitialized = -1
-
   /** Creates a new [[FramePacer]] instance with the given frame rate limit. A limit equal to 0
     * means that no limit should be enforced.
     *
@@ -33,24 +31,23 @@ object FramePacer:
   def apply(cap: Int = 0): FramePacer = new FramePacer:
     require(cap >= 0, "Frame cap must be a non-negative number.")
 
-    private var lastUpdateTime: Long = Uninitialized
     private val frameTime: Option[Long] = cap match
       case 0 => None
-      case _ => Some(((1.0 / cap) * 1e+9).toLong)
+      case _ => Some((1e9 / cap).toLong)
 
     import java.lang.System.nanoTime
     import java.time.Duration
 
-    override def pace(): DeltaSeconds =
-      val time = nanoTime()
+    override def pace(f: => Unit): DeltaSeconds =
+      val start = nanoTime()
+      f
       var newDtNanos: Long = 0
-      if lastUpdateTime != Uninitialized then
-        val elapsed = time - lastUpdateTime
-        frameTime match
-          case Some(ft) =>
-            val overhead = math.max(ft - elapsed, 0)
-            if overhead > 0 then Thread.sleep(Duration.ofNanos(overhead))
-            newDtNanos = ft
-          case None => newDtNanos = elapsed
-      lastUpdateTime = time
+      val elapsed = nanoTime() - start
+      frameTime match
+        case Some(ft) =>
+          val overhead = ft - elapsed
+          if overhead > 0 then 
+            Thread.sleep(Duration.ofNanos(overhead))
+          newDtNanos = ft
+        case None => newDtNanos = elapsed
       (newDtNanos * 1e-9).toFloat

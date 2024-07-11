@@ -61,6 +61,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.withSystem(s1):
       _ on: (e: Entity, v: Velocity, p: Position) =>
         e <== Position(p.vec + v.vec)
+        ()
 
     world.withSystem(s2, priority = 1):
       _ on: (_, p: Position) =>
@@ -87,8 +88,6 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       _ routine: () =>
         ()
 
-    world loop once
-    world.context.deltaTime should be(0f)
     world loop once
     world.context.deltaTime === 0.0 +- Tolerance shouldBe false
 

@@ -203,12 +203,13 @@ object world:
 
       override def loop(loopType: Loop): Unit =
         inline def _loop(): Unit =
-          updateDeltaTime()
-          if areBuffersDirty then
-            areBuffersDirty = false
-            processPendingEntityOperations()
-          processPendingSystems()
-          for s <- activeSystems do s.update()
+          context.setDeltaTime:
+            pacer.pace:
+              if areBuffersDirty then
+                areBuffersDirty = false
+                processPendingEntityOperations()
+              processPendingSystems()
+              for s <- activeSystems do s.update()
         loopType match
           case Loop.Forever      => while true do _loop()
           case Loop.Times(times) => for _ <- 0 until times do _loop()
@@ -308,8 +309,6 @@ object world:
             res = true
         if !res then orElse()
         res
-
-      private inline def updateDeltaTime(): Unit = context.setDeltaTime(pacer.pace())
 
   private[world] object builders:
     trait EntityBuilder:
