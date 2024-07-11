@@ -57,8 +57,8 @@ import ecsutil.CSeq
 /** Builder for [[Query]].
   */
 private[ecscalibur] trait QueryBuilder:
-  /** Excludes from the final Query all Components whose types match the given ones. Entities
-    * with at least one of the specified Components will not be selected.
+  /** Excludes from the final Query all Components whose types match the given ones. Entities with
+    * at least one of the specified Components will not be selected.
     *
     * @param types
     *   the types of Components to exclude
@@ -67,8 +67,8 @@ private[ecscalibur] trait QueryBuilder:
     */
   infix def except(types: ComponentType*): QueryBuilder
 
-  /** Includes in the final Query all entities with at least one Component whose type matches any
-    * of the given ones.
+  /** Includes in the final Query all entities with at least one Component whose type matches any of
+    * the given ones.
     *
     * @param types
     *   the types of Components to include
@@ -85,7 +85,7 @@ private[ecscalibur] trait QueryBuilder:
     * @return
     *   a new Query
     */
-  infix def routine(f: () => Unit): Query
+  infix def routine(f: => Unit): Query
 
   /** Iterates on every Entity in the World without selecting any Components.
     *
@@ -212,8 +212,8 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
     _any = Signature(types*)
     this
 
-  override infix def routine(f: () => Unit): Query =
-    queries.make:
+  override infix def routine(f: => Unit): Query =
+    queries.make: () =>
       f
 
   override infix def on(f: Entity => Unit): Query =

@@ -20,13 +20,13 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     var sum = Int.MinValue
     val s = new System(name = s1, priority = 0):
       override protected val onStart: Query =
-        query routine: () =>
+        query routine:
           sum = 0
       override protected val process: Query =
         query on: (e, v: Value) =>
           sum += v.x
       override protected val onPause: Query =
-        query routine: () =>
+        query routine:
           shouldNotBeExecuted
 
     s.update()
@@ -42,7 +42,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
         query on: (e, v: Value) =>
           sum = 0
       override protected val onPause: Query =
-        query routine: () =>
+        query routine:
           sum = Int.MaxValue
 
     an[IllegalStateException] shouldBe thrownBy(s.pause())
@@ -60,13 +60,13 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     var sum = Int.MinValue
     val s = new System(name = s1, priority = 0):
       override protected val onStart: Query =
-        query routine: () =>
+        query routine:
           sum = 0
       override protected val process =
         query on: (e, v: Value) =>
           sum += v.x
       override protected val onPause: Query =
-        query routine: () =>
+        query routine:
           sum = Int.MaxValue
 
     an[IllegalStateException] shouldBe thrownBy(s.resume())
@@ -83,7 +83,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
 
     val s = new System(name = s1, priority = 0):
       override protected val process =
-        query routine: () =>
+        query routine:
           ()
 
     s.isRunning should be(false)
@@ -98,7 +98,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
 
     val s = new System(name = s1, priority = 0):
       override protected val process =
-        query routine: () =>
+        query routine:
           ()
 
     s.isPaused should be(false)

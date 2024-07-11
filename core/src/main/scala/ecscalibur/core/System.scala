@@ -11,7 +11,7 @@ object systems:
     *   value that dictates when this System will be executed relative to the others stored in the
     *   same World instance
     */
-  trait System(val name: String, val priority: Int):
+  trait System(final val name: String, final val priority: Int):
     /** Logic executed once when the system starts and once every time it resumes after being
       * paused.
       */

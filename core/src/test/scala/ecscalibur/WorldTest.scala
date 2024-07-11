@@ -19,7 +19,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     val world = World()
     var res = false
     world.withSystem(s1):
-      _ routine: () =>
+      _ routine:
         res = true
     world loop once
     (world isSystemRunning s1) shouldBe true
@@ -85,7 +85,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
   it should "update its delta time value on every iteration" in:
     val world = World(iterationsPerSecond = 60)
     world.withSystem(s1):
-      _ routine: () =>
+      _ routine:
         ()
 
     world loop once
@@ -97,7 +97,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     val world = World()
     var sum = 0
     world.withSystem(s1):
-      _ routine: () =>
+      _ routine:
         sum += 1
         if world isSystemRunning s1 then
           val success = world.mutator defer pause(s1)
@@ -113,14 +113,14 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     var sum = 0
 
     world.withSystem(s1):
-      _ routine: () =>
+      _ routine:
         sum += 1
         if world isSystemRunning s1 then
           (world.mutator defer pause(s1)) shouldNot be(false)
           ()
 
     world.withSystem(s2):
-      _ routine: () =>
+      _ routine:
         if world isSystemPaused s1 then
           (world.mutator defer resume(s1)) shouldNot be(false)
           ()
@@ -135,7 +135,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
   it should "correctly defer creating a new entity" in:
     val world = World()
     world.withSystem(s1, priority = 0):
-      _ routine: () =>
+      _ routine:
         world.mutator defer create(CSeq(testValue))
         world.mutator defer pause(s1)
         ()
@@ -248,13 +248,13 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       systemName = thisName
 
     world.withSystem(s2, priority = 2):
-      _ routine: () =>
+      _ routine:
         test(thisName = s2, prevName = s1)
     world.withSystem(s1, priority = 1):
-      _ routine: () =>
+      _ routine:
         test(thisName = s1, prevName = none)
     world.withSystem(s3, priority = 3):
-      _ routine: () =>
+      _ routine:
         test(thisName = s3, prevName = s2)
 
     world loop once
@@ -263,9 +263,9 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
   it should "not contain two systems with the same name" in:
     val world = World()
     world.withSystem(s1):
-      _ routine: () =>
+      _ routine:
         ()
     an[IllegalArgumentException] shouldBe thrownBy:
       world.withSystem(s1):
-        _ routine: () =>
+        _ routine:
           ()

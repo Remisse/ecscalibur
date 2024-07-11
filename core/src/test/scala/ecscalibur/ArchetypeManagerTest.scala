@@ -129,7 +129,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     val fixture = IterateNFixture(nEntities = 100, extraComponents = CSeq.empty)
     given ArchetypeManager = fixture.archManager
     var executionsCount = 0
-    (testquery routine: () =>
+    (testquery routine:
       executionsCount += 1).apply()
     executionsCount shouldBe 1
 

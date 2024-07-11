@@ -20,8 +20,9 @@ object entity:
       *   the Component whose reference must be updated
       */
     @targetName("update")
-    inline def <==(c: Component)(using World): Unit =
+    inline def <==(c: Component)(using World): Entity =
       summon[World].update(this, c)
+      this
 
     /** Syntactic sugar for [[World.hasComponents]].
       *
@@ -42,7 +43,7 @@ object entity:
       *   this Entity
       */
     @targetName("remove")
-    inline def -=(tpe: ComponentType, inline orElse: () => Unit)(using World): Entity =
+    inline def -=(tpe: ComponentType, inline orElse: () => Unit = () => ())(using World): Entity =
       val _ = summon[World].mutator defer EntityRequest.removeComponent(this, tpe, orElse)
       this
 
@@ -56,7 +57,7 @@ object entity:
       *   this Entity
       */
     @targetName("add")
-    inline def +=(c: Component, inline orElse: () => Unit)(using World): Entity =
+    inline def +=(c: Component, inline orElse: () => Unit = () => ())(using World): Entity =
       val _ = summon[World].mutator defer EntityRequest.addComponent(this, c, orElse)
       this
 
@@ -65,3 +66,5 @@ object entity:
       case _ => false
 
     override def hashCode(): Int = id.##
+
+    override def toString(): String = s"Entity $id"

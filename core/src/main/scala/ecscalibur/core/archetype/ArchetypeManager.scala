@@ -116,7 +116,7 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
   private val archetypesBySignature: mutable.Map[Signature, Archetype] = mutable.HashMap.empty
   private val archetypesByEntity: mutable.Map[Entity, Archetype] = mutable.HashMap.empty
 
-  override inline def addEntity(e: Entity, components: CSeq[Component]): Unit =
+  override def addEntity(e: Entity, components: CSeq[Component]): Unit =
     require(
       !archetypesByEntity.contains(e),
       "Attempted to add an already existing entity."
