@@ -7,6 +7,9 @@ import ecscalibur.core.context.MetaContext
 import ecsutil.CSeq
 
 export world.*
+export world.Loop.once
+export world.Loop.forever
+export world.Loop.ext.times
 
 object world:
   import builders.*
@@ -136,10 +139,11 @@ object world:
       */
     val once: Loop = Times(1)
 
-    /** @return
-      *   a [[Loop.Times]] instance initialized with the given parameter.
-      */
-    extension (n: Int) inline def times: Loop = Times(n)
+    object ext:
+      /** @return
+        *   a [[Loop.Times]] instance initialized with the given parameter.
+        */
+      extension (n: Int) inline def times: Loop = Times(n)
 
   object World:
     // TODO Pass a Configuration object instead

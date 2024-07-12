@@ -4,16 +4,17 @@ import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 
-import ecscalibur.core.*
 import ecsdemo.model.*
 import ecsdemo.components.*
-import ecscalibur.core.world.Loop.times
-import ecsutil.CSeq
+import ecsdemo.view.View
+
 import demoutil.transform.Vector2
 import demoutil.Color
-import ecsdemo.view.View
+
+import ecscalibur.core.*
+
+import ecsutil.CSeq
 import ecsutil.shouldNotBeExecuted
-import ecscalibur.core.world.Loop.once
 
 inline val singleValidator = "singleValidator"
 inline val validatorAdd = "validatorAdd"
