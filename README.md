@@ -17,11 +17,7 @@ import ecsutil.CSeq
 
 @main def main(): Unit =
   given world: World = World()
-
-  val pos = Position(12, 6)
-  val vel = Velocity(4, 2)
-  world.entity withComponents CSeq(pos, vel)
-
+  world.entity withComponents CSeq(Position(12, 6), Velocity(4, 2))
   world.withSystem("movement"):
     _ all: (e: Entity, p: Position, v: Velocity) =>
       e <== Position(
@@ -29,13 +25,11 @@ import ecsutil.CSeq
         p.y + v.y * world.context.deltaTime,
       )
       ()
-
   world loop 10.times
 
 @component
 case class Position(x: Float, y: Float) extends Component
 object Position extends ComponentType
-
 @component
 case class Velocity(x: Float, y: Float) extends Component
 object Velocity extends ComponentType
