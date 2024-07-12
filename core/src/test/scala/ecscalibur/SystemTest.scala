@@ -23,7 +23,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
         query routine:
           sum = 0
       override protected val process: Query =
-        query on: (e, v: Value) =>
+        query all: (e, v: Value) =>
           sum += v.x
       override protected val onPause: Query =
         query routine:
@@ -39,7 +39,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     var sum = Int.MinValue
     val s = new System(name = s1, priority = 0):
       override protected val process =
-        query on: (e, v: Value) =>
+        query all: (e, v: Value) =>
           sum = 0
       override protected val onPause: Query =
         query routine:
@@ -63,7 +63,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
         query routine:
           sum = 0
       override protected val process =
-        query on: (e, v: Value) =>
+        query all: (e, v: Value) =>
           sum += v.x
       override protected val onPause: Query =
         query routine:

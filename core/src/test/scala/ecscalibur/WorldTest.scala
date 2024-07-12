@@ -43,7 +43,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.entity withComponents CSeq(testValue)
     var test = Value(0)
     world.withSystem(s1):
-      _ on: (e: Entity, v: Value) =>
+      _ all: (e: Entity, v: Value) =>
         test = v
 
     world loop once
@@ -59,12 +59,12 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.entity withComponents CSeq(pos, vel)
 
     world.withSystem(s1):
-      _ on: (e: Entity, v: Velocity, p: Position) =>
+      _ all: (e: Entity, v: Velocity, p: Position) =>
         e <== Position(p.vec + v.vec)
         ()
 
     world.withSystem(s2, priority = 1):
-      _ on: (_, p: Position) =>
+      _ all: (_, p: Position) =>
         p.vec should be(pos.vec + vel.vec)
         ()
 
@@ -76,7 +76,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     given world: World = World()
     world.entity withComponents CSeq(testValue)
     world.withSystem(s1):
-      _ any Value on: (e: Entity) =>
+      _ any Value all: (e: Entity) =>
         e ?> Value should be(true)
         ()
 
@@ -142,7 +142,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
     var test = Value(0)
     world.withSystem(s2, priority = 1):
-      _ on: (_, v: Value) =>
+      _ all: (_, v: Value) =>
         test = v
 
     world loop once
@@ -155,11 +155,11 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.entity withComponents CSeq(C1())
     var sum = 0
     world.withSystem(s1):
-      _ on: (e: Entity, _: C1) =>
+      _ all: (e: Entity, _: C1) =>
         world.mutator defer delete(e)
         sum += 1
     world.withSystem(s2):
-      _ on: (_, _: C1) =>
+      _ all: (_, _: C1) =>
         sum += 1
 
     world loop 2.times
@@ -169,14 +169,14 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     given world: World = World()
     world.entity withComponents CSeq(C1())
     world.withSystem(s1):
-      _ on: (e: Entity, _: C1) =>
+      _ all: (e: Entity, _: C1) =>
         e += (testValue, () => shouldNotBeExecuted)
         // world.mutator defer addComponent(e, testValue, () => shouldNotBeExecuted)
         val _ = world.mutator defer pause(s1)
 
     var test = Value(0)
     world.withSystem(s2):
-      _ on: (_, v: Value) =>
+      _ all: (_, v: Value) =>
         test = v
 
     world loop once
@@ -189,14 +189,14 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.entity withComponents CSeq(C1())
 
     world.withSystem(s1):
-      _ on: (e: Entity, _: C1) =>
+      _ all: (e: Entity, _: C1) =>
         e -= (C1, () => shouldNotBeExecuted)
         // world.mutator defer removeComponent(e, C1, () => shouldNotBeExecuted)
         val _ = world.mutator defer pause(s1)
 
     var sum = 0
     world.withSystem(s2):
-      _ on: (e: Entity, _: C1) =>
+      _ all: (e: Entity, _: C1) =>
         sum += 1
 
     world loop once
@@ -213,7 +213,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     val world = World()
     world.entity withComponents CSeq(C1())
     world.withSystem(s1):
-      _ on: (e: Entity, _: C1) =>
+      _ all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer addComponent(e, C2())
 
     noException shouldBe thrownBy(world loop deferTestIterations)
@@ -222,7 +222,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     val world = World()
     world.entity withComponents CSeq(C1())
     world.withSystem(s1):
-      _ on: (e: Entity, _: C1) =>
+      _ all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer removeComponent(e, C1)
 
     noException shouldBe thrownBy(world loop deferTestIterations)
@@ -231,7 +231,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     val world = World()
     world.entity withComponents CSeq(C1())
     world.withSystem(s1):
-      _ on: (e: Entity, _: C1) =>
+      _ all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer delete(e)
 
     noException shouldBe thrownBy(world loop deferTestIterations)

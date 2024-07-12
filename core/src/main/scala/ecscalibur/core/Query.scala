@@ -65,7 +65,7 @@ private[ecscalibur] trait QueryBuilder:
     * @return
     *   this QueryBuilder instance
     */
-  infix def except(types: ComponentType*): QueryBuilder
+  infix def none(types: ComponentType*): QueryBuilder
 
   /** Includes in the final Query all entities with at least one Component whose type matches any of
     * the given ones.
@@ -94,7 +94,7 @@ private[ecscalibur] trait QueryBuilder:
     * @return
     *   a new Query
     */
-  infix def on(f: Entity => Unit): Query
+  infix def all(f: Entity => Unit): Query
 
   /** Iterates on all Entities with a Component that is instance of the given type parameter.
     *
@@ -103,7 +103,7 @@ private[ecscalibur] trait QueryBuilder:
     * @return
     *   a new Query
     */
-  infix def on[C0 <: Component: ClassTag](f: (Entity, C0) => Unit): Query
+  infix def all[C0 <: Component: ClassTag](f: (Entity, C0) => Unit): Query
 
   /** Iterates on all Entities with Components that are instances of the 2 given type parameters.
     *
@@ -112,7 +112,7 @@ private[ecscalibur] trait QueryBuilder:
     * @return
     *   a new Query
     */
-  infix def on[C0 <: Component: ClassTag, C1 <: Component: ClassTag](
+  infix def all[C0 <: Component: ClassTag, C1 <: Component: ClassTag](
       f: (Entity, C0, C1) => Unit
   ): Query
 
@@ -123,7 +123,7 @@ private[ecscalibur] trait QueryBuilder:
     * @return
     *   a new Query
     */
-  infix def on[C0 <: Component: ClassTag, C1 <: Component: ClassTag, C2 <: Component: ClassTag](
+  infix def all[C0 <: Component: ClassTag, C1 <: Component: ClassTag, C2 <: Component: ClassTag](
       f: (Entity, C0, C1, C2) => Unit
   ): Query
 
@@ -134,7 +134,7 @@ private[ecscalibur] trait QueryBuilder:
     * @return
     *   a new Query
     */
-  infix def on[
+  infix def all[
       C0 <: Component: ClassTag,
       C1 <: Component: ClassTag,
       C2 <: Component: ClassTag,
@@ -148,7 +148,7 @@ private[ecscalibur] trait QueryBuilder:
     * @return
     *   a new Query
     */
-  infix def on[
+  infix def all[
       C0 <: Component: ClassTag,
       C1 <: Component: ClassTag,
       C2 <: Component: ClassTag,
@@ -163,7 +163,7 @@ private[ecscalibur] trait QueryBuilder:
     * @return
     *   a new Query
     */
-  infix def on[
+  infix def all[
       C0 <: Component: ClassTag,
       C1 <: Component: ClassTag,
       C2 <: Component: ClassTag,
@@ -179,7 +179,7 @@ private[ecscalibur] trait QueryBuilder:
     * @return
     *   a new Query
     */
-  infix def on[
+  infix def all[
       C0 <: Component: ClassTag,
       C1 <: Component: ClassTag,
       C2 <: Component: ClassTag,
@@ -202,7 +202,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   private inline def multipleCallsErrorMsg(methodName: String) =
     s"Called '$methodName' multiple times."
 
-  override infix def except(types: ComponentType*): QueryBuilder =
+  override infix def none(types: ComponentType*): QueryBuilder =
     ensureFirstCallToNone()
     _none = Signature(types*)
     this
@@ -216,7 +216,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
     queries.make: () =>
       f
 
-  override infix def on(f: Entity => Unit): Query =
+  override infix def all(f: Entity => Unit): Query =
     queries.make: () =>
       am.iterate(matches): (e, _) =>
         f(e)
@@ -224,7 +224,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   private inline def initSignature(cache: CSeq[ComponentId]): Unit =
     selected = Signature(cache)
 
-  override infix def on[C0 <: Component: ClassTag](f: (Entity, C0) => Unit): Query =
+  override infix def all[C0 <: Component: ClassTag](f: (Entity, C0) => Unit): Query =
     idCache = CSeq(id0K[C0])
     initSignature(idCache)
     queries.make(() =>
@@ -232,7 +232,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
         f(e, components.findOfType[C0])
     )
 
-  override infix def on[C0 <: Component: ClassTag, C1 <: Component: ClassTag](
+  override infix def all[C0 <: Component: ClassTag, C1 <: Component: ClassTag](
       f: (Entity, C0, C1) => Unit
   ): Query =
     idCache = CSeq(id0K[C0], id0K[C1])
@@ -246,7 +246,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
         )
     )
 
-  override infix def on[
+  override infix def all[
       C0 <: Component: ClassTag,
       C1 <: Component: ClassTag,
       C2 <: Component: ClassTag
@@ -265,7 +265,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
         )
     )
 
-  override infix def on[
+  override infix def all[
       C0 <: Component: ClassTag,
       C1 <: Component: ClassTag,
       C2 <: Component: ClassTag,
@@ -284,7 +284,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
         )
     )
 
-  override infix def on[
+  override infix def all[
       C0 <: Component: ClassTag,
       C1 <: Component: ClassTag,
       C2 <: Component: ClassTag,
@@ -305,7 +305,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
         )
     )
 
-  override infix def on[
+  override infix def all[
       C0 <: Component: ClassTag,
       C1 <: Component: ClassTag,
       C2 <: Component: ClassTag,
@@ -328,7 +328,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
         )
     )
 
-  override infix def on[
+  override infix def all[
       C0 <: Component: ClassTag,
       C1 <: Component: ClassTag,
       C2 <: Component: ClassTag,

@@ -23,7 +23,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     )
     given am: ArchetypeManager = fixture.archManager
     var sum = 0
-    (testquery except C1 on: (e: Entity, v: Value, c: C2) =>
+    (testquery none C1 all: (e: Entity, v: Value, c: C2) =>
       v isA Value shouldBe true
       c isA C2 shouldBe true
       sum += v.x
@@ -39,9 +39,9 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     )
     given am: ArchetypeManager = fixture.archManager
     var sum = 0
-    (testquery on: (e, v: Value) =>
+    (testquery all: (e, v: Value) =>
       am.update(e, editedValue)).apply()
-    (testquery on: (e, v: Value) =>
+    (testquery all: (e, v: Value) =>
       sum += v.x).apply()
     sum shouldBe editedValue.x * fixture.entitiesCount
 
@@ -50,7 +50,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       CSeq(testValue, C1())
     )
     given am: ArchetypeManager = fixture.archManager
-    (testquery any (C1, C2) on: (e, v: Value) =>
+    (testquery any (C1, C2) all: (e, v: Value) =>
       am.hasComponents(e, C1) should be(true)
       am.hasComponents(e, C1, C2) should be(false)
       ()
@@ -68,7 +68,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     given am: ArchetypeManager = fixture.archManager
     am.addComponents(fixture.entities.head, CSeq(testValue))
     var sum = 0
-    (testquery on: (e, v: Value) =>
+    (testquery all: (e, v: Value) =>
       sum += v.x).apply()
     sum shouldBe testValue.x
 
@@ -76,7 +76,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     val fixture = ArchetypeManagerFixture(CSeq(testValue))
     given am: ArchetypeManager = fixture.archManager
     am.addComponents(fixture.entities.head, CSeq(testValue))
-    (testquery on: (_, v: Value) =>
+    (testquery all: (_, v: Value) =>
       v shouldBe testValue
       ()
     ).apply()
@@ -85,7 +85,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     val fixture = ArchetypeManagerFixture(CSeq(C1(), C2(), testValue))
     given am: ArchetypeManager = fixture.archManager
     am.removeComponents(fixture.entities.head, C1, Value)
-    (testquery any (C1, Value) on: _ =>
+    (testquery any (C1, Value) all: _ =>
       shouldNotBeExecuted).apply()
 
   it should "do nothing when attempting to remove non-existing components from an entity" in:
@@ -97,7 +97,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     val fixture = ArchetypeManagerFixture(CSeq(C1()))
     given am: ArchetypeManager = fixture.archManager
     am.delete(fixture.entities.head)
-    (testquery any C1 on: _ =>
+    (testquery any C1 all: _ =>
       shouldNotBeExecuted).apply()
 
   val nonExisting: Entity = Entity(1)
@@ -138,40 +138,40 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
     val fixture = IterateNFixture(nEntities, extraComponents = CSeq.empty)
     given ArchetypeManager = fixture.archManager
     var executionsCount = 0
-    (testquery on: _ =>
+    (testquery all: _ =>
       executionsCount += 1).apply()
     executionsCount shouldBe nEntities
 
   it should "correctly iterate over all entities when supplying 1 type parameter" in:
     val fixture = IterateNFixture(extraComponents = CSeq.empty)
     given ArchetypeManager = fixture.archManager
-    (testquery on: (e, v: Value) =>
+    (testquery all: (e, v: Value) =>
       fixture.onIterationStart(v)
       summon[ArchetypeManager].update(e, fixture.testValue)
     ).apply()
-    (testquery on: (e, v: Value) =>
+    (testquery all: (e, v: Value) =>
       fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
   it should "correctly iterate over all entities when supplying 2 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1()))
     given ArchetypeManager = fixture.archManager
-    (testquery on: (e, v: Value, _: C1) =>
+    (testquery all: (e, v: Value, _: C1) =>
       fixture.onIterationStart(v)
       summon[ArchetypeManager].update(e, fixture.testValue)
     ).apply()
-    (testquery on: (e, v: Value, _: C1) =>
+    (testquery all: (e, v: Value, _: C1) =>
       fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
   it should "correctly iterate over all entities when supplying 3 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1(), C2()))
     given ArchetypeManager = fixture.archManager
-    (testquery on: (e, v: Value, _: C1, _: C2) =>
+    (testquery all: (e, v: Value, _: C1, _: C2) =>
       fixture.onIterationStart(v)
       summon[ArchetypeManager].update(e, fixture.testValue)
     ).apply()
-    (testquery on: (e, v: Value, _: C1, _: C2) =>
+    (testquery all: (e, v: Value, _: C1, _: C2) =>
       fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
@@ -179,11 +179,11 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   it should "correctly iterate over all entities when supplying 4 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1(), C2(), C3()))
     given ArchetypeManager = fixture.archManager
-    (testquery on: (e, v: Value, _: C1, _: C2, _: C3) =>
+    (testquery all: (e, v: Value, _: C1, _: C2, _: C3) =>
       fixture.onIterationStart(v)
       summon[ArchetypeManager].update(e, fixture.testValue)
     ).apply()
-    (testquery on: (e, v: Value, _: C1, _: C2, _: C3) =>
+    (testquery all: (e, v: Value, _: C1, _: C2, _: C3) =>
       fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
@@ -191,11 +191,11 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   it should "correctly iterate over all entities when supplying 5 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1(), C2(), C3(), C4()))
     given ArchetypeManager = fixture.archManager
-    (testquery on: (e, v: Value, _: C1, _: C2, _: C3, _: C4) =>
+    (testquery all: (e, v: Value, _: C1, _: C2, _: C3, _: C4) =>
       fixture.onIterationStart(v)
       summon[ArchetypeManager].update(e, fixture.testValue)
     ).apply()
-    (testquery on: (e, v: Value, _: C1, _: C2, _: C3, _: C4) =>
+    (testquery all: (e, v: Value, _: C1, _: C2, _: C3, _: C4) =>
       fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
@@ -203,11 +203,11 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   it should "correctly iterate over all entities when supplying 6 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1(), C2(), C3(), C4(), C5()))
     given ArchetypeManager = fixture.archManager
-    (testquery on: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5) =>
+    (testquery all: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5) =>
       fixture.onIterationStart(v)
       summon[ArchetypeManager].update(e, fixture.testValue)
     ).apply()
-    (testquery on: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5) =>
+    (testquery all: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5) =>
       fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
 
@@ -215,10 +215,10 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   it should "correctly iterate over all entities when supplying 7 type parameters" in:
     val fixture = IterateNFixture(extraComponents = CSeq(C1(), C2(), C3(), C4(), C5(), C6()))
     given ArchetypeManager = fixture.archManager
-    (testquery on: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5, _: C6) =>
+    (testquery all: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5, _: C6) =>
       fixture.onIterationStart(v)
       summon[ArchetypeManager].update(e, fixture.testValue)
     ).apply()
-    (testquery on: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5, _: C6) =>
+    (testquery all: (e, v: Value, _: C1, _: C2, _: C3, _: C4, _: C5, _: C6) =>
       fixture.onIterationStart(v)).apply()
     fixture.isSuccess shouldBe true
