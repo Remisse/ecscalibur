@@ -65,7 +65,9 @@ lazy val demo_ecs = (project in file("./demo/ecs"))
 
     scalacOptions ++= Seq(
       "-experimental"
-    )
+    ),
+
+    libraryDependencies ++= testDependencies,
   )
 
 lazy val demo_oop = (project in file("./demo/oop"))
