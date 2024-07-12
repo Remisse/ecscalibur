@@ -1,7 +1,7 @@
 package ecsutil
 
 /** Measures the time required to run a function and puts the current thread to
-  * sleep if such time falls under a specified frame time.
+  * sleep if such a time falls under a specified frame time.
   */
 trait FramePacer:
   type DeltaSeconds = Float

@@ -9,7 +9,7 @@ import components.{Component, ComponentType}
   * and its internal state.
   */
 trait Mutator:
-  /** Schedules a request for structural changes for execution on the next [[World]] loop. Until
+  /** Schedules a request for structural changes to be executed on the next [[World]] loop. Until
     * then, the [[World]]'s state will not be affected.
     *
     * @param q

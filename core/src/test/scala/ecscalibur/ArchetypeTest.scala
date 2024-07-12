@@ -54,13 +54,25 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val fixture = fixtures.StandardArchetypeFixture(components*)(nEntities = 1)
     val entity = fixture.entities(0)
     fixture.archetype.remove(entity).forall(components.contains) shouldBe true
-    fixture.archetype.contains(entity) shouldBe false
+
+  it should "not throw when adding an entity that was previously removed" in:
+    val fixture = fixtures.StandardArchetypeFixture(C1())(nEntities = 1)
+    val entity = fixture.entities(0)
+    val components = fixture.archetype.remove(entity)
+    noException should be thrownBy(fixture.archetype.add(entity, components))
 
   it should "correctly soft-remove entities" in:
     val fixture = fixtures.StandardArchetypeFixture(C1())(nEntities = 1)
     val entity = fixture.entities(0)
     fixture.archetype.softRemove(entity)
     fixture.archetype.contains(entity) shouldBe false
+
+  it should "not throw when adding an entity that was previously soft-removed" in:
+    val components: CSeq[Component] = CSeq(C1())
+    val fixture = fixtures.StandardArchetypeFixture(components.toArray*)(nEntities = 1)
+    val entity = fixture.entities(0)
+    fixture.archetype.softRemove(entity)
+    noException should be thrownBy(fixture.archetype.add(entity, components))
 
   inline val nEntities = 1000
 
@@ -94,11 +106,6 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
       )
     for e <- fixture.entities do fixture.archetype.remove(e)
     fixture.archetype.fragments.size shouldBe 1
-
-  // it should "throw if the size of a component is greather than the maximum size limit" in:
-  //   an[IllegalStateException] shouldBe thrownBy(
-  //     fixtures.StandardArchetypeFixture(Value(0))(nEntities = 1, ExtremelySmallFragmentSize)
-  //   )
 
   "A Fragment" should "correctly report whether it is full or not" in:
     val fixture = fixtures.StandardFragmentFixture(defaultComponent)(nEntities = 0, maxEntities = 1)

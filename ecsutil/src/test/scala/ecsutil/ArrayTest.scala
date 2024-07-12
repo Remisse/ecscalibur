@@ -1,9 +1,9 @@
 package ecsutil
 
-import ecsutil.array._
-import org.scalatest._
-import org.scalatest.flatspec._
-import org.scalatest.matchers._
+import ecsutil.array.*
+import org.scalatest.*
+import org.scalatest.flatspec.*
+import org.scalatest.matchers.*
 
 class ArrayTest extends AnyFlatSpec with should.Matchers:
   inline val Min = 0
@@ -107,7 +107,8 @@ class ArrayTest extends AnyFlatSpec with should.Matchers:
     val arr: Array[AnyRef] = Array(C1(), C2())
     (arr.aFindOfType[C1] match
       case _: C1 => true
-      case _ => false) should be(true)
+      case _     => false
+    ) should be(true)
     a[NoSuchElementException] shouldBe thrownBy(arr.aFindOfType[C3])
 
   "aFilter" should "work correctly" in:

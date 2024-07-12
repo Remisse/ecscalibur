@@ -1,8 +1,8 @@
 package ecsutil
 
-import org.scalatest._
-import org.scalatest.flatspec._
-import org.scalatest.matchers._
+import org.scalatest.*
+import org.scalatest.flatspec.*
+import org.scalatest.matchers.*
 
 class FramePacerTest extends AnyFlatSpec with should.Matchers:
   inline val defaultCap = 60

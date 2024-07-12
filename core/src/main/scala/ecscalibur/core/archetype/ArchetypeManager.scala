@@ -139,7 +139,7 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
     ensureEntityIsValid(e)
     require(components.nonEmpty, "Component list is empty.")
     val existing: CSeq[Component] = archetypesByEntity(e).remove(e)
-    if filterOutExistingComponents(existing, components.map(~_)).isEmpty then return false
+    if filterOutExistingComponents(existing, components.toArray*).isEmpty then return false
     archetypesByEntity -= e
     newEntityToArchetype(e, existing concat components)
     true
@@ -149,15 +149,15 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
     if !archetypesByEntity(e).signature.containsAny(Signature(compTypes*)) then return false
     val entityComps: CSeq[Component] = archetypesByEntity(e).remove(e)
     archetypesByEntity -= e
-    val filtered = filterOutExistingComponents(entityComps, CSeq(compTypes*).map(~_))
+    val filtered = filterOutExistingComponents(entityComps, compTypes*)
     if filtered.nonEmpty then newEntityToArchetype(e, filtered)
     true
 
   private inline def filterOutExistingComponents(
       toBeFiltered: CSeq[Component],
-      ids: CSeq[ComponentId]
+      toFilterOut: WithType*
   ): CSeq[Component] =
-    toBeFiltered.filterNot(c => ids.contains(~c))
+    toBeFiltered.filterNot(c => toFilterOut.indexWhere(_.typeId == c.typeId) != -1)
 
   override def hasComponents(e: Entity, types: ComponentType*): Boolean =
     ensureEntityIsValid(e)
