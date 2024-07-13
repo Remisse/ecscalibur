@@ -16,7 +16,7 @@ class SignatureTest extends AnyFlatSpec with should.Matchers:
     signature.underlying.isEmpty should be(true)
 
   it should "be non-empty and made of distinct component IDs" in:
-    an[IllegalArgumentException] should be thrownBy (Signature(CSeq.empty[ComponentId]))
+    an[IllegalArgumentException] should be thrownBy (Signature(Seq.empty[ComponentId]*))
     val signature = Signature(C1, C2, C3)
     signature.isNil should be(false)
     signature.underlying.isEmpty should be(false)

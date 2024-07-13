@@ -86,7 +86,7 @@ private[ecscalibur] object archetypes:
     // TODO Make this parameter configurable
     /** Default maximum size of a [[Fragment]].
       */
-    inline val DefaultFragmentSize = 50
+    inline val DefaultFragmentSize = 100
 
     /** Creates an [[Aggregate]] archetype with a [[Signature]] derived from the given types.
       *
@@ -133,8 +133,6 @@ private[ecscalibur] object archetypes:
       */
     def isEmpty: Boolean
 
-  private inline val removalErrorMsg = "Attempted to remove an entity not stored in this archetype."
-
   object Aggregate:
     /** Creates an Aggregate instance with a Signature derived from the given types and with a
       * maximum Fragment size specified by maxFragmentSizeBytes.
@@ -179,11 +177,7 @@ private[ecscalibur] object archetypes:
 
       override def add(e: Entity, entityComponents: CSeq[Component]): Archetype =
         // TODO Find out why this assert fails in the demo
-        // require(!contains(e), "Attempted to add an already existing entity.")
-//        require(
-//          signature == Signature(entityComponents),
-//          "Given component types do not correspond to this archetype's signature."
-//        )
+      //  require(!contains(e), "Attempted to add an already existing entity.")
         if _fragments.isEmpty || lastFragment.isFull then appendNewFragment()
         lastFragment.add(e, entityComponents)
         fragmentsByEntity += e -> lastFragment
@@ -208,7 +202,6 @@ private[ecscalibur] object archetypes:
         maybeDeleteFragment(fragment)
 
       private inline def removeFromMapAndGetFormerFragment(e: Entity): Fragment =
-        require(contains(e), removalErrorMsg)
         val fragment = fragmentsByEntity(e)
         fragmentsByEntity -= e
         fragment
@@ -258,12 +251,10 @@ private[ecscalibur] object archetypes:
         maxEntities: Int
     ) extends Archetype(inSignature),
           Fragment:
-      import ecsutil.array.*
-
       private val entityIndexes: ProgressiveMap[Entity] = ProgressiveMap()
       private val components: CSeq[CSeq[Component]] =
         CSeq.fill[CSeq[Component]](maxEntities)(
-          CSeq.ofDim[Component](inSignature.underlying.length)
+          CSeq.ofDim[Component](inSignature.underlying.size)
         )
 
       override inline def isFull: Boolean = entityIndexes.size == maxEntities
@@ -277,7 +268,6 @@ private[ecscalibur] object archetypes:
         components(entityIndexes(e))(componentMappings(c.typeId)) = c
 
       override def add(e: Entity, entityComponents: CSeq[Component]): Archetype =
-        // No need to validate the inputs, as Aggregate already takes care of it.
         require(!isFull, s"Cannot add more entities beyond the maximum limit ($maxEntities).")
         entityIndexes += e
         for c <- entityComponents do

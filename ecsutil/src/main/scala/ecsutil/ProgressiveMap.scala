@@ -130,4 +130,4 @@ object ProgressiveMap:
 
     override def isEmpty: Boolean = map.isEmpty
 
-    private inline def notMappedErrorMsg[T](elem: T) = s"Element $elem has not been mapped."
+    private inline def notMappedErrorMsg(elem: T) = s"Element $elem has not been mapped."
