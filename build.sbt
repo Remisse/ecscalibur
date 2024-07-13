@@ -76,3 +76,13 @@ lazy val demo_oop = (project in file("./demo/oop"))
     name := "OOP Demo",
     assembly / assemblyJarName := "demo_oop.jar",
   )
+
+lazy val benchmark = project
+  .dependsOn(demo_ecs, demo_oop)
+  .enablePlugins(JmhPlugin)
+  .settings(
+    name := "Benchmark",
+    scalacOptions ++= Seq(
+      "-experimental"
+    )
+  )
