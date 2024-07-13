@@ -3,7 +3,6 @@ package ecscalibur
 import ecscalibur.core.*
 import ecscalibur.testutil.testclasses.C1
 import ecscalibur.testutil.testclasses.Value
-import ecsutil.CSeq
 import ecsutil.shouldNotBeExecuted
 import org.scalatest.*
 import org.scalatest.flatspec.*
@@ -40,7 +39,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "correctly create an entity with the supplied components" in:
     val world = World()
-    world.entity withComponents CSeq(testValue)
+    world.entity withComponents testValue
     var test = Value(0)
     world.withSystem(s1):
       _ all: (e: Entity, v: Value) =>
@@ -56,7 +55,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
     val pos = Position(Vec2D(10, 20))
     val vel = Velocity(Vec2D(1, 2))
-    world.entity withComponents CSeq(pos, vel)
+    world.entity withComponents (pos, vel)
 
     world.withSystem(s1):
       _ all: (e: Entity, v: Velocity, p: Position) =>
@@ -74,7 +73,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "correctly report whether an entity has specific components" in:
     given world: World = World()
-    world.entity withComponents CSeq(testValue)
+    world.entity withComponents testValue
     world.withSystem(s1):
       _ any Value all: (e: Entity) =>
         e ?> Value should be(true)
@@ -136,7 +135,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     val world = World()
     world.withSystem(s1, priority = 0):
       _ routine:
-        world.mutator defer create(CSeq(testValue))
+        world.mutator defer create(testValue)
         world.mutator defer pause(s1)
         ()
 
@@ -152,7 +151,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "correctly defer deleting an entity" in:
     val world = World()
-    world.entity withComponents CSeq(C1())
+    world.entity withComponents C1()
     var sum = 0
     world.withSystem(s1):
       _ all: (e: Entity, _: C1) =>
@@ -167,7 +166,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "correctly defer adding components to an entity" in:
     given world: World = World()
-    world.entity withComponents CSeq(C1())
+    world.entity withComponents C1()
     world.withSystem(s1):
       _ all: (e: Entity, _: C1) =>
         e += (testValue, () => shouldNotBeExecuted)
@@ -186,7 +185,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "correctly defer removing components from an entity" in:
     given world: World = World()
-    world.entity withComponents CSeq(C1())
+    world.entity withComponents C1()
 
     world.withSystem(s1):
       _ all: (e: Entity, _: C1) =>
@@ -211,7 +210,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "only execute the first of many 'addComponent' requests if they do the same thing" in:
     val world = World()
-    world.entity withComponents CSeq(C1())
+    world.entity withComponents C1()
     world.withSystem(s1):
       _ all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer addComponent(e, C2())
@@ -220,7 +219,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "only execute the first of many 'removeComponent' requests if they do the same thing" in:
     val world = World()
-    world.entity withComponents CSeq(C1())
+    world.entity withComponents C1()
     world.withSystem(s1):
       _ all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer removeComponent(e, C1)
@@ -229,7 +228,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "only execute the first of many 'delete' requests if they refer to the same Entity" in:
     val world = World()
-    world.entity withComponents CSeq(C1())
+    world.entity withComponents C1()
     world.withSystem(s1):
       _ all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer delete(e)

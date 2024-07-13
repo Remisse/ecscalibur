@@ -33,7 +33,7 @@ object queries:
       * @return
       *   a new Query instance
       */
-    inline def apply(inline q: () => Unit): Query = q
+    inline def apply(q: () => Unit): Query = q
 
     /** Creates an empty Query.
       *
@@ -42,7 +42,7 @@ object queries:
       */
     def None: Query = Query(() => ())
 
-  private[core] inline def make(inline q: () => Unit): Query = Query(q)
+  private[core] inline def make(q: () => Unit): Query = Query(q)
 
   /** Factory method for [[Query]]. Needed when overriding [[System.process]].
     *
@@ -222,7 +222,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
         f(e)
 
   private inline def initSignature(cache: CSeq[ComponentId]): Unit =
-    selected = Signature(cache)
+    selected = Signature(cache.toArray*)
 
   override infix def all[C0 <: Component: ClassTag](f: (Entity, C0) => Unit): Query =
     idCache = CSeq(id0K[C0])

@@ -10,8 +10,6 @@ import ecscalibur.core.world.World
 import ecsutil.CSeq
 import ecsutil.ProgressiveMap
 
-import CSeq.*
-
 // 'import core.archetype.Archetypes.Archetype.DefaultFragmentSizeBytes' warns about an unused import
 // for some reason.
 inline val DefaultFragmentSize = core.archetype.archetypes.Archetype.DefaultFragmentSize
@@ -30,7 +28,7 @@ object fixtures:
     val context = MetaContext()
     val mutator = TestMutator()
     val entities = (0 until entityComponents.length).map(Entity(_))
-    for (comps, idx) <- entityComponents.zipWithIndex do archManager.addEntity(entities(idx), comps)
+    for (comps, idx) <- entityComponents.zipWithIndex do archManager.addEntity(entities(idx), comps.toArray*)
 
   class IterateNFixture(nEntities: Int = 100, extraComponents: CSeq[Component]):
     require(nEntities > 0)
@@ -44,7 +42,7 @@ object fixtures:
     private var sum = 0
 
     for (e, idx) <- entities.zipWithIndex do
-      archManager.addEntity(e, values(idx) +: extraComponents)
+      archManager.addEntity(e, (values(idx) +: extraComponents.toArray)*)
 
     def onIterationStart(v: Value) = sum += v.x
     def isSuccess = sum == values.map(_.x).sum + nEntities * testValue.x
@@ -74,4 +72,4 @@ object fixtures:
   class SystemFixture(nEntities: Int = 1):
     val world = World()
     val defaultValue = Value(1)
-    for i <- (0 until nEntities) do world.archetypeManager.addEntity(Entity(i), CSeq(defaultValue))
+    for i <- (0 until nEntities) do world.archetypeManager.addEntity(Entity(i), defaultValue)

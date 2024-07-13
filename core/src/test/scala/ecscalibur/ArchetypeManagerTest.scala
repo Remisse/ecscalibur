@@ -58,15 +58,15 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
 
   it should "not add the same entity more than once" in:
     val am = ArchetypeManager()
-    am.addEntity(defaultEntity, CSeq(C1()))
-    an[IllegalArgumentException] shouldBe thrownBy(am.addEntity(defaultEntity, CSeq(C1())))
+    am.addEntity(defaultEntity, C1())
+    an[IllegalArgumentException] shouldBe thrownBy(am.addEntity(defaultEntity, C1()))
 
   it should "add components to an existing entity" in:
     val fixture = ArchetypeManagerFixture(
       CSeq(C1())
     )
     given am: ArchetypeManager = fixture.archManager
-    am.addComponents(fixture.entities.head, CSeq(testValue))
+    am.addComponents(fixture.entities.head, testValue)
     var sum = 0
     (testquery all: (e, v: Value) =>
       sum += v.x).apply()
@@ -75,7 +75,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
   it should "do nothing when adding the same component to an entity more than once" in:
     val fixture = ArchetypeManagerFixture(CSeq(testValue))
     given am: ArchetypeManager = fixture.archManager
-    am.addComponents(fixture.entities.head, CSeq(testValue))
+    am.addComponents(fixture.entities.head, testValue)
     (testquery all: (_, v: Value) =>
       v shouldBe testValue
       ()
@@ -107,7 +107,7 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
       CSeq(C1())
     )
     val am = fixture.archManager
-    an[IllegalArgumentException] shouldBe thrownBy(am.addComponents(nonExisting, CSeq(C2())))
+    an[IllegalArgumentException] shouldBe thrownBy(am.addComponents(nonExisting, C2()))
 
   it should "throw when removing components from a non-existing entity" in:
     val fixture = ArchetypeManagerFixture(

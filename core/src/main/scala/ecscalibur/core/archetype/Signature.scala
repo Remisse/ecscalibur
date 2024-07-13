@@ -90,7 +90,7 @@ object Signature:
     *   a new Signature instance.
     */
   @targetName("fromIds")
-  inline def apply(ids: ComponentId*): Signature = apply(CSeq(ids))
+  inline def apply(ids: ComponentId*): Signature = apply(CSeq(ids*))
 
   /** Creates a new Signature from the given Components or ComponentTypes.
     *
@@ -102,7 +102,7 @@ object Signature:
     *   a new Signature instance.
     */
   @targetName("fromTypes")
-  inline def apply[T <: WithType](types: T*): Signature = apply(CSeq(types.map(_.typeId)))
+  inline def apply[T <: WithType](types: T*): Signature = apply(CSeq(types.map(_.typeId)*))
 
   /** Creates a new Signature from the given Components or ComponentTypes.
     *

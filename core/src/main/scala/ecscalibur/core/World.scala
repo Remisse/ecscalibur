@@ -4,7 +4,6 @@ import ecscalibur.core.archetype.ArchetypeManager
 import ecscalibur.core.components.Component
 import ecscalibur.core.components.ComponentType
 import ecscalibur.core.context.MetaContext
-import ecsutil.CSeq
 
 export world.*
 export world.Loop.once
@@ -172,16 +171,14 @@ object world:
       import ecsutil.IdGenerator
       private val entityIdGenerator = IdGenerator()
 
-      import scala.collection.mutable.ArrayBuffer
-
       private var activeSystems: Vector[System] = Vector.empty
       private var pendingSystems: Vector[System] = Vector.empty
 
-      private val entityCreate: mutable.Map[Entity, CSeq[Component]] = mutable.Map.empty
-      private var entityDelete: Vector[Entity] = Vector.empty
-      private val entityAddComps: mutable.Map[Entity, ArrayBuffer[(Component, () => Unit)]] =
+      private val entityCreate: mutable.Map[Entity, Seq[Component]] = mutable.Map.empty
+      private var entityDelete: List[Entity] = List.empty
+      private val entityAddComps: mutable.Map[Entity, List[(Component, () => Unit)]] =
         mutable.Map.empty
-      private val entityRemoveComps: mutable.Map[Entity, ArrayBuffer[(ComponentType, () => Unit)]] =
+      private val entityRemoveComps: mutable.Map[Entity, List[(ComponentType, () => Unit)]] =
         mutable.Map.empty
       private var areBuffersDirty = false
 
@@ -219,7 +216,7 @@ object world:
           case Loop.Times(times) => for _ <- 0 until times do _loop()
 
       private inline def processPendingEntityOperations(): Unit =
-        for (e, comps) <- entityCreate do archetypeManager.addEntity(e, comps)
+        for (e, comps) <- entityCreate do archetypeManager.addEntity(e, comps*)
         entityCreate.clear
 
         for e <- entityDelete do
@@ -231,17 +228,18 @@ object world:
           if entityRemoveComps.contains(e) then
             for (_, orElse) <- entityRemoveComps(e) do orElse()
             entityRemoveComps -= e
-        entityDelete = Vector.empty
+        entityDelete = List.empty
 
         for (e, comps) <- entityAddComps do
-          archetypeManager.addComponents(e, CSeq(comps.map(_._1).toArray))
+          archetypeManager.addComponents(e, comps.map(_._1)*)
         entityAddComps.clear
 
         for (e, types) <- entityRemoveComps do
-          archetypeManager.removeComponents(e, types.map(_._1).toArray*)
+          archetypeManager.removeComponents(e, types.map(_._1)*)
         entityRemoveComps.clear
 
       private inline def processPendingSystems(): Unit =
+
         for s <- pendingSystems do activeSystems = s +: activeSystems
         pendingSystems = Vector.empty
         activeSystems = activeSystems.sortBy(_.priority)
@@ -256,7 +254,7 @@ object world:
           case SystemRequest.resume(systemName) =>
             tryForwardCommandToSystem(systemName, _.resume())
 
-          case EntityRequest.create(components) =>
+          case EntityRequest.create(components*) =>
             entityCreate += (Entity(entityIdGenerator.next) -> components)
             areBuffersDirty = true
             true
@@ -300,27 +298,32 @@ object world:
       import ecscalibur.core.components.WithType
 
       private inline def tryScheduleAddOrRemoveComponent[T <: WithType](
-          buffer: mutable.Map[Entity, ArrayBuffer[(T, () => Unit)]],
+          buffer: mutable.Map[Entity, List[(T, () => Unit)]],
           e: Entity,
           comp: T,
           orElse: () => Unit
       ): Boolean =
         var res = false
         if isEntityValid(e) then
-          val arrayBuf: ArrayBuffer[(T, () => Unit)] = buffer.getOrElseUpdate(e, ArrayBuffer.empty)
-          if !arrayBuf.exists(_._1.typeId == comp.typeId) then
-            arrayBuf += ((comp, orElse))
+          val l: List[(T, () => Unit)] = buffer.getOrElseUpdate(e, List.empty)
+          if !l.exists(_._1.typeId == comp.typeId) then
+            buffer(e) = ((comp -> orElse)) :: l
             res = true
         if !res then orElse()
         res
 
   private[world] object builders:
     trait EntityBuilder:
-      infix def withComponents(components: CSeq[Component]): Unit
+      infix def withComponents(components: Component*): Unit
+
+      infix def withComponents(components: List[Component]): Unit
 
     object EntityBuilder:
       def apply()(using Mutator): EntityBuilder = EntityBuilderImpl()
 
       private class EntityBuilderImpl(using Mutator) extends EntityBuilder:
-        override def withComponents(components: CSeq[Component]): Unit =
-          val _ = summon[Mutator] defer EntityRequest.create(components)
+        override def withComponents(components: Component*): Unit =
+          val _ = summon[Mutator] defer EntityRequest.create(components*)
+
+        override def withComponents(components: List[Component]): Unit =
+          val _ = summon[Mutator] defer EntityRequest.create(components*)

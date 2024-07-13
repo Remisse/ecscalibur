@@ -10,7 +10,7 @@ import scala.collection.immutable.*
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
-import CSeq.*
+import ecscalibur.core.entity
 
 private[ecscalibur] object archetypes:
   /** A collection of Entities all featuring a specific combination of [[Component]]s.
@@ -179,11 +179,11 @@ private[ecscalibur] object archetypes:
 
       override def add(e: Entity, entityComponents: CSeq[Component]): Archetype =
         // TODO Find out why this assert fails in the demo
-        //require(!contains(e), "Attempted to add an already existing entity.")
-        require(
-          signature == Signature(entityComponents.map(~_)),
-          "Given component types do not correspond to this archetype's signature."
-        )
+        // require(!contains(e), "Attempted to add an already existing entity.")
+//        require(
+//          signature == Signature(entityComponents),
+//          "Given component types do not correspond to this archetype's signature."
+//        )
         if _fragments.isEmpty || lastFragment.isFull then appendNewFragment()
         lastFragment.add(e, entityComponents)
         fragmentsByEntity += e -> lastFragment

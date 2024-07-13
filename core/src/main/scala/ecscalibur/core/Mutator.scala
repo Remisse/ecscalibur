@@ -1,7 +1,5 @@
 package ecscalibur.core
 
-import ecsutil.CSeq
-
 import entity.Entity
 import components.{Component, ComponentType}
 
@@ -44,7 +42,7 @@ enum EntityRequest:
     * @param components
     *   components of the new Entity
     */
-  case create(components: CSeq[Component])
+  case create(components: Component*)
 
   /** Request to delete an existing Entity.
     *
