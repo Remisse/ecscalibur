@@ -13,11 +13,10 @@ An archetype-based ECS framework for Scala projects.
 
 ```scala
 import ecscalibur.core.*
-import ecsutil.CSeq
 
 @main def main(): Unit =
   given world: World = World()
-  world.entity withComponents CSeq(Position(12, 6), Velocity(4, 2))
+  world.entity withComponents (Position(12, 6), Velocity(4, 2))
   world.withSystem("movement"):
     _ all: (e: Entity, p: Position, v: Velocity) =>
       e <== Position(
