@@ -6,8 +6,13 @@ import oopdemo.model.Events
 trait View extends Observer, Updatable:
   def bind(obj: SceneObject): Unit
 
-object ConsoleView:
-  def apply(): View = new View:
+object View:
+  def empty(): View = new View:
+    override def bind(obj: SceneObject): Unit = ()
+    override def onUpdate(using DeltaTime): Unit = ()
+    override def signal(e: Event): Unit = ()
+
+  def terminal(): View = new View:
     var objects: List[SceneObject] = List.empty
 
     override def bind(obj: SceneObject): Unit =

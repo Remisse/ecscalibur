@@ -13,7 +13,6 @@ import demoutil.Color
 
 import ecscalibur.core.*
 
-import ecsutil.CSeq
 import ecsutil.shouldNotBeExecuted
 
 inline val singleValidator = "singleValidator"
@@ -28,16 +27,14 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (CSeq[Component](
-      WantsToStop(Velocity(Vector2.zero))
-    ) concat fixture.baseComponents)
+    world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
     world withSystem StopSystem()
 
     world.withSystem(validatorAdd):
-      _ all: (_: Entity, _: StoppedEvent, _: WantsToResume) =>
+      _ all: (_: Entity, _: StoppedEvent, _: ResumeMovementIntention) =>
         fixture.markAsSuccessfullyAdded()
     world.withSystem(validatorRemove):
-      _ none WantsToStop all: _ =>
+      _ none StopMovementIntention all: _ =>
         fixture.markAsSuccessfullyRemoved()
     world loop producersIterations
     fixture.wasTestSuccessful should be(true)
@@ -46,16 +43,14 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (CSeq[Component](
-      WantsToResume(Velocity(Vector2.zero))
-    ) concat fixture.baseComponents)
+    world.entity withComponents (ResumeMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents) 
     world withSystem ResumeSystem()
 
     world.withSystem(validatorAdd):
-      _ all: (_: Entity, _: ResumedMovementEvent, _: WantsToStop) =>
+      _ all: (_: Entity, _: ResumedMovementEvent, _: StopMovementIntention) =>
         fixture.markAsSuccessfullyAdded()
     world.withSystem(validatorRemove):
-      _ none WantsToResume all: _ =>
+      _ none ResumeMovementIntention all: _ =>
         fixture.markAsSuccessfullyRemoved()
     world loop producersIterations
     fixture.wasTestSuccessful should be(true)
@@ -64,9 +59,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (CSeq[Component](
-      WantsToChangeVelocity()
-    ) concat fixture.baseComponents)
+    world.entity withComponents (ChangeVelocityIntention() :: fixture.baseComponents)
     world withSystem ChangeVelocitySystem()
 
     world.withSystem(validatorAdd):
@@ -80,10 +73,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (CSeq[Component](
-      Colorful(Color.White),
-      WantsToChangeColor()
-    ) concat fixture.baseComponents)
+    world.entity withComponents (Colorful(Color.White) :: ChangeColorIntention() :: fixture.baseComponents)
     world withSystem ChangeColorSystem()
 
     world.withSystem(validatorAdd):
@@ -99,9 +89,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (CSeq[Component](
-      WantsToStop(Velocity(Vector2.zero))
-    ) concat fixture.baseComponents)
+    world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
     world withSystem StopSystem()
     world withSystem ResumeSystem()
 
@@ -117,9 +105,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
     given View = fixture.view
 
-    world.entity withComponents (CSeq[Component](
-      WantsToStop(Velocity(Vector2.zero))
-    ) concat fixture.baseComponents)
+    world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
     world withSystem StopSystem()
     world withSystem ResumeSystem()
     world withSystem ConsumeParameterlessEventsSystem()
@@ -138,7 +124,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture: Fixture = summon[Fixture]
     given world: World = fixture.world
 
-    world.entity withComponents (CSeq[Component](intention) concat fixture.baseComponents)
+    world.entity withComponents (intention :: fixture.baseComponents)
     world withSystem producer
     world withSystem consumer
     world loop once
@@ -156,7 +142,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
     given View = fixture.view
     testConsumeEventSystem(
-      intention = WantsToChangeVelocity(),
+      intention = ChangeVelocityIntention(),
       eventType = ChangedVelocityEvent,
       producer = ChangeVelocitySystem(),
       consumer = ConsumeChangedVelocityEventSystem()
@@ -167,7 +153,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
     given View = fixture.view
     testConsumeEventSystem(
-      intention = WantsToChangeColor(),
+      intention = ChangeColorIntention(),
       eventType = ChangedColorEvent,
       producer = ChangeColorSystem(),
       consumer = ConsumeChangedColorEventSystem()

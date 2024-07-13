@@ -1,7 +1,6 @@
 package ecsdemo
 
 import ecscalibur.core.world.World
-import ecsutil.CSeq
 import ecsdemo.components.*
 import demoutil.transform.Vector2
 import ecsdemo.view.View
@@ -10,7 +9,7 @@ final class Fixture:
   val world = World()
   val view = View.terminal()
   val baseComponents =
-    CSeq(Position(Vector2.zero), Velocity(Vector2.zero), ecsdemo.components.Timer(0, 0))
+    List(Position(Vector2.zero), Velocity(Vector2.zero), ecsdemo.components.Timer(0f))
   private var hasAddedAll = false
   private var hasRemovedAll = false
 

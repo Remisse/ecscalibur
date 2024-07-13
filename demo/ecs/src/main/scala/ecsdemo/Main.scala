@@ -9,7 +9,7 @@ import ecsdemo.view.View
 
 @main def main(): Unit =
   given world: World = World(iterationsPerSecond = 60)
-  val model = Model()
+  val model = Model(interval = 2f)
   model bindEntitiesTo world
   model bindSystemsTo world
   given view: View = View.terminal()

@@ -11,9 +11,8 @@ object model:
     def objects: Seq[SceneObject]
 
   object Model:
-    def apply(): Model = new Model:
+    def apply(interval: Float): Model = new Model:
       override def objects: Seq[SceneObject] = 
-        inline val interval = 1f
         Seq(
           ObjectWithStop(
             pos = Vector2(50, 0),

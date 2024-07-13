@@ -14,9 +14,13 @@ object view:
     def handleChangedColorEvent(e: Entity, ev: ChangedColorEvent): Unit
 
   object View:
-    def terminal(): View = new TerminalView()
+    def empty(): View = new View:
+      override def handleChangedColorEvent(e: Entity, ev: ChangedColorEvent): Unit = ()
+      override def handleChangedVelocityEvent(e: Entity, ev: ChangedVelocityEvent): Unit = ()
+      override def handleResumedEvent(e: Entity): Unit = ()
+      override def handleStoppedEvent(e: Entity): Unit = ()
 
-    private class TerminalView extends View:
+    def terminal(): View = new View:
       override def handleStoppedEvent(e: Entity): Unit =
         println(format(e, "has stopped"))
 
