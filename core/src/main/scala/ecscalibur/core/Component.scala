@@ -58,10 +58,6 @@ object components:
     @targetName("typeId")
     inline def unary_~ : ComponentId = typeId
 
-    final override def equals(other: Any): Boolean = other match
-      case o: WithType => typeId == o.typeId
-      case _           => false
-
   /** Base trait that must be extended by all classes meant to be used as components.
     *
     * Classes extending this trait must be annotated with [[@component]] and also define a companion
@@ -80,4 +76,7 @@ object components:
   /** Base trait that must be extended by the companion objects of all classes meant to be used as
     * components.
     */
-  trait ComponentType extends WithType
+  trait ComponentType extends WithType:
+    final override def equals(other: Any): Boolean = other match
+      case o: WithType => typeId == o.typeId
+      case _           => false

@@ -2,7 +2,6 @@ package ecscalibur.core.archetype
 
 import ecscalibur.core.components.*
 import ecscalibur.core.entity.Entity
-import ecsutil.CSeq
 import ecsutil.ProgressiveMap
 
 import scala.annotation.targetName
@@ -31,7 +30,7 @@ private[ecscalibur] object archetypes:
       * @return
       *   this Archetype
       */
-    def add(e: Entity, entityComponents: CSeq[Component]): Archetype
+    def add(e: Entity, entityComponents: Component*): Archetype
 
     /** Checks whether the given Entity is stored in this Archetype.
       *
@@ -51,7 +50,7 @@ private[ecscalibur] object archetypes:
       * @return
       *   the given Entity's Components.
       */
-    def remove(e: Entity): CSeq[Component]
+    def remove(e: Entity): Array[Component]
 
     /** Same as [[Archetype.remove]], but does not return anything.
       *
@@ -68,7 +67,7 @@ private[ecscalibur] object archetypes:
       * @param f
       *   the function to be applied to all Entities and their Components
       */
-    def iterate(f: (Entity, CSeq[Component]) => Unit): Unit
+    def iterate(f: (Entity, Array[Component]) => Unit): Unit
 
     /** Replaces the given Entity's Component with the given value.
       *
@@ -175,22 +174,25 @@ private[ecscalibur] object archetypes:
 
       override def fragments: Iterator[Fragment] = _fragments.iterator
 
-      override def add(e: Entity, entityComponents: CSeq[Component]): Archetype =
-        // TODO Find out why this assert fails in the demo
-      //  require(!contains(e), "Attempted to add an already existing entity.")
-        if _fragments.isEmpty || lastFragment.isFull then appendNewFragment()
-        lastFragment.add(e, entityComponents)
-        fragmentsByEntity += e -> lastFragment
-        lastFragment
+      override def add(e: Entity, components: Component*): Archetype =
+        val fr = if _fragments.isEmpty || lastFragment.isFull then _fragments.find(!_.isFull) match
+          case Some(fr) => fr
+          case _ => appendNewFragment()
+        else lastFragment 
+        fragmentsByEntity += e -> fr
+        fr.add(e, components*)
+        this
 
       private inline def lastFragment: Fragment = _fragments.last
 
-      private inline def appendNewFragment(): Unit =
-        _fragments += Fragment(signature, componentMappings, maxFragmentSize.toInt)
+      private inline def appendNewFragment(): Fragment =
+        val newFragment = Fragment(signature, componentMappings, maxFragmentSize.toInt)
+        _fragments += newFragment
+        newFragment
 
       override inline def contains(e: Entity): Boolean = fragmentsByEntity.contains(e)
 
-      override def remove(e: Entity): CSeq[Component] =
+      override def remove(e: Entity): Array[Component] =
         val fragment = removeFromMapAndGetFormerFragment(e)
         val res = fragment.remove(e)
         maybeDeleteFragment(fragment)
@@ -209,15 +211,10 @@ private[ecscalibur] object archetypes:
       private inline def maybeDeleteFragment(fr: Fragment): Unit =
         if fr.isEmpty && fr != lastFragment then _fragments -= fr
 
-      override def iterate(f: (Entity, CSeq[Component]) => Unit): Unit =
+      override def iterate(f: (Entity, Array[Component]) => Unit): Unit =
         _fragments.foreach(_.iterate(f))
 
       override def update(e: Entity, c: Component): Unit =
-        // No need to check whether this archetype contains e, as AggregateManager takes care of it
-        require(
-          signature.underlying.contains(c.typeId),
-          "Attempted to update the value of a non-existing component."
-        )
         fragmentsByEntity(e).update(e, c)
 
       override def equals(x: Any): Boolean = x match
@@ -227,7 +224,6 @@ private[ecscalibur] object archetypes:
       override def hashCode(): Int = signature.hashCode
 
   object Fragment:
-
     /** Creates a new [[Fragment]] instance with the given Signature and a maximum number of
       * entities that can be stored.
       *
@@ -252,9 +248,9 @@ private[ecscalibur] object archetypes:
     ) extends Archetype(inSignature),
           Fragment:
       private val entityIndexes: ProgressiveMap[Entity] = ProgressiveMap()
-      private val components: CSeq[CSeq[Component]] =
-        CSeq.fill[CSeq[Component]](maxEntities)(
-          CSeq.ofDim[Component](inSignature.underlying.size)
+      private val components: Array[Array[Component]] =
+        Array.fill[Array[Component]](maxEntities)(
+          Array.ofDim[Component](inSignature.length)
         )
 
       override inline def isFull: Boolean = entityIndexes.size == maxEntities
@@ -262,31 +258,27 @@ private[ecscalibur] object archetypes:
       override def isEmpty: Boolean = entityIndexes.isEmpty
 
       override def update(e: Entity, c: Component): Unit =
-        setComponent(e, c)
+        setComponent(entityIndexes(e), c)
 
-      private inline def setComponent(e: Entity, c: Component): Unit =
-        components(entityIndexes(e))(componentMappings(c.typeId)) = c
-
-      override def add(e: Entity, entityComponents: CSeq[Component]): Archetype =
-        require(!isFull, s"Cannot add more entities beyond the maximum limit ($maxEntities).")
-        entityIndexes += e
-        for c <- entityComponents do
-          setComponent(e, c)
+      override def add(e: Entity, entityComponents: Component*): Archetype =
+        val idx = entityIndexes += e
+        for c <- entityComponents do setComponent(idx, c)
         this
+
+      private inline def setComponent(entityIndex: Int, c: Component): Unit =
+        components(entityIndex)(componentMappings(c.typeId)) = c
 
       override inline def contains(e: Entity): Boolean =
         entityIndexes.contains(e)
 
-      override def remove(e: Entity): CSeq[Component] =
+      override def remove(e: Entity): Array[Component] =
         components(removeEntityFromMap(e))
 
       override def softRemove(e: Entity): Unit =
         val _ = removeEntityFromMap(e)
 
       private inline def removeEntityFromMap(e: Entity): Int =
-        val idx = entityIndexes(e)
         entityIndexes -= e
-        idx
 
-      override def iterate(f: (Entity, CSeq[Component]) => Unit): Unit =
+      override def iterate(f: (Entity, Array[Component]) => Unit): Unit =
         for (e, entityIdx) <- entityIndexes do f(e, components(entityIdx))

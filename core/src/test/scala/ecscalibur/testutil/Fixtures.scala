@@ -7,7 +7,6 @@ import ecscalibur.core.archetype.archetypes.Aggregate
 import ecscalibur.core.archetype.archetypes.Fragment
 import ecscalibur.core.context.MetaContext
 import ecscalibur.core.world.World
-import ecsutil.CSeq
 import ecsutil.ProgressiveMap
 
 // 'import core.archetype.Archetypes.Archetype.DefaultFragmentSizeBytes' warns about an unused import
@@ -20,7 +19,7 @@ object fixtures:
   class TestMutator extends Mutator:
     override def defer(q: SystemRequest | EntityRequest): Boolean = false
 
-  class ArchetypeManagerFixture(entityComponents: CSeq[Component]*):
+  class ArchetypeManagerFixture(entityComponents: Seq[Component]*):
     require(entityComponents.length > 0)
 
     val entitiesCount = entityComponents.length
@@ -28,9 +27,9 @@ object fixtures:
     val context = MetaContext()
     val mutator = TestMutator()
     val entities = (0 until entityComponents.length).map(Entity(_))
-    for (comps, idx) <- entityComponents.zipWithIndex do archManager.addEntity(entities(idx), comps.toArray*)
+    for (comps, idx) <- entityComponents.zipWithIndex do archManager.addEntity(entities(idx), comps*)
 
-  class IterateNFixture(nEntities: Int = 100, extraComponents: CSeq[Component]):
+  class IterateNFixture(nEntities: Int = 100, extraComponents: Seq[Component] = Seq.empty):
     require(nEntities > 0)
 
     val archManager = ArchetypeManager()
@@ -57,7 +56,7 @@ object fixtures:
       fragmentSize: Long = DefaultFragmentSize
   ) extends ArchetypeFixture(components*)(nEntities):
     val archetype = Aggregate(Signature(componentIds*))(fragmentSize)
-    for e <- entities do archetype.add(e, CSeq(components*))
+    for e <- entities do archetype.add(e, components*)
 
   class StandardFragmentFixture(components: Component*)(
       nEntities: Int = 100,
@@ -67,7 +66,7 @@ object fixtures:
     val signature = Signature(componentIds*)
     val fragment =
       Fragment(signature, ProgressiveMap.from(signature.underlying.toArray*), maxEntities)
-    for e <- entities do fragment.add(e, CSeq(components*))
+    for e <- entities do fragment.add(e, components*)
 
   class SystemFixture(nEntities: Int = 1):
     val world = World()

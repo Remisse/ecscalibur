@@ -3,7 +3,8 @@ package ecscalibur.core.archetype
 import ecscalibur.core.archetype.archetypes.Archetype
 import ecscalibur.core.components.*
 import ecscalibur.core.entity.Entity
-import ecsutil.CSeq
+import ecsutil.array.aFilterNot
+import scala.collection.immutable.ArraySeq
 
 /** A collection of [[Archetype]]s.
   */
@@ -96,7 +97,7 @@ private[ecscalibur] trait ArchetypeManager:
     * @param f
     *   function to be executed on all selected Entities
     */
-  def iterate(isSelected: Signature => Boolean)(f: (Entity, CSeq[Component]) => Unit): Unit
+  def iterate(isSelected: Signature => Boolean)(f: (Entity, Array[Component]) => Unit): Unit
 
 object ArchetypeManager:
   /** Creates a new instance of [[ArchetypeManager]].
@@ -130,16 +131,16 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
         newArchetype
       }
     )
-    archetypesByEntity.update(e, desiredArchetype.add(e, CSeq(components*)))
+    archetypesByEntity.update(e, desiredArchetype.add(e, components*))
 
   override def addComponents(e: Entity, components: Component*): Boolean =
     ensureEntityIsValid(e)
     val currentArch = archetypesByEntity(e)
     if components.isEmpty || currentArch.signature.containsAll(Signature(components*)) then
       return false
-    val existing: CSeq[Component] = currentArch.remove(e)
+    val existing = currentArch.remove(e)
     archetypesByEntity -= e
-    newEntityToArchetype(e, (existing.toArray concat components)*)
+    newEntityToArchetype(e, (existing concat components)*)
     true
 
   override def removeComponents(e: Entity, compTypes: ComponentType*): Boolean =
@@ -147,15 +148,16 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
     val currentArch = archetypesByEntity(e)
     if compTypes.isEmpty || !currentArch.signature.containsAny(Signature(compTypes*)) then
       return false
-    val entityComps: CSeq[Component] = currentArch.remove(e)
+    val entityComps = currentArch.remove(e)
     archetypesByEntity -= e
-    newEntityToArchetype(e, (filterOutExistingComponents(entityComps.toArray*)(compTypes*))*)
+    val remainingComponents = filterOutExistingComponents(entityComps)(compTypes*)
+    if remainingComponents.nonEmpty then newEntityToArchetype(e, remainingComponents*)
     true
 
-  private inline def filterOutExistingComponents(toBeFiltered: Component*)(
+  private inline def filterOutExistingComponents(toBeFiltered: Array[Component])(
       toFilterOut: WithType*
   ): Seq[Component] =
-    toBeFiltered.filterNot(c => toFilterOut.exists(_.typeId == c.typeId))
+    ArraySeq.unsafeWrapArray(toBeFiltered.aFilterNot(c => toFilterOut.exists(_.typeId == c.typeId)))
 
   override def hasComponents(e: Entity, types: ComponentType*): Boolean =
     ensureEntityIsValid(e)
@@ -170,7 +172,7 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
     archetypesByEntity(e).update(e, c)
 
   override def iterate(isSelected: Signature => Boolean)(
-      f: (Entity, CSeq[Component]) => Unit
+      f: (Entity, Array[Component]) => Unit
   ): Unit =
     for a <- archetypes if isSelected(a.signature) do a.iterate(f)
 

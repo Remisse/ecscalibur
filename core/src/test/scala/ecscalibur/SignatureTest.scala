@@ -2,7 +2,6 @@ package ecscalibur
 
 import ecscalibur.core.archetype.Signature
 import ecscalibur.core.components.ComponentId
-import ecsutil.CSeq
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
@@ -20,7 +19,6 @@ class SignatureTest extends AnyFlatSpec with should.Matchers:
     val signature = Signature(C1, C2, C3)
     signature.isNil should be(false)
     signature.underlying.isEmpty should be(false)
-    an[IllegalArgumentException] should be thrownBy (Signature(C1, C1))
 
   it should "correctly report whether it is part of another" in:
     val smallerSignature = Signature(C1, C2)

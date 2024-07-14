@@ -1,11 +1,8 @@
 package ecscalibur.core
 
-import ecscalibur.core.components.Component
-import ecscalibur.core.components.ComponentType
-
 import scala.annotation.targetName
 
-export entity.*
+export entity.Entity
 
 object entity:
   /** Identifiers that do not hold any state. They can be created through a [[World]] instance,

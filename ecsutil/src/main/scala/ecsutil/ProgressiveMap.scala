@@ -12,10 +12,10 @@ trait ProgressiveMap[T]:
     * @throws IllegalArgumentException
     *   if this map does not contain the given element
     * @return
-    *   this map
+    *   the mapping of `elem`
     */
   @targetName("add")
-  def +=(elem: T): ProgressiveMap[T]
+  def +=(elem: T): Int 
 
   /** Removes an element from this map.
     *
@@ -24,10 +24,10 @@ trait ProgressiveMap[T]:
     * @throws IllegalArgumentException
     *   if this map does not contain the given element
     * @return
-    *   this map
+    *   the former mapping of `elem`
     */
   @targetName("remove")
-  def -=(elem: T): ProgressiveMap[T]
+  def -=(elem: T): Int
 
   /** Checks whether this map contains the given element.
     *
@@ -102,19 +102,20 @@ object ProgressiveMap:
     private val idGenerator = IdGenerator()
 
     @targetName("add")
-    override def +=(elem: T): ProgressiveMap[T] =
+    override def +=(elem: T): Int =
       require(!contains(elem), s"Element $elem has already been mapped.")
-      val t = elem -> idGenerator.next
+      val idx = idGenerator.next
+      val t = elem -> idx
       map += t
-      this
+      idx
 
     @targetName("remove")
-    override def -=(elem: T): ProgressiveMap[T] =
+    override def -=(elem: T): Int =
       val id = map(elem)
       require(id != Uninitialized, notMappedErrorMsg(elem))
       idGenerator.erase(id)
       map -= elem
-      this
+      id
 
     override inline def contains(elem: T): Boolean = map(elem) != Uninitialized
 

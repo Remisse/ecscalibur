@@ -4,9 +4,9 @@ import ecscalibur.core.archetype.ArchetypeManager
 import ecscalibur.core.archetype.Signature
 import ecscalibur.core.components.*
 import ecscalibur.util.tpe.*
-import ecsutil.CSeq.*
 
 import scala.reflect.ClassTag
+import ecsutil.array.aFindOfType
 
 export queries.*
 
@@ -52,7 +52,6 @@ object queries:
   def query(using World): QueryBuilder = new QueryBuilderImpl(summon[World].archetypeManager)
 
 import ecscalibur.core.queries.Query
-import ecsutil.CSeq
 
 /** Builder for [[Query]].
   */
@@ -197,7 +196,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   private var _none: Signature = Signature.Nil
   private var _any: Signature = Signature.Nil
 
-  private var idCache: CSeq[ComponentId] = CSeq.empty
+  private var idCache: Array[ComponentId] = Array.empty
 
   private inline def multipleCallsErrorMsg(methodName: String) =
     s"Called '$methodName' multiple times."
@@ -221,28 +220,28 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
       am.iterate(matches): (e, _) =>
         f(e)
 
-  private inline def initSignature(cache: CSeq[ComponentId]): Unit =
+  private inline def initSignature(cache: Array[ComponentId]): Unit =
     selected = Signature(cache.toArray*)
 
   override infix def all[C0 <: Component: ClassTag](f: (Entity, C0) => Unit): Query =
-    idCache = CSeq(id0K[C0])
+    idCache = Array(id0K[C0])
     initSignature(idCache)
     queries.make(() =>
       am.iterate(matches): (e, components) =>
-        f(e, components.findOfType[C0])
+        f(e, components.aFindOfType[C0])
     )
 
   override infix def all[C0 <: Component: ClassTag, C1 <: Component: ClassTag](
       f: (Entity, C0, C1) => Unit
   ): Query =
-    idCache = CSeq(id0K[C0], id0K[C1])
+    idCache = Array(id0K[C0], id0K[C1])
     initSignature(idCache)
     queries.make(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,
-          components.findOfType[C0],
-          components.findOfType[C1]
+          components.aFindOfType[C0],
+          components.aFindOfType[C1]
         )
     )
 
@@ -253,15 +252,15 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   ](
       f: (Entity, C0, C1, C2) => Unit
   ): Query =
-    idCache = CSeq(id0K[C0], id0K[C1], id0K[C2])
+    idCache = Array(id0K[C0], id0K[C1], id0K[C2])
     initSignature(idCache)
     queries.make(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,
-          components.findOfType[C0],
-          components.findOfType[C1],
-          components.findOfType[C2]
+          components.aFindOfType[C0],
+          components.aFindOfType[C1],
+          components.aFindOfType[C2]
         )
     )
 
@@ -271,16 +270,16 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
       C2 <: Component: ClassTag,
       C3 <: Component: ClassTag
   ](f: (Entity, C0, C1, C2, C3) => Unit): Query =
-    idCache = CSeq(id0K[C0], id0K[C1], id0K[C2], id0K[C3])
+    idCache = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3])
     initSignature(idCache)
     queries.make(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,
-          components.findOfType[C0],
-          components.findOfType[C1],
-          components.findOfType[C2],
-          components.findOfType[C3]
+          components.aFindOfType[C0],
+          components.aFindOfType[C1],
+          components.aFindOfType[C2],
+          components.aFindOfType[C3]
         )
     )
 
@@ -291,17 +290,17 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
       C3 <: Component: ClassTag,
       C4 <: Component: ClassTag
   ](f: (Entity, C0, C1, C2, C3, C4) => Unit): Query =
-    idCache = CSeq(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4])
+    idCache = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4])
     initSignature(idCache)
     queries.make(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,
-          components.findOfType[C0],
-          components.findOfType[C1],
-          components.findOfType[C2],
-          components.findOfType[C3],
-          components.findOfType[C4]
+          components.aFindOfType[C0],
+          components.aFindOfType[C1],
+          components.aFindOfType[C2],
+          components.aFindOfType[C3],
+          components.aFindOfType[C4]
         )
     )
 
@@ -313,18 +312,18 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
       C4 <: Component: ClassTag,
       C5 <: Component: ClassTag
   ](f: (Entity, C0, C1, C2, C3, C4, C5) => Unit): Query =
-    idCache = CSeq(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4], id0K[C5])
+    idCache = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4], id0K[C5])
     initSignature(idCache)
     queries.make(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,
-          components.findOfType[C0],
-          components.findOfType[C1],
-          components.findOfType[C2],
-          components.findOfType[C3],
-          components.findOfType[C4],
-          components.findOfType[C5]
+          components.aFindOfType[C0],
+          components.aFindOfType[C1],
+          components.aFindOfType[C2],
+          components.aFindOfType[C3],
+          components.aFindOfType[C4],
+          components.aFindOfType[C5]
         )
     )
 
@@ -337,19 +336,19 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
       C5 <: Component: ClassTag,
       C6 <: Component: ClassTag
   ](f: (Entity, C0, C1, C2, C3, C4, C5, C6) => Unit): Query =
-    idCache = CSeq(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4], id0K[C5], id0K[C6])
+    idCache = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4], id0K[C5], id0K[C6])
     initSignature(idCache)
     queries.make(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,
-          components.findOfType[C0],
-          components.findOfType[C1],
-          components.findOfType[C2],
-          components.findOfType[C3],
-          components.findOfType[C4],
-          components.findOfType[C5],
-          components.findOfType[C6]
+          components.aFindOfType[C0],
+          components.aFindOfType[C1],
+          components.aFindOfType[C2],
+          components.aFindOfType[C3],
+          components.aFindOfType[C4],
+          components.aFindOfType[C5],
+          components.aFindOfType[C6]
         )
     )
 
