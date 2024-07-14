@@ -22,7 +22,6 @@ class DemoBenchmark:
   private var oopWorker30000: Worker = uninitialized
 
   import ecscalibur.core.*
-  import ecsutil.FramePacer
 
   @Setup
   def setup(blackhole: Blackhole): Unit =
@@ -36,33 +35,29 @@ class DemoBenchmark:
     def ecsBase(count: Int): Worker = new Worker:
       given view: ecsdemo.view.View = ecsdemo.view.View.empty()
       val controller = ecsdemo.controller.Controller()
+      given world: World = World()
+      val model = ecsdemo.model.Model(interval)
+      for _ <- 0 until count do model.bindEntitiesTo(world)
+      model.bindSystemsTo(world)
+      controller bindSystemsTo world
 
       override def work: Unit =
         blackhole.consume:
-          given world: World = World()
-          val model = ecsdemo.model.Model(interval)
-          for _ <- 0 until count do model.bindEntitiesTo(world)
-          model.bindSystemsTo(world)
-          controller bindSystemsTo world
           world loop iterations.times
 
-    import oopdemo.objects.SceneObject
     def oopBase(count: Int): Worker = new Worker:
+      val model = oopdemo.model.Model(interval)
+      val objects = (for _ <- 0 until count yield model.objects).flatten
       val view: oopdemo.View = oopdemo.View.empty()
-      val pacer: FramePacer = FramePacer()
+      val controller = oopdemo.controller.Controller(iterationsPerSecond = 0, maxIterations = iterations)
+      for o <- objects do view.bind(o)
 
       override def work: Unit =
         blackhole.consume:
-          val model = oopdemo.model.Model(interval)
-          val objects: Seq[SceneObject] =
-            (for _ <- 0 until count yield model.objects).flatten
-          for o <- objects do view.bind(o)
-          var dt: oopdemo.objects.DeltaTime = 0f
-          for _ <- 0 until iterations do
-            given oopdemo.objects.DeltaTime = dt
-            dt = pacer.pace:
-              view.onUpdate
-              for o <- objects do o.onUpdate
+          controller.loop: deltaTime =>
+            given oopdemo.objects.DeltaTime = deltaTime
+            view.onUpdate
+            for o <- objects do o.onUpdate
 
     ecsWorker300 = ecsBase(entitiesCount300)
     ecsWorker3000 = ecsBase(entitiesCount3000)

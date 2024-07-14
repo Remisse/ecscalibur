@@ -29,6 +29,6 @@ object View:
       e match
         case Events.Stop(s)              => message = format(s, "has stopped")
         case Events.ResumeMovement(s)    => message = format(s, "has resumed its movement")
-        case Events.VelocityChange(s, v) => message = format(s, "has changed velocity to ($v)")
-        case Events.ColorChange(s, newC) => message = format(s, "has changed color to $newC")
+        case Events.VelocityChange(s, v) => message = format(s, s"has changed velocity to ($v)")
+        case Events.ColorChange(s, newC) => message = format(s, s"has changed color to $newC")
       println(message)
