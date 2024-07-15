@@ -124,14 +124,6 @@ class ArchetypeManagerTest extends AnyFlatSpec with should.Matchers:
 
   import fixtures.IterateNFixture
 
-  it should "iterate only once regardless of the number of entities when creating a routine" in:
-    val fixture = IterateNFixture(nEntities = 100)
-    given ArchetypeManager = fixture.archManager
-    var executionsCount = 0
-    (testquery routine:
-      executionsCount += 1).apply()
-    executionsCount shouldBe 1
-
   it should "correctly iterate over all entities across all fragments if no components are specified" in:
     inline val nEntities = 100
     val fixture = IterateNFixture(nEntities)

@@ -51,6 +51,16 @@ object queries:
     */
   def query(using World): QueryBuilder = new QueryBuilderImpl(summon[World].archetypeManager)
 
+  /** Factory method for a [[Query]] that executes only once per World loop. No Entities will be
+    * selected.
+    *
+    * @param f
+    *   the logic of this Query
+    * @return
+    *   a new Query
+    */
+  def routine(f: => Unit): Query = Query(() => f)
+
 import ecscalibur.core.queries.Query
 
 /** Builder for [[Query]].
@@ -75,16 +85,6 @@ private[ecscalibur] trait QueryBuilder:
     *   this QueryBuilder instance
     */
   infix def any(types: ComponentType*): QueryBuilder
-
-  /** Builds a Query that executes only once per World loop. No Entities will be selected. Previous
-    * calls to [[QueryBuilder.any]] or [[QueryBuilder.except]] will be ignored.
-    *
-    * @param f
-    *   the logic of this Query
-    * @return
-    *   a new Query
-    */
-  infix def routine(f: => Unit): Query
 
   /** Iterates on every Entity in the World without selecting any Components.
     *
@@ -210,10 +210,6 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
     ensureFirstCallToAny()
     _any = Signature(types*)
     this
-
-  override infix def routine(f: => Unit): Query =
-    queries.make: () =>
-      f
 
   override infix def all(f: Entity => Unit): Query =
     queries.make: () =>

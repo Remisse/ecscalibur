@@ -72,3 +72,9 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
   "id0K[T]" should "not return the component ID of a 1-kinded class's type parameter" in:
     id0K[OneKinded[C1]] shouldNot be(~C1)
     id0K[OneKinded[C1]] shouldBe ~OneKinded
+
+  "getId" should "return the correct type ID" in:
+    val cls = classOf[C1]
+    getId(cls) should be(~C1)
+    getId(cls.getName) should be(~C1)
+    getId(cls) should be(id0K[C1])

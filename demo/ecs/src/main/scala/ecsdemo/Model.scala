@@ -43,7 +43,7 @@ object model:
             ChangeVelocitySystem(),
             ChangeColorSystem()
           )
-        do world.withSystem(s)
+        do world.system(s)
 
   private inline val modelPriority = 1
 

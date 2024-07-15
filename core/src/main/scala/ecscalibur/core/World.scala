@@ -77,7 +77,7 @@ object world:
       * @throws IllegalArgumentException
       *   if a System with the same name already exists
       */
-    infix def withSystem(name: String, priority: Int = 0)(qb: QueryBuilder => Query): Unit
+    infix def system(name: String, priority: Int = 0)(q: Query): Unit
 
     /** Adds a [[System]] instance to this World.
       *
@@ -86,7 +86,7 @@ object world:
       * @throws IllegalArgumentException
       *   if a System with the same name already exists
       */
-    infix def withSystem(s: System): Unit
+    infix def system(s: System): Unit
 
     /** Checks whether the [[System]] identified by the given name is currently running.
       *
@@ -189,13 +189,12 @@ object world:
       override def hasComponents(e: Entity, types: ComponentType*): Boolean =
         archetypeManager.hasComponents(e, types*)
 
-      override def withSystem(name: String, priority: Int)(qb: QueryBuilder => Query): Unit =
-        given World = this
-        withSystem:
+      override def system(name: String, priority: Int)(q: Query): Unit =
+        system:
           new System(name, priority):
-            override protected val process: Query = qb(query)
+            override protected val process: Query = q
 
-      override def withSystem(s: System): Unit =
+      override def system(s: System): Unit =
         require(
           !(activeSystems.contains(s) || pendingSystems.contains(s)),
           s"System \"${s.name}\" already exists."

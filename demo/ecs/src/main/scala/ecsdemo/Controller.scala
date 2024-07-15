@@ -16,7 +16,7 @@ object controller:
         ConsumeChangedVelocityEventSystem(),
         ConsumeChangedColorEventSystem()
       )
-      do world.withSystem(s)
+      do world.system(s)
 
   private inline val controllerPriority = 0
 

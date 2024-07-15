@@ -19,17 +19,17 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   val testValue: Value = Value(1)
 
   "An Aggregate archetype with no signature" should "throw when created" in:
-    an[IllegalArgumentException] should be thrownBy Aggregate()(DefaultFragmentSize)
+    an[IllegalArgumentException] should be thrownBy Aggregate(Signature.Nil)(DefaultFragmentSize)
 
   "An Aggregate archetype" should "be identified by the component classes it holds" in:
-    val archetype = Aggregate(C1, C2)(DefaultFragmentSize)
+    val archetype = Aggregate(Signature(C1, C2))(DefaultFragmentSize)
     archetype.signature shouldBe Signature(C1, C2)
     archetype.signature shouldBe Signature(C2, C1)
     archetype.signature shouldNot be(Signature(C1))
     archetype.signature shouldNot be(Signature(C1, C2, C3))
 
   it should "have a signature made of distinct component types only" in:
-    val aggregate = Aggregate(C1, C1, C2)(DefaultFragmentSize)
+    val aggregate = Aggregate(Signature(C1, C1, C2))(DefaultFragmentSize)
     aggregate.signature should be(Signature(C1, C2))
 
   it should "correctly store entities and their components" in:
@@ -105,6 +105,14 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     for e <- fixture.entities do fixture.archetype.remove(e)
     fixture.archetype.fragments.size shouldBe 1
 
+  "Two Aggregates" should "be equal if they share the same signature" in:
+    inline val entitiesCount = 1L
+    val signature = Signature(C1, C2)
+    val a1 = Aggregate(signature)(entitiesCount)
+    val a2 = Aggregate(signature)(entitiesCount)
+    a1 should be(a2)
+    a1.## should be(a2.##)
+
   "A Fragment" should "correctly report whether it is full or not" in:
     val fixture = fixtures.StandardFragmentFixture(defaultComponent)(nEntities = 0, maxEntities = 1)
     val frag = fixture.fragment
@@ -118,9 +126,8 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     frag.isEmpty shouldBe true
     frag.isFull shouldBe !frag.isEmpty
 
-  // it should "throw when attempting to add more entities than it can store" in:
-  //   val fixture = fixtures.StandardFragmentFixture(defaultComponent)(nEntities = 1, maxEntities = 1)
-  //   an[IllegalArgumentException] should be thrownBy fixture.fragment.add(
-  //     fixture.nextEntity,
-  //     defaultComponent
-  //   )
+  it should "correctly report whether it contains an entity" in:
+    inline val nEntities = 1
+    val fixture = fixtures.StandardFragmentFixture(defaultComponent)(nEntities, nEntities)
+    fixture.fragment.contains(fixture.entities(0)) should be(true)
+    fixture.fragment.contains(Entity(nEntities)) should be(false)

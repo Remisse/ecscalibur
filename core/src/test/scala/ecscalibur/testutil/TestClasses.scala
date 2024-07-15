@@ -53,5 +53,5 @@ object testclasses:
   class TestSystem(logic: () => Unit)(using World)
       extends ecscalibur.core.systems.System("test", 0):
     override protected val process: Query =
-      query routine:
+      routine:
         logic()

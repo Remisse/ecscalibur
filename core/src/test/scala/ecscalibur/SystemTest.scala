@@ -20,13 +20,13 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     var sum = Int.MinValue
     val s = new System(name = s1, priority = 0):
       override protected val onStart: Query =
-        query routine:
+        routine:
           sum = 0
       override protected val process: Query =
         query all: (e, v: Value) =>
           sum += v.x
       override protected val onPause: Query =
-        query routine:
+        routine:
           shouldNotBeExecuted
 
     s.update()
@@ -42,7 +42,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
         query all: (e, v: Value) =>
           sum = 0
       override protected val onPause: Query =
-        query routine:
+        routine:
           sum = Int.MaxValue
 
     an[IllegalStateException] shouldBe thrownBy(s.pause())
@@ -60,13 +60,13 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     var sum = Int.MinValue
     val s = new System(name = s1, priority = 0):
       override protected val onStart: Query =
-        query routine:
+        routine:
           sum = 0
       override protected val process =
         query all: (e, v: Value) =>
           sum += v.x
       override protected val onPause: Query =
-        query routine:
+        routine:
           sum = Int.MaxValue
 
     an[IllegalStateException] shouldBe thrownBy(s.resume())
@@ -78,12 +78,9 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     sum shouldBe fixture.defaultValue.x
 
   it should "correctly report whether it is running" in:
-    val fixture = SystemFixture()
-    given World = fixture.world
-
     val s = new System(name = s1, priority = 0):
       override protected val process =
-        query routine:
+        routine:
           ()
 
     s.isRunning should be(false)
@@ -93,12 +90,9 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     s.isRunning should be(false)
 
   it should "correctly report whether it is paused" in:
-    val fixture = SystemFixture()
-    given World = fixture.world
-
     val s = new System(name = s1, priority = 0):
       override protected val process =
-        query routine:
+        routine:
           ()
 
     s.isPaused should be(false)

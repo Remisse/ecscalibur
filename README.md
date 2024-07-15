@@ -1,5 +1,7 @@
 # ecscalibur
 
+![Coverage](.github/badges/jacoco.svg)  
+
 An archetype-based ECS framework for Scala projects.
 
 ## Getting started
@@ -9,7 +11,7 @@ An archetype-based ECS framework for Scala projects.
   TBD
   ```
 2) Add the `-experimental` compiler option to your project
-3) Run this self-contained code snippet to ensure everything has been set up correctly:
+3) Run the following snippet to ensure everything has been set up correctly:
 
 ```scala
 import ecscalibur.core.*
@@ -17,8 +19,8 @@ import ecscalibur.core.*
 @main def main(): Unit =
   given world: World = World()
   world.entity withComponents (Position(12, 6), Velocity(4, 2))
-  world.withSystem("movement"):
-    _ all: (e: Entity, p: Position, v: Velocity) =>
+  world.system("movement"):
+    query all: (e: Entity, p: Position, v: Velocity) =>
       e <== Position(
         p.x + v.x * world.context.deltaTime,
         p.y + v.y * world.context.deltaTime,

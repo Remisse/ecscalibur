@@ -133,20 +133,6 @@ private[ecscalibur] object archetypes:
     def isEmpty: Boolean
 
   object Aggregate:
-    /** Creates an Aggregate instance with a Signature derived from the given types and with a
-      * maximum Fragment size specified by maxFragmentSizeBytes.
-      *
-      * @param types
-      *   [[ComponentType]]s from which the archetype's Signature must be derived
-      * @param maxFragmentSizeBytes
-      *   the maximum size of all Fragments created by this Aggregate
-      * @return
-      *   a new Aggregate instance
-      */
-    @targetName("fromTypes")
-    def apply(types: ComponentType*)(maxFragmentSizeBytes: Long): Aggregate =
-      apply(Signature(types*))(maxFragmentSizeBytes)
-
     /** Creates an Aggregate instance with the given Signature and with a maximum Fragment size
       * specified by maxFragmentSizeBytes.
       *
@@ -167,6 +153,8 @@ private[ecscalibur] object archetypes:
       import ecsutil.array.*
       import scala.collection.mutable.ArrayBuffer
 
+      require(inSignature != Signature.Nil, "Attempted to create an Archetype with no signature.")
+
       private val _fragments: ArrayBuffer[Fragment] = ArrayBuffer.empty
       private val fragmentsByEntity: mutable.Map[Entity, Fragment] = mutable.Map.empty
       private val componentMappings =
@@ -175,10 +163,12 @@ private[ecscalibur] object archetypes:
       override def fragments: Iterator[Fragment] = _fragments.iterator
 
       override def add(e: Entity, components: Component*): Archetype =
-        val fr = if _fragments.isEmpty || lastFragment.isFull then _fragments.find(!_.isFull) match
-          case Some(fr) => fr
-          case _ => appendNewFragment()
-        else lastFragment 
+        val fr =
+          if _fragments.isEmpty || lastFragment.isFull then
+            _fragments.find(!_.isFull) match
+              case Some(fr) => fr
+              case _        => appendNewFragment()
+          else lastFragment
         fragmentsByEntity += e -> fr
         fr.add(e, components*)
         this
@@ -218,7 +208,7 @@ private[ecscalibur] object archetypes:
         fragmentsByEntity(e).update(e, c)
 
       override def equals(x: Any): Boolean = x match
-        case a: Archetype => signature == a.signature
+        case a: Aggregate => signature == a.signature
         case _            => false
 
       override def hashCode(): Int = signature.hashCode

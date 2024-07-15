@@ -15,10 +15,10 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
   inline val s2 = "test2"
 
   "A World" should "correctly add simple systems and let them execute" in:
-    val world = World()
+    given world: World = World()
     var res = false
-    world.withSystem(s1):
-      _ routine:
+    world.system(s1):
+      routine:
         res = true
     world loop once
     (world isSystemRunning s1) shouldBe true
@@ -30,7 +30,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     given world: World = World()
     var res = false
     val s = TestSystem(() => res = true)
-    world.withSystem(s)
+    world.system(s)
     world loop once
     (world isSystemRunning s.name) shouldBe true
     res should be(true)
@@ -38,11 +38,11 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
   val testValue: Value = Value(1)
 
   it should "correctly create an entity with the supplied components" in:
-    val world = World()
+    given world: World = World()
     world.entity withComponents testValue
     var test = Value(0)
-    world.withSystem(s1):
-      _ all: (e: Entity, v: Value) =>
+    world.system(s1):
+      query all: (e: Entity, v: Value) =>
         test = v
 
     world loop once
@@ -57,46 +57,56 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     val vel = Velocity(Vec2D(1, 2))
     world.entity withComponents (pos, vel)
 
-    world.withSystem(s1):
-      _ all: (e: Entity, v: Velocity, p: Position) =>
+    world.system(s1):
+      query all: (e: Entity, v: Velocity, p: Position) =>
         e <== Position(p.vec + v.vec)
         ()
 
-    world.withSystem(s2, priority = 1):
-      _ all: (_, p: Position) =>
+    world.system(s2, priority = 1):
+      query all: (_, p: Position) =>
         p.vec should be(pos.vec + vel.vec)
         ()
 
     world loop once
 
-  inline val Tolerance = 1e-8
+  inline val Tolerance = 1e-8f
 
-  it should "correctly report whether an entity has specific components" in:
-    given world: World = World()
-    world.entity withComponents testValue
-    world.withSystem(s1):
-      _ any Value all: (e: Entity) =>
-        e ?> Value should be(true)
+  def hasComponentsTest(action: (Entity, Seq[ComponentType]) => Boolean)(using world: World) =
+    world.entity withComponents (testValue, C1())
+    world.system(s1):
+      query any Value all: (e: Entity) =>
+        action(e, Seq(Value, C1)) should be(true)
         ()
 
     world loop once
+
+  it should "correctly report whether an entity has specific components using Entity.?>" in:
+    given world: World = World()
+    hasComponentsTest: (e: Entity, types: Seq[ComponentType]) =>
+      e.?>(types*)
+
+  it should "correctly report whether an entity has specific components using World.hasComponents" in:
+    given world: World = World()
+    hasComponentsTest: (e: Entity, types: Seq[ComponentType]) =>
+      world.hasComponents(e, types*)
 
   it should "update its delta time value on every iteration" in:
-    val world = World(iterationsPerSecond = 60)
-    world.withSystem(s1):
-      _ routine:
+    inline val fps = 60
+    given world: World = World(iterationsPerSecond = fps)
+    world.system(s1):
+      routine:
         ()
 
     world loop once
-    world.context.deltaTime === 0.0 +- Tolerance shouldBe false
+    world.context.deltaTime === (1f / fps) +- Tolerance shouldBe true
 
   import ecscalibur.core.SystemRequest.*
 
   it should "correctly defer pausing a system" in:
-    val world = World()
+    given world: World = World()
     var sum = 0
-    world.withSystem(s1):
-      _ routine:
+    world.system(s1):
+      routine:
         sum += 1
         if world isSystemRunning s1 then
           val success = world.mutator defer pause(s1)
@@ -108,18 +118,18 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     sum shouldBe 1
 
   it should "correctly defer resuming a system" in:
-    val world = World()
+    given world: World = World()
     var sum = 0
 
-    world.withSystem(s1):
-      _ routine:
+    world.system(s1):
+      routine:
         sum += 1
         if world isSystemRunning s1 then
           (world.mutator defer pause(s1)) shouldNot be(false)
           ()
 
-    world.withSystem(s2):
-      _ routine:
+    world.system(s2):
+      routine:
         if world isSystemPaused s1 then
           (world.mutator defer resume(s1)) shouldNot be(false)
           ()
@@ -132,16 +142,16 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.core.EntityRequest.*
 
   it should "correctly defer creating a new entity" in:
-    val world = World()
-    world.withSystem(s1, priority = 0):
-      _ routine:
+    given world: World = World()
+    world.system(s1, priority = 0):
+      routine:
         world.mutator defer create(testValue)
         world.mutator defer pause(s1)
         ()
 
     var test = Value(0)
-    world.withSystem(s2, priority = 1):
-      _ all: (_, v: Value) =>
+    world.system(s2, priority = 1):
+      query all: (_, v: Value) =>
         test = v
 
     world loop once
@@ -150,32 +160,30 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     test shouldBe testValue
 
   it should "correctly defer deleting an entity" in:
-    val world = World()
+    given world: World = World()
     world.entity withComponents C1()
     var sum = 0
-    world.withSystem(s1):
-      _ all: (e: Entity, _: C1) =>
+    world.system(s1):
+      query all: (e: Entity, _: C1) =>
         world.mutator defer delete(e)
         sum += 1
-    world.withSystem(s2):
-      _ all: (_, _: C1) =>
+    world.system(s2):
+      query all: (_, _: C1) =>
         sum += 1
 
     world loop 2.times
     sum shouldBe 2
 
-  it should "correctly defer adding components to an entity" in:
-    given world: World = World()
+  def addComponentTest(action: (Entity, Component) => Unit)(using world: World) = 
     world.entity withComponents C1()
-    world.withSystem(s1):
-      _ all: (e: Entity, _: C1) =>
-        e += (testValue, () => shouldNotBeExecuted)
-        // world.mutator defer addComponent(e, testValue, () => shouldNotBeExecuted)
+    world.system(s1):
+      query all: (e: Entity, _: C1) =>
+        action(e, testValue)
         val _ = world.mutator defer pause(s1)
 
     var test = Value(0)
-    world.withSystem(s2):
-      _ all: (_, v: Value) =>
+    world.system(s2):
+      query all: (_, v: Value) =>
         test = v
 
     world loop once
@@ -183,19 +191,29 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world loop once
     test shouldBe testValue
 
-  it should "correctly defer removing components from an entity" in:
+  it should "correctly defer adding components to an entity using Mutator" in:
     given world: World = World()
+    addComponentTest: (e: Entity, c: Component) =>
+      world.mutator defer addComponent(e, c, () => shouldNotBeExecuted)
+      ()
+
+  it should "correctly defer adding components to an entity using Entity.+=" in:
+    given world: World = World()
+    addComponentTest: (e: Entity, c: Component) =>
+      e += (c, () => shouldNotBeExecuted)
+      ()
+
+  def removeComponentTest(action: (Entity, ComponentType) => Unit)(using world: World) =
     world.entity withComponents C1()
 
-    world.withSystem(s1):
-      _ all: (e: Entity, _: C1) =>
-        e -= (C1, () => shouldNotBeExecuted)
-        // world.mutator defer removeComponent(e, C1, () => shouldNotBeExecuted)
+    world.system(s1):
+      query all: (e: Entity, _: C1) =>
+        action(e, C1)
         val _ = world.mutator defer pause(s1)
 
     var sum = 0
-    world.withSystem(s2):
-      _ all: (e: Entity, _: C1) =>
+    world.system(s2):
+      query all: (e: Entity, _: C1) =>
         sum += 1
 
     world loop once
@@ -203,34 +221,46 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world loop once
     sum shouldBe 1
 
+  it should "correctly defer removing components from an entity using Mutator" in:
+    given world: World = World()
+    removeComponentTest: (e: Entity, t: ComponentType) =>
+      world.mutator defer removeComponent(e, t, () => shouldNotBeExecuted)
+      ()
+
+  it should "correctly defer removing components from an entity using Entity.-=" in:
+    given world: World = World()
+    removeComponentTest: (e: Entity, t: ComponentType) =>
+      e -= (t, () => shouldNotBeExecuted)
+      ()
+
   import ecscalibur.testutil.testclasses.C2
 
   inline val defersCount = 10
   val deferTestIterations: Loop = 10.times
 
   it should "only execute the first of many 'addComponent' requests if they do the same thing" in:
-    val world = World()
+    given world: World = World()
     world.entity withComponents C1()
-    world.withSystem(s1):
-      _ all: (e: Entity, _: C1) =>
+    world.system(s1):
+      query all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer addComponent(e, C2())
 
     noException shouldBe thrownBy(world loop deferTestIterations)
 
   it should "only execute the first of many 'removeComponent' requests if they do the same thing" in:
-    val world = World()
+    given world: World = World()
     world.entity withComponents C1()
-    world.withSystem(s1):
-      _ all: (e: Entity, _: C1) =>
+    world.system(s1):
+      query all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer removeComponent(e, C1)
 
     noException shouldBe thrownBy(world loop deferTestIterations)
 
   it should "only execute the first of many 'delete' requests if they refer to the same Entity" in:
-    val world = World()
+    given world: World = World()
     world.entity withComponents C1()
-    world.withSystem(s1):
-      _ all: (e: Entity, _: C1) =>
+    world.system(s1):
+      query all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer delete(e)
 
     noException shouldBe thrownBy(world loop deferTestIterations)
@@ -239,32 +269,32 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
   inline val s3 = "test3"
 
   it should "execute its systems sorted by priority" in:
-    val world = World()
+    given world: World = World()
     var systemName = none
 
     def test(thisName: String, prevName: String): Unit =
       systemName shouldBe prevName
       systemName = thisName
 
-    world.withSystem(s2, priority = 2):
-      _ routine:
+    world.system(s2, priority = 2):
+      routine:
         test(thisName = s2, prevName = s1)
-    world.withSystem(s1, priority = 1):
-      _ routine:
+    world.system(s1, priority = 1):
+      routine:
         test(thisName = s1, prevName = none)
-    world.withSystem(s3, priority = 3):
-      _ routine:
+    world.system(s3, priority = 3):
+      routine:
         test(thisName = s3, prevName = s2)
 
     world loop once
     systemName shouldBe s3
 
   it should "not contain two systems with the same name" in:
-    val world = World()
-    world.withSystem(s1):
-      _ routine:
+    given world: World = World()
+    world.system(s1):
+      routine:
         ()
     an[IllegalArgumentException] shouldBe thrownBy:
-      world.withSystem(s1):
-        _ routine:
+      world.system(s1):
+        routine:
           ()

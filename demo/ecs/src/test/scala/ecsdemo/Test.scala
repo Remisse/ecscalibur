@@ -28,13 +28,13 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
-    world withSystem StopSystem()
+    world system StopSystem()
 
-    world.withSystem(validatorAdd):
-      _ all: (_: Entity, _: StoppedEvent, _: ResumeMovementIntention) =>
+    world.system(validatorAdd):
+      query all: (_: Entity, _: StoppedEvent, _: ResumeMovementIntention) =>
         fixture.markAsSuccessfullyAdded()
-    world.withSystem(validatorRemove):
-      _ none StopMovementIntention all: _ =>
+    world.system(validatorRemove):
+      query none StopMovementIntention all: _ =>
         fixture.markAsSuccessfullyRemoved()
     world loop producersIterations
     fixture.wasTestSuccessful should be(true)
@@ -44,13 +44,13 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world.entity withComponents (ResumeMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents) 
-    world withSystem ResumeSystem()
+    world system ResumeSystem()
 
-    world.withSystem(validatorAdd):
-      _ all: (_: Entity, _: ResumedMovementEvent, _: StopMovementIntention) =>
+    world.system(validatorAdd):
+      query all: (_: Entity, _: ResumedMovementEvent, _: StopMovementIntention) =>
         fixture.markAsSuccessfullyAdded()
-    world.withSystem(validatorRemove):
-      _ none ResumeMovementIntention all: _ =>
+    world.system(validatorRemove):
+      query none ResumeMovementIntention all: _ =>
         fixture.markAsSuccessfullyRemoved()
     world loop producersIterations
     fixture.wasTestSuccessful should be(true)
@@ -60,10 +60,10 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world.entity withComponents (ChangeVelocityIntention() :: fixture.baseComponents)
-    world withSystem ChangeVelocitySystem()
+    world system ChangeVelocitySystem()
 
-    world.withSystem(validatorAdd):
-      _ all: (_: Entity, _: ChangedVelocityEvent) =>
+    world.system(validatorAdd):
+      query all: (_: Entity, _: ChangedVelocityEvent) =>
         fixture.markAsSuccessfullyAdded()
     world loop producersIterations
     fixture.markAsSuccessfullyRemoved()
@@ -74,10 +74,10 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world.entity withComponents (Colorful(Color.White) :: ChangeColorIntention() :: fixture.baseComponents)
-    world withSystem ChangeColorSystem()
+    world system ChangeColorSystem()
 
-    world.withSystem(validatorAdd):
-      _ all: (_: Entity, _: ChangedColorEvent) =>
+    world.system(validatorAdd):
+      query all: (_: Entity, _: ChangedColorEvent) =>
         fixture.markAsSuccessfullyAdded()
     world loop producersIterations
     fixture.markAsSuccessfullyRemoved()
@@ -90,11 +90,11 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
-    world withSystem StopSystem()
-    world withSystem ResumeSystem()
+    world system StopSystem()
+    world system ResumeSystem()
 
-    world.withSystem(singleValidator):
-      _ any (StoppedEvent, ResumedMovementEvent) all: (e: Entity) =>
+    world.system(singleValidator):
+      query any (StoppedEvent, ResumedMovementEvent) all: (e: Entity) =>
         if e ?> StoppedEvent then fixture.markAsSuccessfullyAdded()
         if e ?> ResumedMovementEvent then fixture.markAsSuccessfullyRemoved()
     world loop consumersIterations
@@ -106,11 +106,11 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given View = fixture.view
 
     world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
-    world withSystem StopSystem()
-    world withSystem ResumeSystem()
-    world withSystem ConsumeParameterlessEventsSystem()
-    world.withSystem(singleValidator):
-      _ all: (_, _: StoppedEvent, _: ResumedMovementEvent) =>
+    world system StopSystem()
+    world system ResumeSystem()
+    world system ConsumeParameterlessEventsSystem()
+    world.system(singleValidator):
+      query all: (_, _: StoppedEvent, _: ResumedMovementEvent) =>
         shouldNotBeExecuted
 
     world loop consumersIterations
@@ -125,15 +125,15 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world.entity withComponents (intention :: fixture.baseComponents)
-    world withSystem producer
-    world withSystem consumer
+    world system producer
+    world system consumer
     world loop once
 
     world.mutator defer SystemRequest.pause(producer.name)
     world loop once
 
-    world.withSystem(singleValidator):
-      _ any eventType all: _ =>
+    world.system(singleValidator):
+      query any eventType all: _ =>
         shouldNotBeExecuted
     world loop once
 
