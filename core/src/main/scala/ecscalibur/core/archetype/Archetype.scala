@@ -87,17 +87,6 @@ private[ecscalibur] object archetypes:
       */
     inline val DefaultFragmentSize = 100
 
-    /** Creates an [[Aggregate]] archetype with a [[Signature]] derived from the given types.
-      *
-      * @param types
-      *   [[ComponentType]]s from which the archetype's Signature must be derived
-      * @return
-      *   a new instance of [[Aggregate]]
-      */
-    @targetName("fromTypes")
-    def apply(types: ComponentType*): Aggregate =
-      Aggregate(Signature(types*))(DefaultFragmentSize)
-
     /** Creates an [[Aggregate]] archetype with the given [[Signature]].
       *
       * @param signature

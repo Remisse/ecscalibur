@@ -47,6 +47,10 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
 
   it should "have a unique type ID" in:
     ~C1 shouldNot equal(~C2)
+    C1 shouldNot equal(C2)
+    ~C1 should equal(~C1)
+    C1 should equal(C1)
+    C1 shouldNot equal(components)
 
   it should "have the same type ID as its companion object" in:
     id0K[C1] shouldBe ~C1

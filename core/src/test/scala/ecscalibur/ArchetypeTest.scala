@@ -113,6 +113,8 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     a1 should be(a2)
     a1.## should be(a2.##)
 
+    a1 shouldNot be(Object())
+
   "A Fragment" should "correctly report whether it is full or not" in:
     val fixture = fixtures.StandardFragmentFixture(defaultComponent)(nEntities = 0, maxEntities = 1)
     val frag = fixture.fragment

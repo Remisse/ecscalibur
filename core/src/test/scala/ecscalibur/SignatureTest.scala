@@ -41,3 +41,4 @@ class SignatureTest extends AnyFlatSpec with should.Matchers:
     getSignature should be(getSignature)
     getSignature shouldNot be(Signature.Nil)
     getSignature shouldNot be(Signature(C1))
+    getSignature shouldNot be(Object())

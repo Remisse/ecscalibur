@@ -100,6 +100,10 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world loop once
     world.context.deltaTime === (1f / fps) +- Tolerance shouldBe true
 
+  it should "not accept negative delta time values" in:
+    val world: World = World()
+    an[IllegalArgumentException] should be thrownBy(world.context.setDeltaTime(-1f))
+
   import ecscalibur.core.SystemRequest.*
 
   it should "correctly defer pausing a system" in:

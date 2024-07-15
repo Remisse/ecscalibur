@@ -101,3 +101,17 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     s.isPaused should be(false)
     s.update()
     s.isPaused should be(true)
+
+  it should "be equal to another System with the same name" in:
+    val system1 = new System(name = s1, priority = 0):
+      override protected val process =
+        routine:
+          ()
+    val system2 = new System(name = s1, priority = 0):
+      override protected val process =
+        routine:
+          ()
+
+    system1 should equal(system2)
+    system1.## should equal(system2.##)
+    system1 shouldNot equal(Object())

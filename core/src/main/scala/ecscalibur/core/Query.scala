@@ -42,7 +42,7 @@ object queries:
       */
     def None: Query = Query(() => ())
 
-  private[core] inline def make(q: () => Unit): Query = Query(q)
+  private[ecscalibur] inline def make(q: () => Unit): Query = Query(q)
 
   /** Factory method for [[Query]]. Needed when overriding [[System.process]].
     *
