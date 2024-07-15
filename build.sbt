@@ -35,7 +35,6 @@ lazy val ecsutil = project
 
 lazy val core = project
   .dependsOn(ecsutil)
-  .enablePlugins(JacocoCoverallsPlugin)
   .settings(
     name := "ecscalibur",
 
@@ -49,11 +48,6 @@ lazy val core = project
       "-language:experimental.macros",
       "-Xcheck-macros", 
     ),
-
-    jacocoCoverallsServiceName := "github-actions", 
-    jacocoCoverallsBranch := sys.env.get("CI_BRANCH"),
-    jacocoCoverallsPullRequest := sys.env.get("GITHUB_EVENT_NAME"),
-    jacocoCoverallsRepoToken := sys.env.get("COVERALLS_REPO_TOKEN"),
 
     assembly / assemblyJarName := "ecscalibur.jar",
   )
