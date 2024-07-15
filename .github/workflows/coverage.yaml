@@ -36,7 +36,7 @@ jobs:
       - name: Move cobertura.xml
         run: |
           mkdir -p target/scala-${{ matrix.scala }}/coverage-report/
-          mv 'core/target/scala-${{ matrix.scala }}/coverage-report/cobertura.xml' 'target/scala-${{ matrix.scala }}/coverage-report/'
+          mv core/target/scala-${{ matrix.scala }}/coverage-report/cobertura.xml target/scala-${{ matrix.scala }}/coverage-report/
       - name: Upload coverage data to Coveralls
         run: sbt 'core / coverageReport ; coveralls'
         env:
