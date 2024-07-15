@@ -1,4 +1,4 @@
-name: JaCoCo
+name: Coverage
 
 on:
   push:
@@ -26,9 +26,9 @@ jobs:
           # see: https://frontside.com/blog/2020-05-26-github-actions-pull_request/#how-does-pull_request-affect-actionscheckout
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Run tests
-        run: sbt clean coverage test
+        run: sbt 'core / clean ; coverage ; test'
       - name: Upload coverage data to Coveralls
-        run: sbt coverageReport coveralls
+        run: sbt 'core / coverageReport ; coveralls'
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           COVERALLS_FLAG_NAME: Scala ${{ matrix.scala }}
