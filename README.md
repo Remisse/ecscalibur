@@ -1,6 +1,6 @@
 # ecscalibur
 
-[![Coverage Status](https://coveralls.io/repos/github/Remisse/ecscalibur/badge.svg)](https://coveralls.io/github/Remisse/ecscalibur)
+[![Coverage Status](https://coveralls.io/repos/github/Remisse/ecscalibur/badge.svg)](https://coveralls.io/github/Remisse/ecscalibur)  [![CI Status](https://github.com/Remisse/ecscalibur/actions/workflows/ci.yaml/badge.svg)](https://github.com/Remisse/ecscalibur/actions/workflows/ci.yaml)
 
 An archetype-based ECS framework for Scala projects.
 
