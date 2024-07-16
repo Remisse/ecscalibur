@@ -103,10 +103,9 @@ object ProgressiveMap:
 
     @targetName("add")
     override def +=(elem: T): Int =
-      val existing = map(elem)
-      if existing == Uninitialized then 
-        val _ = idGenerator.erase(existing)
-      val idx = idGenerator.next
+      var idx = map(elem)
+      if idx == Uninitialized then 
+        idx = idGenerator.next
       map.update(elem, idx)
       idx
 
@@ -114,7 +113,6 @@ object ProgressiveMap:
     override def -=(elem: T): Int =
       val id = map(elem)
       if id == Uninitialized then return Uninitialized
-      // require(id != Uninitialized, notMappedErrorMsg(elem))
       idGenerator.erase(id)
       map -= elem
       id

@@ -141,7 +141,6 @@ private[ecscalibur] object archetypes:
     private final class AggregateImpl(inSignature: Signature, maxFragmentSize: Long)
         extends Archetype(inSignature),
           Aggregate:
-      import ecsutil.array.*
       import scala.collection.mutable.ArrayBuffer
 
       require(inSignature != Signature.Nil, "Attempted to create an Archetype with no signature.")

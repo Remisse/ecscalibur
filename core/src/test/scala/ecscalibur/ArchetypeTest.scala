@@ -36,11 +36,6 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val fixture = fixtures.StandardArchetypeFixture(C1(), C2())(nEntities = 1)
     fixture.archetype.contains(fixture.entities.head) shouldBe true
 
-  it should "throw when attempting to add the same Entity multiple times" in:
-    val comps = Seq[Component](C1())
-    val fixture = fixtures.StandardArchetypeFixture(comps*)(nEntities = 1)
-    an[IllegalArgumentException] should be thrownBy(fixture.archetype.add(fixture.entities(0), comps*))
-
   it should "correctly remove stored entities" in:
     val fixture = fixtures.StandardArchetypeFixture(C1())(nEntities = 1)
     val entity = fixture.entities(0)

@@ -40,7 +40,8 @@ object array:
 
     inline def aSameElements(other: Array[T]): Boolean =
       var res = false
-      if a.length != other.length || a.isEmpty || other.isEmpty then res = false
+      if a.isEmpty && other.isEmpty then res = true
+      else if a.length != other.length || a.isEmpty || other.isEmpty then res = false
       else
         @annotation.tailrec
         def same(i: Int): Boolean = i match
