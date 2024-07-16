@@ -21,19 +21,9 @@ jobs:
         distribution: 'temurin'
         cache: 'sbt'
     - name: Generate coverage reports
-      run: sbt clean coverage test coverageAggregate
+      run: sbt clean test coverageAggregate
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: target/scala-${{ matrix.scala }}/coverage-report/
-    # - name: Upload 'core' results to Codecov
-    #   uses: codecov/codecov-action@v4.0.1
-    #   with:
-    #     token: ${{ secrets.CODECOV_TOKEN }}
-    #     directory: core/target/scala-${{ matrix.scala }}/coverage-report/
-    # - name: Upload 'ecsutil' results to Codecov
-    #   uses: codecov/codecov-action@v4.0.1
-    #   with:
-    #     token: ${{ secrets.CODECOV_TOKEN }}
-    #     directory: ecsutil/target/scala-${{ matrix.scala }}/coverage-report/
