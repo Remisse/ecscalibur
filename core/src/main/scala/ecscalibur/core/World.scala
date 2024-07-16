@@ -72,8 +72,8 @@ object world:
       *   a unique name for this System
       * @param priority
       *   its priority value relative to the other Systems in the World
-      * @param qb
-      *   a function that returns a new Query created with the help of a [[QueryBuilder]]
+      * @param q
+      *   a query
       * @throws IllegalArgumentException
       *   if a System with the same name already exists
       */
@@ -238,10 +238,11 @@ object world:
         entityRemoveComps.clear
 
       private inline def processPendingSystems(): Unit =
-
-        for s <- pendingSystems do activeSystems = s +: activeSystems
-        pendingSystems = Vector.empty
-        activeSystems = activeSystems.sortBy(_.priority)
+        if pendingSystems.nonEmpty then
+          for s <- pendingSystems do activeSystems = activeSystems :+ s
+          pendingSystems = Vector.empty
+          activeSystems = activeSystems.sortBy(_.priority)
+          ()
 
       import EntityRequest.*
       import SystemRequest.*

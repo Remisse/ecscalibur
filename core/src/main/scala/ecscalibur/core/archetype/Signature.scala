@@ -3,13 +3,14 @@ package ecscalibur.core.archetype
 import ecscalibur.core.components.*
 
 import scala.annotation.targetName
+import ecsutil.array.*
 
 /** Ordered sequence of distinct [[ComponentId]]s.
   *
   * @param underlying
   *   ComponentIds out of which this Signature will be made.
   */
-private[ecscalibur] trait Signature(val underlying: Seq[ComponentId]):
+private[ecscalibur] trait Signature(val underlying: Array[ComponentId]):
   /** Checks whether this Signature contains at least one of the ComponentIds the given Signature is
     * made of.
     *
@@ -20,7 +21,7 @@ private[ecscalibur] trait Signature(val underlying: Seq[ComponentId]):
     *   of, false otherwise.
     */
   final inline infix def containsAny(other: Signature): Boolean =
-    other.underlying.exists(underlying.contains)
+    other.underlying.aExists(underlying.aContains)
 
   /** Checks whether this Signature contains all of the ComponentIds the given Signature is made of.
     *
@@ -31,7 +32,7 @@ private[ecscalibur] trait Signature(val underlying: Seq[ComponentId]):
     *   false otherwise.
     */
   final inline infix def containsAll(other: Signature): Boolean =
-    other.underlying.forall(underlying.contains)
+    other.underlying.aForall(underlying.aContains)
 
   /** Checks whether this Signature contains all of the ComponentIds of the given types.
     *
@@ -41,7 +42,7 @@ private[ecscalibur] trait Signature(val underlying: Seq[ComponentId]):
     *   true if this Signature contains all of the ComponentIds of the given types, false otherwise.
     */
   final inline infix def containsAll(types: WithType*): Boolean =
-    types.map(~_).forall(underlying.contains)
+    types.map(~_).forall(underlying.aContains)
 
   /** Checks whether this Signature is empty.
     *
@@ -58,17 +59,17 @@ private[ecscalibur] trait Signature(val underlying: Seq[ComponentId]):
     */
   final inline def length: Int = underlying.length
 
-private[ecscalibur] final case class SignatureImpl(u: Seq[ComponentId]) extends Signature(u):
+private[ecscalibur] final case class SignatureImpl(u: Array[ComponentId]) extends Signature(u):
   override def equals(other: Any): Boolean = other match
-    case SignatureImpl(u) => underlying.sameElements(u)
+    case SignatureImpl(u) => underlying.aSameElements(u)
     case _                => false
 
-  override def hashCode(): Int = underlying.##
+  override def hashCode(): Int = java.util.Arrays.hashCode(underlying)
 
 object Signature:
   /** Empty signature.
     */
-  val Nil: Signature = new SignatureImpl(Seq.empty[ComponentId])
+  val Nil: Signature = new SignatureImpl(Array.empty[ComponentId])
 
   /** Creates a new Signature from the given ComponentIds.
     *
@@ -82,7 +83,9 @@ object Signature:
   @targetName("fromIds")
   def apply(ids: ComponentId*): Signature =
     require(ids.nonEmpty, "Failed to make signature: empty sequence.")
-    new SignatureImpl(ids.distinct.sorted)
+    val distinct = ids.distinct.toArray
+    distinct.sortInPlace()
+    new SignatureImpl(distinct)
 
   /** Creates a new Signature from the given Components or ComponentTypes.
     *

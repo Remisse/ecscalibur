@@ -140,7 +140,7 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
       return false
     val existing = currentArch.remove(e)
     archetypesByEntity -= e
-    newEntityToArchetype(e, (existing concat components)*)
+    newEntityToArchetype(e, existing concat components*)
     true
 
   override def removeComponents(e: Entity, compTypes: ComponentType*): Boolean =
@@ -174,7 +174,7 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
   override def iterate(isSelected: Signature => Boolean)(
       f: (Entity, Array[Component]) => Unit
   ): Unit =
-    for a <- archetypes if isSelected(a.signature) do a.iterate(f)
+    for a <- archetypes do if isSelected(a.signature) then a.iterate(f)
 
   private inline def ensureEntityIsValid(e: Entity): Unit =
     require(archetypesByEntity.contains(e), "Given entity does not exist.")

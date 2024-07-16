@@ -98,21 +98,23 @@ object ProgressiveMap:
   private final class ProgressiveMapImpl[T] extends ProgressiveMap[T]:
     import scala.collection.mutable
 
-    private val map: mutable.Map[T, Int] = mutable.Map.empty.withDefaultValue(Uninitialized)
+    private val map: mutable.Map[T, Int] = mutable.HashMap.empty.withDefaultValue(Uninitialized)
     private val idGenerator = IdGenerator()
 
     @targetName("add")
     override def +=(elem: T): Int =
-      require(!contains(elem), s"Element $elem has already been mapped.")
+      val existing = map(elem)
+      if existing == Uninitialized then 
+        val _ = idGenerator.erase(existing)
       val idx = idGenerator.next
-      val t = elem -> idx
-      map += t
+      map.update(elem, idx)
       idx
 
     @targetName("remove")
     override def -=(elem: T): Int =
       val id = map(elem)
-      require(id != Uninitialized, notMappedErrorMsg(elem))
+      if id == Uninitialized then return Uninitialized
+      // require(id != Uninitialized, notMappedErrorMsg(elem))
       idGenerator.erase(id)
       map -= elem
       id
@@ -120,9 +122,7 @@ object ProgressiveMap:
     override inline def contains(elem: T): Boolean = map(elem) != Uninitialized
 
     override def apply(elem: T): Int =
-      val res = map(elem)
-      require(res != Uninitialized, notMappedErrorMsg(elem))
-      res
+      map(elem)
 
     override def foreach(f: (T, Int) => Unit): Unit =
       for e <- map do f(e._1, e._2)
@@ -130,5 +130,3 @@ object ProgressiveMap:
     override def size: Int = map.size
 
     override def isEmpty: Boolean = map.isEmpty
-
-    private inline def notMappedErrorMsg(elem: T) = s"Element $elem has not been mapped."

@@ -61,6 +61,8 @@ private[ecscalibur] object archetypes:
       */
     def softRemove(e: Entity): Unit
 
+    // TODO Add ProgressiveMap[ComponentId] as a lambda parameter to avoid scanning the whole array
+    // for the various component classes
     /** Iterates over all entities stored in this Archetype and calls the given function on them and
       * all of their Components.
       *
@@ -158,8 +160,8 @@ private[ecscalibur] object archetypes:
               case Some(fr) => fr
               case _        => appendNewFragment()
           else lastFragment
-        fragmentsByEntity += e -> fr
         fr.add(e, components*)
+        fragmentsByEntity += e -> fr
         this
 
       private inline def lastFragment: Fragment = _fragments.last

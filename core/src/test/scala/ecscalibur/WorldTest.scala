@@ -178,7 +178,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world loop 2.times
     sum shouldBe 2
 
-  def addComponentTest(action: (Entity, Component) => Unit)(using world: World) = 
+  def addComponentTest(action: (Entity, Component) => Unit)(using world: World): Assertion = 
     world.entity withComponents C1()
     world.system(s1):
       query all: (e: Entity, _: C1) =>
@@ -198,16 +198,16 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
   it should "correctly defer adding components to an entity using Mutator" in:
     given world: World = World()
     addComponentTest: (e: Entity, c: Component) =>
-      world.mutator defer addComponent(e, c, () => shouldNotBeExecuted)
+      world.mutator defer addComponent(e, c)
       ()
 
   it should "correctly defer adding components to an entity using Entity.+=" in:
     given world: World = World()
     addComponentTest: (e: Entity, c: Component) =>
-      e += (c, () => shouldNotBeExecuted)
+      e += c
       ()
 
-  def removeComponentTest(action: (Entity, ComponentType) => Unit)(using world: World) =
+  def removeComponentTest(action: (Entity, ComponentType) => Unit)(using world: World): Assertion =
     world.entity withComponents C1()
 
     world.system(s1):
@@ -228,13 +228,13 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
   it should "correctly defer removing components from an entity using Mutator" in:
     given world: World = World()
     removeComponentTest: (e: Entity, t: ComponentType) =>
-      world.mutator defer removeComponent(e, t, () => shouldNotBeExecuted)
+      world.mutator defer removeComponent(e, t)
       ()
 
   it should "correctly defer removing components from an entity using Entity.-=" in:
     given world: World = World()
     removeComponentTest: (e: Entity, t: ComponentType) =>
-      e -= (t, () => shouldNotBeExecuted)
+      e -= t
       ()
 
   import ecscalibur.testutil.testclasses.C2

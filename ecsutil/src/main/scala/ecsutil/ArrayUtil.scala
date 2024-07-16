@@ -89,7 +89,7 @@ object array:
 
     inline def aContains(elem: T): Boolean = a.aIndexWhere(elem == _) != -1
 
-    inline def aExists(inline p: T => Boolean): Boolean = a.aIndexWhere(p) != -1
+    inline def aExists(p: T => Boolean): Boolean = a.aIndexWhere(p) != -1
 
     inline def aFindUnsafe(inline p: T => Boolean): T =
       val idx = a.aIndexWhere(p)
@@ -117,7 +117,7 @@ object array:
     private inline def negate(inline p: T => Boolean)(using ClassTag[T]): T => Boolean = elem =>
       !p(elem)
 
-    inline def aFilterNot(inline p: T => Boolean)(using ClassTag[T]): Array[T] =
+    inline def aFilterNot(p: T => Boolean)(using ClassTag[T]): Array[T] =
       a.aFilter(negate(p))
 
     inline def aConcat(that: Array[T])(using ClassTag[T]): Array[T] = a.concat(that)
