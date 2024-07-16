@@ -20,10 +20,10 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: 'sbt'
-    - name: Run JaCoCo
-      run: sbt 'core / clean ; jacocoAggregate'
+    - name: Generate coverage report
+      run: sbt 'core / coverage ; test ; coverageReport'
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        directory: core/target/scala-${{ matrix.scala }}/jacoco/report/
+        directory: core/target/scala-${{ matrix.scala }}/coverage-report/
