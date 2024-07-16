@@ -8,6 +8,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        scala: [3.5.0-RC4]
 
     steps:
     - uses: actions/checkout@v4
@@ -17,9 +20,10 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: 'sbt'
-    - name: Run JaCoCo and upload to Coveralls
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-      run: |
-        export CI_BRANCH="main"
-        sbt 'core / clean ; jacoco ; jacocoCoveralls'
+    - name: Run JaCoCo
+      run: sbt 'core / clean ; jacoco'
+    - name: Upload results to Codecov
+      uses: codecov/codecov-action@v4.0.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: core/target/scala-${{ matrix.scala }}/jacoco/report
