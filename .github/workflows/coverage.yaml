@@ -21,7 +21,7 @@ jobs:
         distribution: 'temurin'
         cache: 'sbt'
     - name: Generate coverage reports
-      run: sbt clean coverage test coverageReport
+      run: sbt clean coverage test coverageAggregate
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
