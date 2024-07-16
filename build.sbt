@@ -31,8 +31,6 @@ lazy val ecsutil = project
     semanticdbVersion := scalafixSemanticdb.revision,
 
     libraryDependencies ++= testDependencies,
-
-    coverageEnabled := true
   )
 
 lazy val core = project
@@ -52,14 +50,11 @@ lazy val core = project
     ),
 
     assembly / assemblyJarName := "ecscalibur.jar",
-
-    coverageEnabled := true
   )
 
 lazy val demo_util = (project in file("./demo/util"))
   .settings(
     name := "Demo utils",
-    coverageEnabled := false
   )
 
 lazy val demo_ecs = (project in file("./demo/ecs"))
@@ -73,8 +68,6 @@ lazy val demo_ecs = (project in file("./demo/ecs"))
     ),
 
     libraryDependencies ++= testDependencies,
-
-    coverageEnabled := false
   )
 
 lazy val demo_oop = (project in file("./demo/oop"))
@@ -82,7 +75,6 @@ lazy val demo_oop = (project in file("./demo/oop"))
   .settings(
     name := "OOP Demo",
     assembly / assemblyJarName := "demo_oop.jar",
-    coverageEnabled := false
   )
 
 lazy val benchmark = project
@@ -93,5 +85,4 @@ lazy val benchmark = project
     scalacOptions ++= Seq(
       "-experimental"
     ),
-    coverageEnabled := false
   )
