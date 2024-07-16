@@ -43,11 +43,11 @@ object Velocity extends ComponentType
 
 ## Using the framework
 
-If you're not sure about what the Entity Component System pattern is, you should read about it ([here](https://github.com/SanderMertens/ecs-faq) or somewhere else) before continuing on. Otherwise, the following section will just be a very confusing read.
+If you're not sure about what Entity Component System is, you should read about it ([here](https://github.com/SanderMertens/ecs-faq) or somewhere else) before continuing on. Otherwise, the following section will just be a very confusing read.
 
 ### World
 
-First of all, create a new World instance as a contextual parameter:
+First, create a new World instance as a contextual parameter:
 ```scala
 given world: World = World()
 ```
@@ -63,9 +63,9 @@ Declaring components requires a little bit of boilerplate code:
 ```scala
 @component
 class MyComponent extends Component:
-  // Your code here.
+  ...
 object MyComponent extends ComponentType:
-  // Your code here.
+  ...
 ```
 
 The component class *must* extend `Component` and its companion object *must* extend `ComponentType`.  
@@ -78,22 +78,23 @@ Create new entities with the `World.entity` method:
 world.entity withComponents (MyComponent(), MyComponent2())
 ```
 
-All entities reside within the World instance they were created with.
+Entities are stored within the World instance they are created with.
 
 ### Systems
 
 There are two ways to create a System:
 
-1. By passing a **query** (explained in the next paragraph) to `World.system`:
+1. By passing a **query** (explained further below) to `World.system`:
 ```scala
-world.system("my_system"):
+world.system("my_system", priority = 0): // Priority can be omitted, defaults to 0
   query all: (e: Entity, c: MyComponent) =>
     // do something with 'c'
   ()
 ```
 2. By extending the `System` trait and overriding its methods:
 ```scala
-class MySystem extends System("my_system", priority = 0):
+// It has to have World as a contextual parameter
+class MySystem(using World) extends System("my_system", priority = 0):
   override def onStart(): Query = ...
   override def process(): Query = ...
   override def onPause(): Query = ...
@@ -130,14 +131,56 @@ routine:
   ...
 ```
 
-### Mutators
+### Mutator
 
+The `Mutator` instance stored in `World` allows you to schedule modifications to both entities and systems for execution on the next world loop:
 
+```scala
+val mutator: Mutator = world.mutator
+
+mutator defer EntityRequest.create(C1(), C2())     // Creates an entity with the specified components
+mutator defer EntityRequest.delete(e)              // Deletes an entity
+mutator defer EntityRequest.addComponent(e, C3())  // Adds a component to an entity
+// Equivalent to
+e += C3()
+mutator defer EntityRequest.removeComponent(e, C3) // Removes a component from  an entity
+// Equivalent to
+e -= C3
+
+mutator defer SystemRequest.pause("my_system")  // Pauses a system
+mutator defer SystemRequest.resume("my_system") // Resumes a system
+```
+
+The only Entity operation that is executed immediately is updating one of its components' reference:
+
+```scala
+// Both alternatives are equivalent
+world.update(e, C1())
+e <== C1()
+```
+
+All of the above Entity operations can affect performance quite heavily because of the archetype-based nature of this framework.
+
+For instance, adding one single component to an entity would result in that entity being removed from the archetype it is stored in and moved to another. If the destination archetype does not exist, it has
+to be created on the spot along with all of its internal data structures.
+
+That is why all operations which would cause similar structural changes are batched, combined and then executed on the next world loop.
+
+### Context
+
+The world's `MetaContext` instance contains secondary data related to the world's execution. For now, it only lets you obtain the amount of seconds
+passed since the last iteration:
+
+```scala
+val dt: DeltaSeconds = world.context.deltaTime // it's actually a Float
+```
 
 ### World loop
 
+Execute your program's logic with `World.loop`:
+
 ```scala
-world loop once
-world loop 2.times
-world loop forever
+world loop once    // Performs one iteration
+world loop 2.times // Performs an arbitrary number of iterations
+world loop forever // Iterates indefinitely
 ```
