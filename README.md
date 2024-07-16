@@ -2,7 +2,7 @@
 
 [![coverage](https://codecov.io/github/Remisse/ecscalibur/graph/badge.svg?token=KH1U71TV5V)](https://codecov.io/github/Remisse/ecscalibur) [![CI Status](https://github.com/Remisse/ecscalibur/actions/workflows/ci.yaml/badge.svg)](https://github.com/Remisse/ecscalibur/actions/workflows/ci.yaml)
 
-An archetype-based ECS framework for Scala projects.
+An archetype-based ECS framework for Scala projects inspired by [flecs](https://github.com/SanderMertens/flecs) and [Unity DOTS](https://unity.com/dots).
 
 ## Getting started
 
@@ -133,28 +133,30 @@ routine:
 
 ### Mutator
 
-The `Mutator` instance stored in `World` allows you to schedule modifications to both entities and systems for execution on the next world loop:
+The `Mutator` instance stored in `World` allows you to schedule modifications to both entities and systems for execution at the start of the next world loop:
 
 ```scala
 val mutator: Mutator = world.mutator
 
 mutator defer EntityRequest.create(C1(), C2())     // Creates an entity with the specified components
 mutator defer EntityRequest.delete(e)              // Deletes an entity
+// Both options are equivalent
 mutator defer EntityRequest.addComponent(e, C3())  // Adds a component to an entity
-// Equivalent to
 e += C3()
+// Both options are equivalent
 mutator defer EntityRequest.removeComponent(e, C3) // Removes a component from  an entity
-// Equivalent to
 e -= C3
 
-mutator defer SystemRequest.pause("my_system")  // Pauses a system
-mutator defer SystemRequest.resume("my_system") // Resumes a system
+if world.isSystemRunning("my_system") then
+  mutator defer SystemRequest.pause("my_system")  // Pauses a system
+if world.isSystemPaused("my_system") then
+  mutator defer SystemRequest.resume("my_system") // Resumes a system
 ```
 
 The only Entity operation that is executed immediately is updating one of its components' reference:
 
 ```scala
-// Both alternatives are equivalent
+// Both options are equivalent
 world.update(e, C1())
 e <== C1()
 ```
@@ -162,7 +164,8 @@ e <== C1()
 All of the above Entity operations can affect performance quite heavily because of the archetype-based nature of this framework.
 
 For instance, adding one single component to an entity would result in that entity being removed from the archetype it is stored in and moved to another. If the destination archetype does not exist, it has
-to be created on the spot along with all of its internal data structures.
+to be created on the spot along with all of its internal data structures.  
+This also means that adding multiple components to the same entity during the same world loop could lead to a lot of unnecessary back-and-forth between archetypes.
 
 That is why all operations which would cause similar structural changes are batched, combined and then executed on the next world loop.
 
