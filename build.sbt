@@ -35,6 +35,7 @@ lazy val ecsutil = project
 
 lazy val core = project
   .dependsOn(ecsutil)
+  .enablePlugins(JacocoCoverallsPlugin)
   .settings(
     name := "ecscalibur",
 
