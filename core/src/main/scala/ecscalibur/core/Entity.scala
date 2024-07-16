@@ -10,7 +10,7 @@ object entity:
     * @param id
     *   the unique ID of this Entity.
     */
-  class Entity private[ecscalibur] (val id: Int):
+  sealed trait Entity(val id: Int):
     /** Syntactic sugar for [[World.update]].
       *
       * @param c
@@ -65,3 +65,6 @@ object entity:
     override def hashCode(): Int = id.##
 
     override def toString(): String = s"Entity $id"
+
+  object Entity:
+    private[ecscalibur] def apply(id: Int) = new Entity(id) {}
