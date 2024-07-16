@@ -41,7 +41,8 @@ object model:
             StopSystem(),
             ResumeSystem(),
             ChangeVelocitySystem(),
-            ChangeColorSystem()
+            ChangeColorSystem(),
+            UpdateTimerSystem()
           )
         do world.system(s)
 
@@ -54,12 +55,15 @@ object model:
         p += v.vec * world.context.deltaTime
         ()
 
-  private inline def timed(t: Timer)(using world: World)(f: => Unit): Unit =
-    if t.isReady then
-      t.reset(); f
-    else
-      t.tick(world.context.deltaTime)
-      ()
+  private[ecsdemo] final class UpdateTimerSystem(using world: World) extends System("updateTimer", modelPriority):
+    override protected val process: Query =
+      query all: (e: Entity, t: Timer) =>
+        if t.isReady then t.reset()
+        else t.tick(world.context.deltaTime)
+        ()
+
+  private inline def timed(t: Timer)(inline f: => Unit): Unit =
+    if t.isReady then f
 
   private[ecsdemo] final class StopSystem(using World) extends System("stop", modelPriority):
     override protected val process: Query =
