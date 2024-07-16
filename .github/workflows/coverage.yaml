@@ -17,7 +17,7 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: 'sbt'
-    - name: Run JaCoCo
+    - name: Run JaCoCo and upload to Coveralls
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
       run: |
