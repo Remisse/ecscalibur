@@ -21,9 +21,9 @@ jobs:
         distribution: 'temurin'
         cache: 'sbt'
     - name: Run JaCoCo
-      run: sbt 'core / clean ; jacoco'
+      run: sbt 'core / clean ; jacocoAggregate'
     - name: Upload results to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        directory: core/target/scala-${{ matrix.scala }}/jacoco/report
+        directory: core/target/scala-${{ matrix.scala }}/jacoco/report/
