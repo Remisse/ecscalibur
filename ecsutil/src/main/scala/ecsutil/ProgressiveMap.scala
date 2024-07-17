@@ -106,7 +106,7 @@ object ProgressiveMap:
       var idx = map(elem)
       if idx == Uninitialized then 
         idx = idGenerator.next
-      map.update(elem, idx)
+        map += elem -> idx
       idx
 
     @targetName("remove")
@@ -119,8 +119,7 @@ object ProgressiveMap:
 
     override inline def contains(elem: T): Boolean = map(elem) != Uninitialized
 
-    override def apply(elem: T): Int =
-      map(elem)
+    override def apply(elem: T): Int = map(elem)
 
     override def foreach(f: (T, Int) => Unit): Unit =
       for e <- map do f(e._1, e._2)

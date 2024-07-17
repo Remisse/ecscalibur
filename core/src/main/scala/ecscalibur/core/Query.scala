@@ -42,8 +42,6 @@ object queries:
       */
     def None: Query = Query(() => ())
 
-  private[ecscalibur] inline def make(q: () => Unit): Query = Query(q)
-
   /** Factory method for [[Query]]. Needed when overriding [[System.process]].
     *
     * @return
@@ -212,7 +210,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
     this
 
   override infix def all(f: Entity => Unit): Query =
-    queries.make: () =>
+    Query: () =>
       am.iterate(matches): (e, _) =>
         f(e)
 
@@ -222,7 +220,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   override infix def all[C0 <: Component: ClassTag](f: (Entity, C0) => Unit): Query =
     idCache = Array(id0K[C0])
     initSignature(idCache)
-    queries.make(() =>
+    Query(() =>
       am.iterate(matches): (e, components) =>
         f(e, components.aFindOfType[C0])
     )
@@ -232,7 +230,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   ): Query =
     idCache = Array(id0K[C0], id0K[C1])
     initSignature(idCache)
-    queries.make(() =>
+    Query(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,
@@ -250,7 +248,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   ): Query =
     idCache = Array(id0K[C0], id0K[C1], id0K[C2])
     initSignature(idCache)
-    queries.make(() =>
+    Query(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,
@@ -268,7 +266,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   ](f: (Entity, C0, C1, C2, C3) => Unit): Query =
     idCache = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3])
     initSignature(idCache)
-    queries.make(() =>
+    Query(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,
@@ -288,7 +286,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   ](f: (Entity, C0, C1, C2, C3, C4) => Unit): Query =
     idCache = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4])
     initSignature(idCache)
-    queries.make(() =>
+    Query(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,
@@ -310,7 +308,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   ](f: (Entity, C0, C1, C2, C3, C4, C5) => Unit): Query =
     idCache = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4], id0K[C5])
     initSignature(idCache)
-    queries.make(() =>
+    Query(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,
@@ -334,7 +332,7 @@ private final class QueryBuilderImpl(am: ArchetypeManager) extends QueryBuilder:
   ](f: (Entity, C0, C1, C2, C3, C4, C5, C6) => Unit): Query =
     idCache = Array(id0K[C0], id0K[C1], id0K[C2], id0K[C3], id0K[C4], id0K[C5], id0K[C6])
     initSignature(idCache)
-    queries.make(() =>
+    Query(() =>
       am.iterate(matches): (e, components) =>
         f(
           e,

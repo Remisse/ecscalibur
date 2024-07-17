@@ -13,7 +13,3 @@ class QueryTest extends AnyFlatSpec with should.Matchers:
   "A QueryBuilder" should "throw when chaining the same method multiple times" in:
     given World = World()
     an[IllegalArgumentException] should be thrownBy(query none C1 none C1)
-
-  "queries.make()" should "successfully return a Query" in:
-    noException should be thrownBy(queries.make(() => ()))
-    "val q: Query = queries.make(() => ())" should compile

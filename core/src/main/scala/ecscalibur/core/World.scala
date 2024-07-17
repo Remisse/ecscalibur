@@ -199,17 +199,18 @@ object world:
           !(activeSystems.contains(s) || pendingSystems.contains(s)),
           s"System \"${s.name}\" already exists."
         )
-        pendingSystems = s +: pendingSystems
+        pendingSystems = pendingSystems :+ s
 
       override def loop(loopType: Loop): Unit =
         inline def _loop(): Unit =
-          context.setDeltaTime:
+          context.setDeltaTime(
             pacer.pace:
               if areBuffersDirty then
                 areBuffersDirty = false
                 processPendingEntityOperations()
               processPendingSystems()
               for s <- activeSystems do s.update()
+          )
         loopType match
           case Loop.Forever      => while true do _loop()
           case Loop.Times(times) => for _ <- 0 until times do _loop()
@@ -243,9 +244,6 @@ object world:
           pendingSystems = Vector.empty
           activeSystems = activeSystems.sortBy(_.priority)
           ()
-
-      import EntityRequest.*
-      import SystemRequest.*
 
       override def defer(q: SystemRequest | EntityRequest): Boolean =
         q match
@@ -307,7 +305,7 @@ object world:
         if isEntityValid(e) then
           val l: List[(T, () => Unit)] = buffer.getOrElseUpdate(e, List.empty)
           if !l.exists(_._1.typeId == comp.typeId) then
-            buffer(e) = ((comp -> orElse)) :: l
+            buffer(e) = comp -> orElse :: l
             res = true
         if !res then orElse()
         res
