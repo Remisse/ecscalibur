@@ -133,7 +133,7 @@ routine:
 
 ### Mutator
 
-The `Mutator` instance stored in `World` allows you to schedule modifications to both entities and systems for execution at the start of the next world loop:
+The `Mutator` instance accessible through `World` allows you to schedule modifications to both entities and systems for execution at the start of the next world loop:
 
 ```scala
 val mutator: Mutator = world.mutator
@@ -153,7 +153,7 @@ if world.isSystemPaused("my_system") then
   mutator defer SystemRequest.resume("my_system") // Resumes a system
 ```
 
-The only Entity operation that is executed immediately is updating one of its components' reference:
+The only operation that is executed immediately is updating the reference to an Entity's component:
 
 ```scala
 // Both options are equivalent
