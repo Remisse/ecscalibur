@@ -8,7 +8,7 @@ Il pattern architetturale Entity Component System ha come obiettivo la separazio
 - *Component*: contenitori di dati le cui istanze sono associate a singole entità (ad esempio, la posizione di un'entità in uno spazio bidimensionale);
 - *System*: parti indipendenti della logica di business che operano su un sottinsieme delle entità e dei loro componenti e che vengono eseguite ciclicamente.
 
-Gli elementi sopra descritti vengono memorizzati in un particolare contenitore chiamato *World*, che funge da tramite per la loro creazione e manipolazione, occupandosi al tempo stesso di orchestrare l'esecuzione dei system.
+Gli elementi sopra descritti vengono memorizzati in una particolare struttura dati chiamata *World*, che funge da tramite per la loro creazione e manipolazione, occupandosi al tempo stesso di orchestrare l'esecuzione dei System.
 
 ## Requisiti
 
@@ -29,6 +29,7 @@ Gli utilizzatori del framework devono avere la possibilità di:
 4. aggiornare i valori dei Component mutabili di una Entity
 5. rimpiazzare le istanze dei Component immutabili di una Entity
 6. creare System che iterino su sottoinsiemi delle Entity e dei loro Component oppure che eseguano indipendentemente dalle Entity
+7. assegnare in modo arbitrario identificatori univoci ai System
 8. definire l'ordine di esecuzione dei System
 9. interrompere l'esecuzione di singoli System ed eventualmente riprenderla
 10. creare World tramite cui poter eseguire le suddette operazioni
@@ -41,19 +42,18 @@ Gli utilizzatori del framework devono avere la possibilità di:
 Il framework deve garantire che:
 
 1. sia impossibile creare Entity o System senza un World
-2. sia impossibile creare Entity duplicate o senza Component
-3. sia impossibile assegnare più istanze dello stesso Component a una Entity
-4. i System siano caratterizzati da un identificatore univoco pubblicamente accessibile
-5. sia impossibile creare più System con lo stesso identificatore
-6. l'ordine di esecuzione dei System deciso dall'utente venga rispettato
-7. sia possibile creare più System con lo stesso valore di priorità, ma senza garantire per essi uno specifico ordine di esecuzione
+2. sia impossibile creare Entity con lo stesso ID o senza Component
+3. sia impossibile assegnare più istanze dello stesso tipo di Component a una Entity
+4. sia impossibile creare più System con lo stesso identificatore
+5. l'ordine di esecuzione dei System deciso dall'utente venga rispettato
+6. sia possibile creare più System con lo stesso valore di priorità senza necessariamente stabilire un ordine di esecuzione prevedibile per essi
 
 ### Non funzionali
 
 1. L'API deve essere intuitiva e facilmente apprendibile
 2. Aggiunta e rimozione di Entity e Component non devono comportare un'elevata frammentazione della memoria: dunque, all'allocazione
 di memoria aggiuntiva va preferito il "riciclo" di eventuali strutture dati non pienamente utilizzate
-3. Il tempo trascorso tra un'iterazione del World e un'altra deve essere misurato accuratamente: nello specifico, deve essere accurato
+3. Il tempo trascorso tra un'iterazione del World e un'altra deve essere misurato accuratamente: nello specifico, va garantita un'accuratezza
 entro un margine di errore di 10^(-8) secondi.
 
 ### Implementativi
