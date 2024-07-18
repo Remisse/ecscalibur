@@ -12,6 +12,7 @@ TBD
 ```
 2) Pass the `-experimental` option to the Scala compiler:
 ```scala
+// build.sbt
 scalacOptions ++= Seq(
   "-experimental",
 ),
@@ -43,7 +44,7 @@ object Velocity extends ComponentType
 
 ## Using the framework
 
-If you're not sure about what Entity Component System is, you should read about it ([here](https://github.com/SanderMertens/ecs-faq) or somewhere else) before continuing on. Otherwise, the following section will just be a very confusing read.
+If you're not sure about what Entity Component System is, you should read up on it before continuing on ([here](https://github.com/SanderMertens/ecs-faq), for instance). Otherwise, the following section will just be a very confusing read.
 
 ### World
 
