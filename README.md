@@ -154,15 +154,18 @@ if world.isSystemPaused("my_system") then
   mutator defer SystemRequest.resume("my_system") // Resumes a system
 ```
 
-The only operation that is executed immediately is updating the reference to an Entity's component:
+The only operations that are executed immediately are the following
 
 ```scala
 // Both options are equivalent
-world.update(e, C1())
+world.update(e, C1())          // Replaces the reference to this component type
 e <== C1()
+// Both options are equivalent
+world.hasComponents(e, C1, C2) // Does the entity have these components?
+e ?> (C1, C2)
 ```
 
-All of the above Entity operations can affect performance quite heavily because of the archetype-based nature of this framework.
+Except for the last two operations, all of the above can affect performance quite heavily because of the archetype-based nature of this framework.
 
 For instance, adding one single component to an entity would result in that entity being removed from the archetype it is stored in and moved to another. If the destination archetype does not exist, it has
 to be created on the spot along with all of its internal data structures.  
