@@ -1,0 +1,25 @@
+@startuml
+!theme vibrant
+
+interface WithType <<interface>> {
+  typeId: ComponentId
+}
+interface Component <<interface>> {
+  isA(t: ComponentType): Bool
+}
+interface ComponentType <<interface>>
+  note left: One ComponentType specialization\nfor every Component specialization
+
+WithType <|.. Component
+WithType <|.. ComponentType
+
+ComponentType <. Component
+
+note "A Component and its ComponentType\ncounterpart must share the same ID" as N1
+Component .. N1
+ComponentType .. N1
+
+hide interface circle
+hide empty members
+
+@enduml

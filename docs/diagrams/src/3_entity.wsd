@@ -1,0 +1,17 @@
+@startuml
+!theme vibrant
+
+interface Entity <<interface>> {
+  id: EntityId
+}
+
+interface EntityBuilder <<interface>> {
+  withComponents(c: Set[Component]): Unit
+}
+
+Entity <- EntityBuilder
+
+hide empty members
+hide interface circle
+
+@enduml

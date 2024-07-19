@@ -1,0 +1,51 @@
+@startuml
+
+!theme vibrant
+
+interface World <<interface>> {
+  -am: ArchetypeManager
+  context: MetaContext
+  mutator: Mutator
+  entity(): EntityBuilder 
+  update(e: Entity, c: Component)
+  hasComponents(e: Entity, types: List[ComponentType]): Bool
+  system(name: String, priority: Int, q: Query)
+  system(s: System)
+  loop(loopType: Loop)
+}
+
+interface Loop <<interface>>
+
+interface MetaContext <<interface>> {
+  deltaTime: DeltaSeconds
+}
+
+interface Mutator <<interface>> {
+  defer(r: Request)
+}
+
+interface Request <<interface>>
+
+interface ArchetypeManager <<interface>>
+
+interface System <<interface>>
+
+interface EntityBuilder <<interface>> {
+  withComponents(c: Set[Component])
+}
+
+interface Query <<interface>>
+
+World "1" *-- "1" MetaContext
+World "1" *-- "1" Mutator
+World "1" *-- "1" ArchetypeManager
+World -> Loop
+EntityBuilder <- World
+Mutator --> Request
+System "*" --o "1" World
+Query -- World
+
+hide interface circle
+hide empty members
+
+@enduml

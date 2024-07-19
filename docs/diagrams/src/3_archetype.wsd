@@ -1,0 +1,55 @@
+@startuml
+
+!theme vibrant
+
+interface Archetype <<interface>> {
+  signature: Signature
+  add(e: Entity, c: List[Component])
+  remove(e: Entity): List[Component]
+  softRemove(e: Entity)
+  update(e: Entity, c: Component)
+  contains(e: Entity): Bool
+  iterate(f: (e: Entity, c: List[Component]) => Unit)
+}
+
+interface Aggregate <<interface>> {
+  fragments: Set[Fragment]
+}
+
+interface Fragment <<interface>> {
+  -maxEntities: Int
+  isFull: Bool
+  isEmpty: Bool
+}
+
+interface ArchetypeManager <<interface>> {
+  addEntity(e: Entity, c: List[Component])
+  delete(e: Entity)
+  addComponents(e: Entity, c: List[Component])
+  removeComponents(e: Entity, c: List[Component])
+  update(e: Entity, c: Component)
+  iterate(f: (e: Entity, c: List[Component]) => Unit)
+}
+
+interface Signature <<interface>> {
+  -underlying: Set[ComponentType]
+}
+
+interface Entity <<interface>>
+interface Component <<interface>>
+
+ArchetypeManager "1" *- "*" Archetype
+Archetype <|.. Aggregate
+Archetype <|.. Fragment
+Archetype -> Signature
+Aggregate "1" *-- "1..*" Fragment
+Fragment "1" o-- "1..*" Entity
+Fragment "1" o-- "1..*" Component
+
+note "Fragments share the same\nSignature as their Aggregate" as N1
+Fragment . N1
+
+hide empty members
+hide interface circle
+
+@enduml
