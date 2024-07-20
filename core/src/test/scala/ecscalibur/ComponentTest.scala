@@ -43,6 +43,13 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
     object C extends ComponentType
     """ should compile
 
+  it should "not be generic" in:
+    """
+    @component
+    class Generic[T] extends Component
+    object Generic extends ComponentType
+    """ shouldNot compile
+
   import testclasses.{C1, C2}
 
   it should "have a unique type ID" in:
@@ -73,9 +80,9 @@ class ComponentTest extends AnyFlatSpec with should.Matchers:
 
   import testclasses.OneKinded
 
-  "id0K[T]" should "not return the component ID of a 1-kinded class's type parameter" in:
+  "id0K[T]" should "return the component ID of a 0-kinded type" in:
+    id0K[C1] should be(~C1)
     id0K[OneKinded[C1]] shouldNot be(~C1)
-    id0K[OneKinded[C1]] shouldBe ~OneKinded
 
   "getId" should "return the correct type ID" in:
     val cls = classOf[C1]

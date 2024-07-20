@@ -25,6 +25,12 @@ object annotations:
       companion match
         case None => report.errorAndAbort("This class should define a companion object.")
         case _    => ()
+
+      if definition.symbol.declaredTypes.nonEmpty then
+        report.error(
+          "Generic component classes are not allowed. Remove all type parameters from the class's definition."
+        )
+
       val newRhs = Literal(IntConstant(getId(definition.symbol.fullName)))
 
       def ensureExtends[T](cls: Symbol)(using Quotes, Type[T]): Unit =

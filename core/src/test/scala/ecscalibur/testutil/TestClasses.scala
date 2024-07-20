@@ -34,9 +34,7 @@ object testclasses:
   class NotAnnotated extends Component
   object NotAnnotated extends ComponentType
 
-  @component
-  class OneKinded[T <: Component] extends Component
-  object OneKinded extends ComponentType
+  class OneKinded[T] extends Component
 
   case class Vec2D(val x: Float, val y: Float):
     def +(that: Vec2D): Vec2D = Vec2D(x + that.x, y + that.y)
