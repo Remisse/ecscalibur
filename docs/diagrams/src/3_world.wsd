@@ -21,10 +21,12 @@ interface MetaContext <<interface>> {
 }
 
 interface Mutator <<interface>> {
-  defer(r: Request)
+  defer(r: EntityRequest)
+  process(r: SystemRequest)
 }
 
-interface Request <<interface>>
+interface EntityRequest <<interface>>
+interface SystemRequest <<interface>>
 
 interface ArchetypeManager <<interface>>
 
@@ -41,7 +43,8 @@ World "1" *-- "1" Mutator
 World "1" *-- "1" ArchetypeManager
 World -> Loop
 EntityBuilder <- World
-Mutator --> Request
+Mutator --> EntityRequest
+Mutator --> SystemRequest 
 System "*" --o "1" World
 Query -- World
 

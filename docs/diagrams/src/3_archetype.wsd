@@ -6,7 +6,6 @@ interface Archetype <<interface>> {
   signature: Signature
   add(e: Entity, c: List[Component])
   remove(e: Entity): List[Component]
-  softRemove(e: Entity)
   update(e: Entity, c: Component)
   contains(e: Entity): Bool
   iterate(f: (e: Entity, c: List[Component]) => Unit)
@@ -27,6 +26,7 @@ interface ArchetypeManager <<interface>> {
   delete(e: Entity)
   addComponents(e: Entity, c: List[Component])
   removeComponents(e: Entity, c: List[Component])
+  hasComponents(e: Entity, t: List[ComponentType]): Bool
   update(e: Entity, c: Component)
   iterate(f: (e: Entity, c: List[Component]) => Unit)
 }
@@ -38,7 +38,7 @@ interface Signature <<interface>> {
 interface Entity <<interface>>
 interface Component <<interface>>
 
-ArchetypeManager "1" *- "*" Archetype
+ArchetypeManager "1" *-- "*" Archetype
 Archetype <|.. Aggregate
 Archetype <|.. Fragment
 Archetype -> Signature
