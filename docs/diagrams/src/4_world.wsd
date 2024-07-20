@@ -1,0 +1,50 @@
+@startuml
+
+!theme vibrant
+
+interface World {
+    loop(l: LoopType)
+}
+
+interface MetaContext {
+    deltaTime: Float
+    -setDeltaTime(dt: Float)
+}
+interface Mutator
+
+interface FramePacer {
+    pace(f: () => Unit): Float
+}
+
+class FramePacerImpl {
+    -iterationsPerSecond: Int
+}
+
+class WorldImpl {
+    -iterationsPerSecond: Int
+}
+
+interface WorldFactory {
+    create(iterationsPerSecond: Int): World
+}
+
+enum LoopType {
+    Forever()
+    Times(n)
+}
+
+World "1" *-- "1" MetaContext
+World -> LoopType
+
+World <|.. WorldImpl
+Mutator <|.. WorldImpl
+
+MetaContext <|.. MetaContextImpl
+
+FramePacer <-- WorldImpl : measures deltaTime
+WorldFactory --> World : creates
+FramePacer <|.. FramePacerImpl
+
+hide empty members
+
+@enduml

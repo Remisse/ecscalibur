@@ -1,0 +1,35 @@
+@startuml
+
+!theme vibrant
+
+interface SystemHolder {
+    bindSystemsTo(world: World)
+}
+
+interface Model {
+    bindEntitiesTo(world: World)
+}
+
+interface Controller
+
+interface View {
+    handleStoppedEvent(e: Entity)
+    handleResumedEvent(e: Entity)
+    handleChangedVelocityEvent(e: Entity, ev: ChangedVelocityEvent)
+    handleChangedColorEvent(e: Entity, ev: ChangedColorEvent)
+}
+
+interface World
+
+interface System
+
+SystemHolder <|-- Model
+SystemHolder <|-- Controller
+Controller --> View : forwards events to
+SystemHolder -> World : binds
+System "*" -o "1" SystemHolder
+Terminal .|> View
+
+hide empty members
+
+@enduml

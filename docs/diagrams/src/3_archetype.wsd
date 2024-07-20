@@ -39,14 +39,14 @@ interface Entity <<interface>>
 interface Component <<interface>>
 
 ArchetypeManager "1" *-- "*" Archetype
-Archetype <|.. Aggregate
-Archetype <|.. Fragment
-Archetype -> Signature
+Archetype <|-- Aggregate
+Archetype <|-- Fragment
+Archetype -> Signature : identified by
 Aggregate "1" *-- "1..*" Fragment
 Fragment "1" o-- "1..*" Entity
 Fragment "1" o-- "1..*" Component
 
-note "Fragments share the same\nSignature as their Aggregate" as N1
+note "Fragments share the Signature\nof their Aggregate" as N1
 Fragment . N1
 
 hide empty members

@@ -1,0 +1,84 @@
+@startuml
+
+!theme vibrant
+
+interface Updatable #back:LightGreen;line:000000 {
+    onUpdate(deltaTime: DeltaTime)
+}
+
+interface Extender <<updatable>> {
+    owner: SceneObject
+}
+
+interface SceneObject <<updatable>> {
+    position: Vector2
+    repeatedAction: RepeatedAction
+    addExtender(e: Extender)
+}
+
+interface RepeatedAction {
+    execute()
+    makeEvent(): Event
+    addObserver(o: Observer)
+}
+
+interface Observer {
+    signal(e: Event)
+}
+
+interface View <<updatable>> {
+    bind(s: SceneObject)
+}
+
+enum Event {
+    Stop
+    ResumeMovement
+    ChangeVelocity
+    ChangeColor
+}
+
+interface Controller {
+    loop(f: Function[DeltaTime, Unit])
+}
+
+class ControllerImpl
+
+abstract MovingObject
+
+interface Model {
+    objects: Iterable[SceneObject]
+}
+
+class Movement {
+    -velocity: Vector2
+}
+
+class Colorful {
+    -color: Color
+}
+
+Extender <|- RepeatedAction
+View --|> Observer
+View --> SceneObject : observes
+Extender "*" -o "1" SceneObject
+SceneObject --> RepeatedAction : repeats logic
+RepeatedAction "*" o- "*" Observer
+Terminal ..|> View
+Extender <|.. Colorful
+Extender <|.. Movement
+RepeatedAction --> Event : emits
+Observer --> Event : listens to
+SceneObject <|.. MovingObject
+Movement <-- MovingObject : moves with
+MovingObject <|-- ObjectWithStop
+MovingObject <|-- ObjectWithChangingVelocity
+MovingObject <|-- ObjectWithChangingColor
+Controller <|.. ControllerImpl
+ControllerImpl -> SceneObject : updates
+ControllerImpl -> View : updates
+Model "1" o-- "1..*" SceneObject
+Colorful <-- ObjectWithChangingColor : has
+
+hide empty members
+
+@enduml

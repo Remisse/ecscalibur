@@ -3,14 +3,11 @@
 !theme vibrant
 
 interface World <<interface>> {
-  -am: ArchetypeManager
+  ~am: ArchetypeManager
   context: MetaContext
   mutator: Mutator
   entity(): EntityBuilder 
-  update(e: Entity, c: Component)
   hasComponents(e: Entity, types: List[ComponentType]): Bool
-  system(name: String, priority: Int, q: Query)
-  system(s: System)
   loop(loopType: Loop)
 }
 
@@ -21,32 +18,26 @@ interface MetaContext <<interface>> {
 }
 
 interface Mutator <<interface>> {
-  defer(r: EntityRequest)
-  process(r: SystemRequest)
+  defer(r: DeferredRequest): Bool
+  doImmediately(r: ImmediateRequest): Bool
 }
 
-interface EntityRequest <<interface>>
-interface SystemRequest <<interface>>
+interface DeferredRequest <<interface>>
+interface ImmediateRequest <<interface>>
 
 interface ArchetypeManager <<interface>>
-
-interface System <<interface>>
 
 interface EntityBuilder <<interface>> {
   withComponents(c: Set[Component])
 }
 
-interface Query <<interface>>
-
 World "1" *-- "1" MetaContext
 World "1" *-- "1" Mutator
 World "1" *-- "1" ArchetypeManager
 World -> Loop
-EntityBuilder <- World
-Mutator --> EntityRequest
-Mutator --> SystemRequest 
-System "*" --o "1" World
-Query -- World
+EntityBuilder <- World : makes Entities with
+Mutator --> DeferredRequest : defers
+Mutator --> ImmediateRequest : processes immediately
 
 hide interface circle
 hide empty members

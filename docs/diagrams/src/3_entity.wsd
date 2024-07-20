@@ -9,7 +9,7 @@ interface EntityBuilder <<interface>> {
   withComponents(c: Set[Component]): Unit
 }
 
-Entity <- EntityBuilder
+Entity <- EntityBuilder : builds
 
 hide empty members
 hide interface circle

@@ -1,0 +1,28 @@
+@startuml
+
+!theme vibrant
+
+interface Mutator {
+  defer(r: DeferredRequest): Bool
+  doImmediately(r: ImmediateRequest): Bool
+}
+
+enum DeferredRequest {
+    createEntity(c: Component*)
+    deleteEntity(c: Component*)
+    addComponent(c: Component)
+    removeComponent(c: Component)
+}
+
+enum ImmediateRequest {
+    update(e: Entity, c: Component)
+    pause(system: String)
+    resume(system: String)
+}
+
+Mutator --> DeferredRequest : defers
+Mutator --> ImmediateRequest : processes immediately
+
+hide empty members
+
+@enduml

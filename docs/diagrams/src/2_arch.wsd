@@ -1,0 +1,67 @@
+@startuml
+
+!theme vibrant
+
+interface World {
+    deltaSeconds: Seconds
+    entity(components: Set[Component])
+    delete(e: Entity)
+    addComponents(e: Entity, c: Set[Component])
+    removeComponents(e: Entity, c: Set[ComponentType])
+    system(s: System, p: Priority)
+    pause(system: String)
+    resume(system: String)
+    loop(t: LoopType)
+}
+
+interface System {
+    onStart: Query
+    process: Query
+    onPause: Query
+}
+
+interface Query {
+    none(t: Set[ComponentType])
+    any(t: Set[ComponentType])
+    all(f: Function[Entity, Set[Component], Unit])
+}
+
+interface Archetype {
+    signature: Set[ComponentType]
+    addEntity(e: Entity, c: Set[Component])
+    deleteEntity(e: Entity): Set[Component]
+    iterate(f: Function[Entity, Set[Component], Unit])
+}
+
+class ComponentType <<metaclass>> {
+    id: ComponentId
+}
+
+interface Component
+
+interface Entity {
+    id: EntityId
+}
+
+System "*" -o "*" World
+World <-- Query : gets entities\nand components
+World --> Component : distributes\nto archetypes
+World "1" *-- "*" Archetype
+World --> Entity : distributes\nto archetypes
+Query --> ComponentType : filters
+Query -> Component : selects
+Query -> Entity : selects
+Archetype "1" o-- "1..*" Component
+Archetype "1" o-- "1..*" Entity
+Component --|> ComponentType
+System -> Query : executes
+
+note "At most one instance of a\nComponent class per Entity" as N1
+Component .. N1
+Entity .. N1
+
+hide empty members
+hide interface circle
+hide class circle
+
+@enduml

@@ -14,7 +14,7 @@ Gli elementi sopra descritti vengono memorizzati in una particolare struttura da
 
 ### Business
 
-1. Si vuole realizzare una libreria Scala che funga da framework per la creazione di software strutturati secondo l'architettura ECS (Entity Component System, descritta nel paragrafo successivo);
+1. Si vuole realizzare una libreria Scala che funga da framework per la creazione di software strutturati secondo l'architettura ECS;
 2. Il framework deve avere una API concisa e intuitiva, ma che permetta al tempo stesso di creare applicazioni anche molto complesse;
    1. A dimostrazione di ciò, andrà realizzato un programma di esempio che simuli il comportamento in uno spazio bidimensionale di oggetti con caratteristiche e logica eterogenee;
 3. Lo sviluppo deve concludersi nell'arco di due mesi.
@@ -64,5 +64,7 @@ Andranno adottate le seguenti tecnologie:
 
 - Scala 3
 - ScalaTest
+
+Poiché nel corso della relazione vengono fatti numerosi riferimenti ai requisiti qui elencati, si consiglia di tenere aperta questa pagina per una consultazione più rapida.
 
 Pagina successiva: [Design architetturale](./2_architettura.md)

@@ -1,0 +1,50 @@
+@startuml
+!theme vibrant
+
+interface System <<interface>> {
+  name: String
+  #onStart: Query
+  #process: Query
+  #onPause: Query
+  -state: SystemState
+  ~update()
+  ~pause()
+  ~resume()
+}
+
+interface Query <<interface>> {
+  apply()
+}
+
+interface RegularQuery <<interface>>
+interface Routine <<interface>>
+
+interface QueryBuilder <<interface>> {
+  none(t: List[ComponentType]): QueryBuilder
+  any(t: List[ComponentType]): QueryBuilder
+  all(f: Function[Entity, Unit]): RegularQuery
+  all[C < Component](f: Function[Entity, C, Unit]): RegularQuery
+  all[(C1, C2) < Component](f: Function[Entity, C1, C2, Unit]): RegularQuery
+  all...()
+}
+
+interface World <<interface>> {
+  ~am: ArchetypeManager
+  system(name: String, priority: Int, q: Query)
+  system(s: System)
+}
+
+interface ArchetypeManager <<interface>>
+
+System -> Query
+Query <|-- RegularQuery
+Query <|-- Routine
+RegularQuery <-- QueryBuilder : builds
+QueryBuilder --> World : gets ArchetypeManager
+QueryBuilder --> ArchetypeManager : uses
+System "*" --o "*" [priority: Int] World : calls update() every loop <
+
+hide interface circle
+hide empty members
+
+@enduml

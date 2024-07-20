@@ -10,8 +10,8 @@ interface Component <<interface>> {
 interface ComponentType <<interface>>
   note left: One ComponentType specialization\nfor every Component specialization
 
-WithType <|.. Component
-WithType <|.. ComponentType
+WithType <|-- Component
+WithType <|-- ComponentType
 
 ComponentType <. Component
 

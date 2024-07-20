@@ -1,0 +1,31 @@
+@startuml
+
+!theme vibrant
+
+annotation component
+interface Component
+interface ComponentType
+interface WithType <<sealed>> {
+    typeId: Int 
+}
+class C1
+class $C1 <<companion>>
+
+WithType <|-- Component
+WithType <|-- ComponentType
+
+C1 <-- component
+$C1 <-- component
+
+Component <|.. C1
+ComponentType <|.. $C1
+
+note "Concrete classes are\nannotated by @component" as N1
+
+N1 .. C1
+N1 .. $C1
+N1 .. component
+
+hide empty members
+
+@enduml
