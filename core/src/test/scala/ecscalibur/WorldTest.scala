@@ -69,8 +69,6 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
     world loop once
 
-  inline val Tolerance = 1e-8f
-
   def hasComponentsTest(action: (Entity, Seq[ComponentType]) => Boolean)(using world: World) =
     world.entity withComponents (testValue, C1())
     world.system(s1):
@@ -90,6 +88,8 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     hasComponentsTest: (e: Entity, types: Seq[ComponentType]) =>
       world.hasComponents(e, types*)
 
+  inline val Tolerance = 1e-8f
+
   it should "update its delta time value on every iteration" in:
     inline val fps = 60
     given world: World = World(iterationsPerSecond = fps)
@@ -104,7 +104,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     val world: World = World()
     an[IllegalArgumentException] should be thrownBy(world.context.setDeltaTime(-1f))
 
-  import ecscalibur.core.SystemRequest.*
+  import ecscalibur.core.ImmediateRequest.*
 
   it should "correctly defer pausing a system" in:
     given world: World = World()
@@ -113,7 +113,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       routine:
         sum += 1
         if world isSystemRunning s1 then
-          val success = world.mutator defer pause(s1)
+          val success = world.mutator doImmediately pause(s1)
           if !success then shouldNotBeExecuted
 
     world loop once
@@ -129,13 +129,13 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       routine:
         sum += 1
         if world isSystemRunning s1 then
-          (world.mutator defer pause(s1)) shouldNot be(false)
+          (world.mutator doImmediately pause(s1)) shouldNot be(false)
           ()
 
     world.system(s2):
       routine:
         if world isSystemPaused s1 then
-          (world.mutator defer resume(s1)) shouldNot be(false)
+          (world.mutator doImmediately resume(s1)) shouldNot be(false)
           ()
 
     world loop 2.times
@@ -143,14 +143,14 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world loop once
     sum shouldBe 2
 
-  import ecscalibur.core.EntityRequest.*
+  import ecscalibur.core.DeferredRequest.*
 
   it should "correctly defer creating a new entity" in:
     given world: World = World()
     world.system(s1, priority = 0):
       routine:
-        world.mutator defer create(testValue)
-        world.mutator defer pause(s1)
+        world.mutator defer createEntity(testValue)
+        world.mutator doImmediately pause(s1)
         ()
 
     var test = Value(0)
@@ -169,7 +169,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     var sum = 0
     world.system(s1):
       query all: (e: Entity, _: C1) =>
-        world.mutator defer delete(e)
+        world.mutator defer deleteEntity(e)
         sum += 1
     world.system(s2):
       query all: (_, _: C1) =>
@@ -183,7 +183,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.system(s1):
       query all: (e: Entity, _: C1) =>
         action(e, testValue)
-        val _ = world.mutator defer pause(s1)
+        val _ = world.mutator doImmediately pause(s1)
 
     var test = Value(0)
     world.system(s2):
@@ -213,7 +213,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.system(s1):
       query all: (e: Entity, _: C1) =>
         action(e, C1)
-        val _ = world.mutator defer pause(s1)
+        val _ = world.mutator doImmediately pause(s1)
 
     var sum = 0
     world.system(s2):
@@ -265,7 +265,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world.entity withComponents C1()
     world.system(s1):
       query all: (e: Entity, _: C1) =>
-        for _ <- 0 until defersCount do world.mutator defer delete(e)
+        for _ <- 0 until defersCount do world.mutator defer deleteEntity(e)
 
     noException shouldBe thrownBy(world loop deferTestIterations)
 

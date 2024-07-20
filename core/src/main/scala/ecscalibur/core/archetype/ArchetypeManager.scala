@@ -59,6 +59,19 @@ private[ecscalibur] trait ArchetypeManager:
     */
   def removeComponents(e: Entity, compTypes: ComponentType*): Boolean
 
+  /** Adds and removes the given components in one single operation.
+    *
+    * @param e
+    *   the Entity to manipulate
+    * @param toAdd
+    *   the Components to add
+    * @param toRemove
+    *   the types of the Components to remove
+    * @return
+    *   true if this operation has been successfully executed, false otherwise.
+    */
+  def addRemove(e: Entity)(toAdd: Component*)(toRemove: ComponentType*): Boolean
+
   /** Checks whether the given Entity has all of the given Components.
     *
     * @param e
@@ -131,7 +144,8 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
         newArchetype
       }
     )
-    archetypesByEntity.update(e, desiredArchetype.add(e, components*))
+    desiredArchetype.add(e, components*)
+    archetypesByEntity += e -> desiredArchetype
 
   override def addComponents(e: Entity, components: Component*): Boolean =
     ensureEntityIsValid(e)
@@ -139,9 +153,7 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
     if components.isEmpty || currentArch.signature.containsAll(Signature(components*)) then
       return false
     val existing = currentArch.remove(e)
-    archetypesByEntity -= e
-    newEntityToArchetype(e, existing concat components*)
-    true
+    move(e, existing concat components*)
 
   override def removeComponents(e: Entity, compTypes: ComponentType*): Boolean =
     ensureEntityIsValid(e)
@@ -149,10 +161,26 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
     if compTypes.isEmpty || !currentArch.signature.containsAny(Signature(compTypes*)) then
       return false
     val entityComps = currentArch.remove(e)
+    move(e, filterOutExistingComponents(entityComps)(compTypes*)*)
+
+  override def addRemove(e: Entity)(toAdd: Component*)(toRemove: ComponentType*): Boolean =
+    ensureEntityIsValid(e)
+    val currentArch = archetypesByEntity(e)
+    if (toAdd.isEmpty && toRemove.isEmpty) ||
+      (currentArch.signature
+        .containsAll(Signature(toAdd*)) && !currentArch.signature.containsAny(Signature(toRemove*)))
+    then return false
+    val entityComps = currentArch.remove(e)
+    val remainingComponents = filterOutExistingComponents(entityComps)(toRemove*)
+    move(e, remainingComponents concat toAdd*)
+
+  private inline def move(e: Entity, c: Component*): Boolean =
+    var res = false
     archetypesByEntity -= e
-    val remainingComponents = filterOutExistingComponents(entityComps)(compTypes*)
-    if remainingComponents.nonEmpty then newEntityToArchetype(e, remainingComponents*)
-    true
+    if c.nonEmpty then
+      newEntityToArchetype(e, c*)
+      res = true
+    res
 
   private inline def filterOutExistingComponents(toBeFiltered: Array[Component])(
       toFilterOut: WithType*
@@ -169,6 +197,7 @@ private final class ArchetypeManagerImpl extends ArchetypeManager:
     archetypesByEntity -= e
 
   override def update(e: Entity, c: Component): Unit =
+    ensureEntityIsValid(e)
     archetypesByEntity(e).update(e, c)
 
   override def iterate(isSelected: Signature => Boolean)(

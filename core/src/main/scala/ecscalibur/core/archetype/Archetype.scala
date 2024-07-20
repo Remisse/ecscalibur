@@ -30,7 +30,7 @@ private[ecscalibur] object archetypes:
       * @return
       *   this Archetype
       */
-    def add(e: Entity, entityComponents: Component*): Archetype
+    def add(e: Entity, entityComponents: Component*): Unit
 
     /** Checks whether the given Entity is stored in this Archetype.
       *
@@ -152,7 +152,7 @@ private[ecscalibur] object archetypes:
 
       override def fragments: Iterator[Fragment] = _fragments.iterator
 
-      override def add(e: Entity, components: Component*): Archetype =
+      override def add(e: Entity, components: Component*) =
         val fr =
           if _fragments.isEmpty || lastFragment.isFull then
             _fragments.find(!_.isFull) match
@@ -161,7 +161,6 @@ private[ecscalibur] object archetypes:
           else lastFragment
         fr.add(e, components*)
         fragmentsByEntity += e -> fr
-        this
 
       private inline def lastFragment: Fragment = _fragments.last
 
@@ -240,10 +239,9 @@ private[ecscalibur] object archetypes:
       override def update(e: Entity, c: Component): Unit =
         setComponent(entityIndexes(e), c)
 
-      override def add(e: Entity, entityComponents: Component*): Archetype =
+      override def add(e: Entity, entityComponents: Component*): Unit =
         val idx = entityIndexes += e
         for c <- entityComponents do setComponent(idx, c)
-        this
 
       private inline def setComponent(entityIndex: Int, c: Component): Unit =
         components(entityIndex)(componentMappings(c.typeId)) = c

@@ -43,17 +43,6 @@ object world:
       */
     def entity: EntityBuilder
 
-    /** Updates the reference to the given Component type for the given Entity.
-      *
-      * @param e
-      *   the Entity for which the given Component must be updated
-      * @param c
-      *   the Component to update
-      * @throws IllegalArgumentException
-      *   if the given Entity does not exist
-      */
-    def update(e: Entity, c: Component): Unit
-
     /** Checks whether the given Entity has all of the given Components.
       *
       * @param e
@@ -176,15 +165,11 @@ object world:
 
       private val entityCreate: mutable.Map[Entity, Seq[Component]] = mutable.Map.empty
       private var entityDelete: List[Entity] = List.empty
-      private val entityAddComps: mutable.Map[Entity, List[(Component, () => Unit)]] =
-        mutable.Map.empty
-      private val entityRemoveComps: mutable.Map[Entity, List[(ComponentType, () => Unit)]] =
-        mutable.Map.empty
+      private val entityAddComps: mutable.Map[Entity, List[Component]] = mutable.Map.empty
+      private val entityRemoveComps: mutable.Map[Entity, List[ComponentType]] = mutable.Map.empty
       private var areBuffersDirty = false
 
       override def entity: EntityBuilder = EntityBuilder()(using this)
-
-      override def update(e: Entity, c: Component): Unit = archetypeManager.update(e, c)
 
       override def hasComponents(e: Entity, types: ComponentType*): Boolean =
         archetypeManager.hasComponents(e, types*)
@@ -222,20 +207,19 @@ object world:
         for e <- entityDelete do
           archetypeManager.delete(e)
           val _ = entityIdGenerator.erase(e.id)
-          if entityAddComps.contains(e) then
-            for (_, orElse) <- entityAddComps(e) do orElse()
-            entityAddComps -= e
-          if entityRemoveComps.contains(e) then
-            for (_, orElse) <- entityRemoveComps(e) do orElse()
-            entityRemoveComps -= e
+          entityAddComps -= e
+          entityRemoveComps -= e
         entityDelete = List.empty
 
         for (e, comps) <- entityAddComps do
-          archetypeManager.addComponents(e, comps.map(_._1)*)
+          if entityRemoveComps.contains(e) then
+            archetypeManager.addRemove(e)(comps*)(entityRemoveComps(e)*)
+            entityRemoveComps -= e
+          else archetypeManager.addComponents(e, comps*)
         entityAddComps.clear
 
         for (e, types) <- entityRemoveComps do
-          archetypeManager.removeComponents(e, types.map(_._1)*)
+          archetypeManager.removeComponents(e, types*)
         entityRemoveComps.clear
 
       private inline def processPendingSystems(): Unit =
@@ -245,31 +229,34 @@ object world:
           activeSystems = activeSystems.sortBy(_.priority)
           ()
 
-      override def defer(q: SystemRequest | EntityRequest): Boolean =
-        q match
-          case SystemRequest.pause(systemName) =>
-            tryForwardCommandToSystem(systemName, _.pause())
-          case SystemRequest.resume(systemName) =>
-            tryForwardCommandToSystem(systemName, _.resume())
-
-          case EntityRequest.create(components*) =>
+      override def defer(q: DeferredRequest): Boolean = q match
+          case DeferredRequest.createEntity(components*) =>
             entityCreate += (Entity(entityIdGenerator.next) -> components)
             areBuffersDirty = true
             true
-          case EntityRequest.delete(e) =>
+          case DeferredRequest.deleteEntity(e) =>
             if isEntityValid(e) && !entityDelete.contains(e) then
               entityDelete = e +: entityDelete
               areBuffersDirty = true
               return true
             false
-          case EntityRequest.addComponent(e, component, orElse) =>
-            val res = tryScheduleAddOrRemoveComponent(entityAddComps, e, component, orElse)
+          case DeferredRequest.addComponent(e, component) =>
+            val res = tryScheduleAddOrRemoveComponent(entityAddComps, e, component)
             areBuffersDirty = res
             res
-          case EntityRequest.removeComponent(e, cType, orElse) =>
-            val res = tryScheduleAddOrRemoveComponent(entityRemoveComps, e, cType, orElse)
+          case DeferredRequest.removeComponent(e, cType) =>
+            val res = tryScheduleAddOrRemoveComponent(entityRemoveComps, e, cType)
             areBuffersDirty = res
             res
+
+      override def doImmediately(q: ImmediateRequest): Boolean = q match
+        case ImmediateRequest.pause(systemName) =>
+          tryForwardCommandToSystem(systemName, _.pause())
+        case ImmediateRequest.resume(systemName) =>
+          tryForwardCommandToSystem(systemName, _.resume())
+        case ImmediateRequest.update(e, c) => 
+          archetypeManager.update(e, c)
+          true
 
       override def isSystemRunning(name: String): Boolean =
         val idx = activeSystems.indexWhere(_.name == name)
@@ -296,18 +283,16 @@ object world:
       import ecscalibur.core.components.WithType
 
       private inline def tryScheduleAddOrRemoveComponent[T <: WithType](
-          buffer: mutable.Map[Entity, List[(T, () => Unit)]],
+          buffer: mutable.Map[Entity, List[T]],
           e: Entity,
-          comp: T,
-          orElse: () => Unit
+          comp: T
       ): Boolean =
         var res = false
         if isEntityValid(e) then
-          val l: List[(T, () => Unit)] = buffer.getOrElseUpdate(e, List.empty)
-          if !l.exists(_._1.typeId == comp.typeId) then
-            buffer(e) = comp -> orElse :: l
+          val l: List[T] = buffer.getOrElseUpdate(e, List.empty)
+          if !l.exists(_.typeId == comp.typeId) then
+            buffer(e) = comp :: l
             res = true
-        if !res then orElse()
         res
 
   private[world] object builders:
@@ -321,7 +306,7 @@ object world:
 
       private class EntityBuilderImpl(using Mutator) extends EntityBuilder:
         override def withComponents(components: Component*): Unit =
-          val _ = summon[Mutator] defer EntityRequest.create(components*)
+          val _ = summon[Mutator] defer DeferredRequest.createEntity(components*)
 
         override def withComponents(components: List[Component]): Unit =
-          val _ = summon[Mutator] defer EntityRequest.create(components*)
+          val _ = summon[Mutator] defer DeferredRequest.createEntity(components*)

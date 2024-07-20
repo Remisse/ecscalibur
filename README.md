@@ -134,38 +134,43 @@ routine:
 
 ### Mutator
 
-The `Mutator` instance accessible through `World` allows you to schedule modifications to both entities and systems for execution at the start of the next world loop:
+The `Mutator` instance accessible through `World` allows you to schedule modifications to entites for processing at the start of the next world loop:
 
 ```scala
 val mutator: Mutator = world.mutator
 
-mutator defer EntityRequest.create(C1(), C2())     // Creates an entity with the specified components
-mutator defer EntityRequest.delete(e)              // Deletes an entity
+mutator defer DeferredRequest.create(C1(), C2())     // Creates an entity with the specified components
+mutator defer DeferredRequest.delete(e)              // Deletes an entity
 // Both options are equivalent
-mutator defer EntityRequest.addComponent(e, C3())  // Adds a component to an entity
+mutator defer DeferredRequest.addComponent(e, C3())  // Adds a component to an entity
 e += C3()
 // Both options are equivalent
-mutator defer EntityRequest.removeComponent(e, C3) // Removes a component from  an entity
+mutator defer DeferredRequest.removeComponent(e, C3) // Removes a component from  an entity
 e -= C3
-
-if world.isSystemRunning("my_system") then
-  mutator defer SystemRequest.pause("my_system")  // Pauses a system
-if world.isSystemPaused("my_system") then
-  mutator defer SystemRequest.resume("my_system") // Resumes a system
 ```
 
-The only operations that are executed immediately are the following
+Requests to update the reference to an Entity's component are, instead, processed immediately:
 
 ```scala
 // Both options are equivalent
-world.update(e, C1())          // Replaces the reference to this component type
+mutator doImmediately ImmediateRequest.update(e, C1())
 e <== C1()
 // Both options are equivalent
 world.hasComponents(e, C1, C2) // Does the entity have these components?
 e ?> (C1, C2)
 ```
 
-Except for the last two operations, all of the above can affect performance quite heavily because of the archetype-based nature of this framework.
+It also allows you to modify the state of a System:
+
+```scala
+if world.isSystemRunning("my_system") then
+  mutator doImmediately ImmediateRequest.pause("my_system")  // Pauses a system
+if world.isSystemPaused("my_system") then
+  mutator doImmediately ImmediateRequest.resume("my_system") // Resumes a system
+```
+
+All of the above deferred operations can affect performance quite heavily because of the archetype-based nature of this framework.
+>>>>>>> a93827e (Refactoring)
 
 For instance, adding one single component to an entity would result in that entity being removed from the archetype it is stored in and moved to another. If the destination archetype does not exist, it has
 to be created on the spot along with all of its internal data structures.  

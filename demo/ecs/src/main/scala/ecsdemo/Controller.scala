@@ -8,20 +8,21 @@ object controller:
   trait Controller extends SystemHolder
 
   object Controller:
+
+    private[ecsdemo] inline val controllerPriority = 0
+
     def apply()(using View): Controller = (world: World) =>
       given World = world
 
       for s <- Seq(
-        ConsumeParameterlessEventsSystem(),
-        ConsumeChangedVelocityEventSystem(),
-        ConsumeChangedColorEventSystem()
+        ConsumeParameterlessEventsSystem(controllerPriority),
+        ConsumeChangedVelocityEventSystem(controllerPriority),
+        ConsumeChangedColorEventSystem(controllerPriority)
       )
       do world.system(s)
 
-  private inline val controllerPriority = 0
-
-  private[ecsdemo] final class ConsumeParameterlessEventsSystem(using World, View)
-      extends System("viewNoParameters", controllerPriority):
+  private[ecsdemo] final class ConsumeParameterlessEventsSystem(priority: Int)(using World, View)
+      extends System("viewNoParameters", priority):
     override protected val process: Query =
       query any (StoppedEvent, ResumedMovementEvent) all: (e: Entity) =>
         if e ?> StoppedEvent then
@@ -31,16 +32,16 @@ object controller:
           e -= ResumedMovementEvent
           summon[View].handleResumedEvent(e)
 
-  private[ecsdemo] final class ConsumeChangedVelocityEventSystem(using World, View)
-      extends System("viewChangedVelocity", controllerPriority):
+  private[ecsdemo] final class ConsumeChangedVelocityEventSystem(priority: Int)(using World, View)
+      extends System("viewChangedVelocity", priority):
     override protected val process: Query =
       query all: (e: Entity, event: ChangedVelocityEvent) =>
         e -= ChangedVelocityEvent
         summon[View].handleChangedVelocityEvent(e, event)
         ()
 
-  private[ecsdemo] final class ConsumeChangedColorEventSystem(using World, View)
-      extends System("viewChangedColor", controllerPriority):
+  private[ecsdemo] final class ConsumeChangedColorEventSystem(priority: Int)(using World, View)
+      extends System("viewChangedColor", priority):
     override protected val process: Query =
       query all: (e: Entity, event: ChangedColorEvent) =>
         e -= ChangedColorEvent

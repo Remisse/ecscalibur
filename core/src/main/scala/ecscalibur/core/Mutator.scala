@@ -7,19 +7,28 @@ import components.{Component, ComponentType}
   * and its internal state.
   */
 trait Mutator:
-  /** Schedules a request for structural changes to be executed on the next [[World]] loop. Until
+  /** Schedules a [[DeferredRequest]] to be processed on the next [[World]] loop. Until
     * then, the [[World]]'s state will not be affected.
+    *
+    * @param q
+    *   the request to be processed by this Mutator
+    * @return
+    *   true if the request has been accepted for processing, false otherwise
+    */
+  infix def defer(q: DeferredRequest): Boolean
+
+  /** Processes the given [[ImmediateRequest]] immediately.
     *
     * @param q
     *   the request to be executed by this Mutator
     * @return
-    *   true if the request has been accepted for execution, false otherwise
+    *   true if the request has been processed successfully, false otherwise
     */
-  infix def defer(q: SystemRequest | EntityRequest): Boolean
+  infix def doImmediately(q: ImmediateRequest): Boolean
 
-/** Class of requests related to the execution of a [[System]].
+/** Class of requests to be executed immediately.
   */
-enum SystemRequest:
+enum ImmediateRequest:
   /** Request to pause the system identified by the given name.
     *
     * @param systemName
@@ -34,45 +43,52 @@ enum SystemRequest:
     */
   case resume(systemName: String)
 
-/** Class of requests related to an [[Entity]] and its [[Component]]s.
+  /** Request to update the reference to the given Component type for the given Entity.
+    *
+    * @param e
+    *   the Entity for which the given Component must be updated
+    * @param c
+    *   the Component to update
+    * @throws IllegalArgumentException
+    *   if the given Entity does not exist
+    */
+  case update(e: Entity, c: Component)
+
+/** Class of requests to be buffered and then processed at the start of a new [[World]] loop.
   */
-enum EntityRequest:
+enum DeferredRequest:
   /** Request to create a new Entity with the given components.
     *
     * @param components
     *   components of the new Entity
     */
-  case create(components: Component*)
+  case createEntity(components: Component*)
 
   /** Request to delete an existing Entity.
     *
     * @param e
     *   entity to be deleted
     */
-  case delete(e: Entity)
+  case deleteEntity(e: Entity)
 
-  /** Request to add a Component to the given Entity. If this request fails (either because the
-    * entity already has the same component or the entity is deleted before this operation can be
-    * executed), the 'orElse' function will be executed instead.
+  /** Request to add a Component to the given Entity. This request can fail, either because the
+    * entity already has the same component or because the entity was deleted before this 
+    * operation could be executed
     *
     * @param e
     *   entity to which the Component will be added
     * @param component
     *   component to be added
-    * @param orElse
-    *   callback that will be executed if this request fails
     */
-  case addComponent(e: Entity, component: Component, orElse: () => Unit = () => ())
+  case addComponent(e: Entity, component: Component)
 
-  /** Request to remove a Component from the given Entity. If this request fails (either because the
-    * entity does not have this component or the entity is deleted before this operation can be
-    * executed), the 'orElse' function will be executed instead.
+  /** Request to remove a Component from the given Entity. This request can fail, either because the
+    * entity does not have this component or because the entity was deleted before this operation 
+    * could be executed
     *
     * @param e
     *   entity from which the Component will be removed
     * @param cType
     *   component to be removed
-    * @param orElse
-    *   callback that will be executed if this request fails
     */
-  case removeComponent(e: Entity, cType: ComponentType, orElse: () => Unit = () => ())
+  case removeComponent(e: Entity, cType: ComponentType)

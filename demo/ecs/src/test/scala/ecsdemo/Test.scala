@@ -22,13 +22,16 @@ inline val validatorRemove = "validatorRemove"
 val producersIterations = 2.times
 val consumersIterations = 3.times
 
+inline val controllerPriority = controller.Controller.controllerPriority
+inline val modelPriority = model.Model.modelPriority
+
 class FramePacerTest extends AnyFlatSpec with should.Matchers:
   "StopSystem" should "work correctly" in:
     val fixture = Fixture()
     given world: World = fixture.world
 
     world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
-    world system StopSystem()
+    world system StopSystem(modelPriority)
 
     world.system(validatorAdd):
       query all: (_: Entity, _: StoppedEvent, _: ResumeMovementIntention) =>
@@ -44,7 +47,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world.entity withComponents (ResumeMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents) 
-    world system ResumeSystem()
+    world system ResumeSystem(modelPriority)
 
     world.system(validatorAdd):
       query all: (_: Entity, _: ResumedMovementEvent, _: StopMovementIntention) =>
@@ -60,7 +63,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world.entity withComponents (ChangeVelocityIntention() :: fixture.baseComponents)
-    world system ChangeVelocitySystem()
+    world system ChangeVelocitySystem(modelPriority)
 
     world.system(validatorAdd):
       query all: (_: Entity, _: ChangedVelocityEvent) =>
@@ -74,7 +77,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world.entity withComponents (Colorful(Color.White) :: ChangeColorIntention() :: fixture.baseComponents)
-    world system ChangeColorSystem()
+    world system ChangeColorSystem(modelPriority)
 
     world.system(validatorAdd):
       query all: (_: Entity, _: ChangedColorEvent) =>
@@ -90,8 +93,8 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
-    world system StopSystem()
-    world system ResumeSystem()
+    world system StopSystem(modelPriority)
+    world system ResumeSystem(modelPriority)
 
     world.system(singleValidator):
       query any (StoppedEvent, ResumedMovementEvent) all: (e: Entity) =>
@@ -106,9 +109,9 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given View = fixture.view
 
     world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
-    world system StopSystem()
-    world system ResumeSystem()
-    world system ConsumeParameterlessEventsSystem()
+    world system StopSystem(modelPriority)
+    world system ResumeSystem(modelPriority)
+    world system ConsumeParameterlessEventsSystem(controllerPriority)
     world.system(singleValidator):
       query all: (_, _: StoppedEvent, _: ResumedMovementEvent) =>
         shouldNotBeExecuted
@@ -129,7 +132,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     world system consumer
     world loop once
 
-    world.mutator defer SystemRequest.pause(producer.name)
+    world.mutator doImmediately ImmediateRequest.pause(producer.name)
     world loop once
 
     world.system(singleValidator):
@@ -144,8 +147,8 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     testConsumeEventSystem(
       intention = ChangeVelocityIntention(),
       eventType = ChangedVelocityEvent,
-      producer = ChangeVelocitySystem(),
-      consumer = ConsumeChangedVelocityEventSystem()
+      producer = ChangeVelocitySystem(modelPriority),
+      consumer = ConsumeChangedVelocityEventSystem(controllerPriority)
     )
 
   "ConsumeChangedColorEvent" should "work correctly" in:
@@ -155,6 +158,6 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     testConsumeEventSystem(
       intention = ChangeColorIntention(),
       eventType = ChangedColorEvent,
-      producer = ChangeColorSystem(),
-      consumer = ConsumeChangedColorEventSystem()
+      producer = ChangeColorSystem(modelPriority),
+      consumer = ConsumeChangedColorEventSystem(controllerPriority)
     )

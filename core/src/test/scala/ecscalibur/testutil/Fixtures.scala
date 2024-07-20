@@ -17,7 +17,8 @@ object fixtures:
   import ecscalibur.testutil.testclasses.Value
 
   class TestMutator extends Mutator:
-    override def defer(q: SystemRequest | EntityRequest): Boolean = false
+    override def defer(q: DeferredRequest): Boolean = false
+    override def doImmediately(q: ImmediateRequest): Boolean = false
 
   class ArchetypeManagerFixture(entityComponents: Seq[Component]*):
     require(entityComponents.length > 0)

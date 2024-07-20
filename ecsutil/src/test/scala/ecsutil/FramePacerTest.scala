@@ -13,7 +13,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     inline val incorrect = -1
     an[IllegalArgumentException] shouldBe thrownBy(FramePacer(incorrect))
 
-  inline val Tolerance = 1e-4f
+  inline val Tolerance = 1e-8f
 
   it should "return the correct delta time value after a call to pace()" in:
     val pacer = FramePacer(defaultCap)
