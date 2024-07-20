@@ -15,7 +15,7 @@ object systems:
     /** Logic executed once when the system starts and once every time it resumes after being
       * paused.
       */
-    protected val onStart: Query = Query.None
+    protected val onStart: Query = Query.none
 
     /** Logic executed every World loop. Override by calling the [[query]] factory method.
       */
@@ -23,7 +23,7 @@ object systems:
 
     /** Logic executed once whenever the system pauses.
       */
-    protected val onPause: Query = Query.None
+    protected val onPause: Query = Query.none
 
     private var _status = Status.Starting
 

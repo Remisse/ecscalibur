@@ -33,14 +33,14 @@ object queries:
       * @return
       *   a new Query instance
       */
-    inline def apply(q: () => Unit): Query = q
+    private[ecscalibur] inline def apply(q: () => Unit): Query = q
 
     /** Creates an empty Query.
       *
       * @return
       *   an empty Query
       */
-    def None: Query = Query(() => ())
+    def none: Query = Query(() => ())
 
   /** Factory method for [[Query]]. Needed when overriding [[System.process]].
     *

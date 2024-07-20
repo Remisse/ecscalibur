@@ -3,7 +3,7 @@ package oopdemo
 import oopdemo.objects.DeltaTime
 import oopdemo.extenders.Extender
 
-trait RepeatedAction(val intervalSeconds: Float) extends Extender:
+trait RepeatedAction(private val intervalSeconds: Float) extends Extender:
   private var currentTime: Float = 0f 
   private var observers: Set[Observer] = Set.empty
 

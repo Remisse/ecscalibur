@@ -4,20 +4,7 @@
 
 An archetype-based ECS framework for Scala projects inspired by [flecs](https://github.com/SanderMertens/flecs) and [Unity DOTS](https://unity.com/dots).
 
-## Getting started
-
-1) Add this framework to your project's dependencies:  
-```
-TBD
-```
-2) Pass the `-experimental` option to the Scala compiler:
-```scala
-// build.sbt
-scalacOptions ++= Seq(
-  "-experimental",
-),
-```
-3) Run the following snippet to ensure everything has been set up correctly:
+## Show me an example!
 
 ```scala
 import ecscalibur.core.*
@@ -40,6 +27,19 @@ object Position extends ComponentType
 @component
 case class Velocity(x: Float, y: Float) extends Component
 object Velocity extends ComponentType
+```
+
+## Getting started
+
+1) Add this framework to your project's dependencies:  
+```
+TBD
+```
+2) Pass the `-experimental` option to the Scala compiler:
+```scala
+scalacOptions ++= Seq(
+  "-experimental",
+),
 ```
 
 ## Using the framework
@@ -92,13 +92,13 @@ world.system("my_system", priority = 0): // Priority can be omitted, defaults to
     // do something with 'c'
   ()
 ```
-2. By extending the `System` trait and overriding its methods:
+2. By extending the `System` trait and overriding its fields:
 ```scala
 // It has to have World as a contextual parameter
-class MySystem(using World) extends System("my_system", priority = 0):
-  override def onStart(): Query = ...
-  override def process(): Query = ...
-  override def onPause(): Query = ...
+class MySystem(priority: Int)(using World) extends System("my_system", priority):
+  override val onStart: Query = ...
+  override val process: Query = ...
+  override val onPause: Query = ...
 
 // Somewhere else in your code...
 world.system(MySystem())
@@ -139,8 +139,8 @@ The `Mutator` instance accessible through `World` allows you to schedule modific
 ```scala
 val mutator: Mutator = world.mutator
 
-mutator defer DeferredRequest.create(C1(), C2())     // Creates an entity with the specified components
-mutator defer DeferredRequest.delete(e)              // Deletes an entity
+mutator defer DeferredRequest.createEntity(C1(), C2()) // Creates an entity with the specified components
+mutator defer DeferredRequest.deleteEntity(e)          // Deletes an entity
 // Both options are equivalent
 mutator defer DeferredRequest.addComponent(e, C3())  // Adds a component to an entity
 e += C3()
