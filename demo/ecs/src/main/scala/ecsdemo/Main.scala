@@ -12,5 +12,5 @@ import ecsdemo.view.View
   model bindEntitiesTo world
   model bindSystemsTo world
   given view: View = View.terminal()
-  Controller() bindSystemsTo world
+  Controller() bindListenersTo world
   world loop forever

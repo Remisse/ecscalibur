@@ -6,7 +6,7 @@ An archetype-based ECS framework for Scala projects inspired by [flecs](https://
 
 ## Show me an example!
 
-```scala
+```scala 3
 import ecscalibur.core.*
 
 @main def main(): Unit =
@@ -31,15 +31,14 @@ object Velocity extends ComponentType
 
 ## Getting started
 
-1) Add this framework to your project's dependencies:  
-```
-TBD
-```
+Assuming you're using SBT as your build system:
+
+1) Download the latest `ecscalibur.jar` from the Releases page and move it into your project's `lib` folder (Sonatype release coming soon)
 2) Pass the `-experimental` option to the Scala compiler:
-```scala
+```scala 3
 scalacOptions ++= Seq(
   "-experimental",
-),
+)
 ```
 
 ## Using the framework
@@ -49,24 +48,22 @@ If you're not sure about what Entity Component System is, you should read up on 
 ### World
 
 First, create a new World instance as a contextual parameter:
-```scala
+```scala 3
 given world: World = World()
 ```
 
-Optionally, you can specify the number of iterations per second (or frames per second, depending on how you want to see it) your program should run at:
-```scala
+Optionally, you can specify the number of iterations per second your program should run at (or frames per second, depending on how you want to see them):
+```scala 3
 World(iterationsPerSecond = 60)
 ```
 
 ### Components
 
 Declaring components requires a little bit of boilerplate code:
-```scala
+```scala 3
 @component
-class MyComponent extends Component:
-  ...
-object MyComponent extends ComponentType:
-  ...
+class MyComponent extends Component
+object MyComponent extends ComponentType
 ```
 
 The component class *must* extend `Component` and its companion object *must* extend `ComponentType`.  
@@ -75,7 +72,7 @@ Forgetting to annotate component classes with `@component` will result in a runt
 ### Entities
 
 Create new entities with the `World.entity` method:
-```scala
+```scala 3
 world.entity withComponents (MyComponent(), MyComponent2())
 ```
 
@@ -86,19 +83,19 @@ Entities are stored within the World instance they are created with.
 There are two ways to create a System:
 
 1. By passing a **query** (explained further below) to `World.system`:
-```scala
+```scala 3
 world.system("my_system", priority = 0): // Priority can be omitted, defaults to 0
   query all: (e: Entity, c: MyComponent) =>
     // do something with 'c'
-  ()
+    ()
 ```
 2. By extending the `System` trait and overriding its fields:
-```scala
+```scala 3
 // It has to have World as a contextual parameter
 class MySystem(priority: Int)(using World) extends System("my_system", priority):
-  override val onStart: Query = ...
-  override val process: Query = ...
-  override val onPause: Query = ...
+  override protected val onStart: Query = ???
+  override protected val process: Query = ???
+  override protected val onPause: Query = ???
 
 // Somewhere else in your code...
 world.system(MySystem())
@@ -107,36 +104,36 @@ world.system(MySystem())
 ### Queries
 
 Queries allow you to iterate on a subset of all the entities by specifying which components to include and which to exclude. You can begin building a Query by calling the `query` factory method:
-```scala
-query none (C1, C2) any (C3, C4) all: (e: Entity, c5: C5, ...) =>
-  ...
+```scala 3
+query none (C1, C2) any (C3, C4) all: (e: Entity, c5: C5) =>
+  ()
 ```
 Let's break this down bit by bit:
 - `none`: entities with **at least one** component type among those passed to `none` will be excluded from the selection
 - `any`: entities with **at least one** component type among those passed to `any` will be included in the selection
   - you won't be able to read the contents of those components directly, but you can delete them with the `-=` Entity operator or replace their references with the `<==` Entity operator
-- `all`: entities with **all** of the components specified as lambda parameters will be included in the selection
+- `all`: entities with **all** the components specified as lambda parameters will be included in the selection
   - the first parameter is always the Entity itself
   - the contents of these components can be read and updated
   - this method will terminate the query building process
 
 If you want to iterate over all entities indiscriminately:
-```scala
+```scala 3
 query all: (e: Entity) =>
-  ...
+  ()
 ```
 
 Lastly, if you want to create a system that doesn't iterate over any entities and executes once per World loop, you can create a special Query with the `routine` factory method:
-```scala
+```scala 3
 routine:
-  ...
+  ()
 ```
 
 ### Mutator
 
-The `Mutator` instance accessible through `World` allows you to schedule modifications to entites for processing at the start of the next world loop:
+The `Mutator` instance accessible through `World` allows you to schedule modifications to entities for processing at the start of the next world loop:
 
-```scala
+```scala 3
 val mutator: Mutator = world.mutator
 
 mutator defer DeferredRequest.createEntity(C1(), C2()) // Creates an entity with the specified components
@@ -151,7 +148,7 @@ e -= C3
 
 Requests to update the reference to an Entity's component are, instead, processed immediately:
 
-```scala
+```scala 3
 // Both options are equivalent
 mutator doImmediately ImmediateRequest.update(e, C1())
 e <== C1()
@@ -162,15 +159,14 @@ e ?> (C1, C2)
 
 It also allows you to modify the state of a System:
 
-```scala
+```scala 3
 if world.isSystemRunning("my_system") then
   mutator doImmediately ImmediateRequest.pause("my_system")  // Pauses a system
 if world.isSystemPaused("my_system") then
   mutator doImmediately ImmediateRequest.resume("my_system") // Resumes a system
 ```
 
-All of the above deferred operations can affect performance quite heavily because of the archetype-based nature of this framework.
->>>>>>> a93827e (Refactoring)
+If the above `DeferredRequest` operations were to be executed instantly, they would affect performance quite heavily because of the archetype-based nature of this framework.
 
 For instance, adding one single component to an entity would result in that entity being removed from the archetype it is stored in and moved to another. If the destination archetype does not exist, it has
 to be created on the spot along with all of its internal data structures.  
@@ -178,12 +174,52 @@ This also means that adding multiple components to the same entity during the sa
 
 That is why all operations which would cause similar structural changes are batched, combined and then executed on the next world loop.
 
+### Events
+
+Declare new event classes similarly to how you would declare components:
+
+```scala 3
+@component
+class MyEvent extends Event
+object MyEvent extends EventType
+```
+
+You can easily emit events via the following syntax:
+
+```scala 3
+// From within a Query
+entity >> MyEvent()
+```
+
+Subscribe to specific event types or unsubscribe from them:
+
+```scala 3
+world.listener("myListener"): (e: Entity, event: MyEvent) =>
+  ()
+
+world.eventBus unsubscribe ("myListener", MyEvent)
+```
+
+When adding listeners from within a System, it's good practice to remove them when the system gets paused:
+
+```scala 3
+private val listenerName = "myListener"
+override protected val onStart() =
+  routine:
+    summon[World].listener(listenerName): (e: Entity, event: MyEvent) =>
+      ()
+override protected val onPause() =
+  routine:
+    summon[World].eventBus unsubscribe(listenerName, MyEvent)
+    ()
+```
+
 ### Context
 
-The world's `MetaContext` instance contains secondary data related to the world's execution. For now, it only lets you obtain the amount of seconds
+The world's `MetaContext` instance contains secondary data related to the world's execution. For now, it only exposes the amount of seconds
 passed since the last iteration:
 
-```scala
+```scala 3
 val dt: DeltaSeconds = world.context.deltaTime // it's actually a Float
 ```
 
@@ -191,7 +227,7 @@ val dt: DeltaSeconds = world.context.deltaTime // it's actually a Float
 
 Execute your program's logic with `World.loop`:
 
-```scala
+```scala 3
 world loop once    // Performs one iteration
 world loop 2.times // Performs an arbitrary number of iterations
 world loop forever // Iterates indefinitely

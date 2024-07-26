@@ -34,8 +34,6 @@ object entity:
       *
       * @param tpe
       *   ComponentType of the Component to be removed
-      * @param orElse
-      *   callback executed if the deferred request fails
       * @return
       *   this Entity
       */
@@ -48,8 +46,6 @@ object entity:
       *
       * @param c
       *   Component to be added
-      * @param orElse
-      *   callback executed if the deferred request fails
       * @return
       *   this Entity
       */
@@ -58,15 +54,26 @@ object entity:
       val _ = summon[World].mutator defer DeferredRequest.addComponent(this, c)
       this
 
+    /** Syntactic sugar for `World.eventBus.emit`.
+      * @param event
+      *   the event to emit
+      * @return
+      *   this Entity
+      */
+    @targetName("emit")
+    inline def >>(event: Event)(using World): Entity =
+      summon[World].eventBus.emit(this, event)
+      this
+
     override def equals(that: Any): Boolean = that match
       case e: Entity => id == e.id
-      case _ => false
+      case _         => false
 
     override def hashCode(): Int = id
 
-    override def toString(): String = s"Entity $id"
+    override def toString: String = s"Entity $id"
 
   object Entity:
-    val Nil = Entity(-1)
+    val Nil: Entity = Entity(-1)
 
     private[ecscalibur] def apply(id: Int) = new Entity(id) {}

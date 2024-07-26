@@ -69,7 +69,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
     world loop once
 
-  def hasComponentsTest(action: (Entity, Seq[ComponentType]) => Boolean)(using world: World) =
+  def hasComponentsTest(action: (Entity, Seq[ComponentType]) => Boolean)(using world: World): Unit =
     world.entity withComponents (testValue, C1())
     world.system(s1):
       query any Value all: (e: Entity) =>
@@ -102,7 +102,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "not accept negative delta time values" in:
     val world: World = World()
-    an[IllegalArgumentException] should be thrownBy(world.context.setDeltaTime(-1f))
+    an[IllegalArgumentException] should be thrownBy (world.context.setDeltaTime(-1f))
 
   import ecscalibur.core.ImmediateRequest.*
 
@@ -178,7 +178,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world loop 2.times
     sum shouldBe 2
 
-  def addComponentTest(action: (Entity, Component) => Unit)(using world: World): Assertion = 
+  def addComponentTest(action: (Entity, Component) => Unit)(using world: World): Assertion =
     world.entity withComponents C1()
     world.system(s1):
       query all: (e: Entity, _: C1) =>
@@ -302,3 +302,39 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       world.system(s1):
         routine:
           ()
+
+  import ecscalibur.testutil.testclasses.TestEvent
+
+  val listener = "listener"
+
+  it should "correctly register listeners" in:
+    given world: World = World()
+    world.entity withComponents C1()
+    var emitted = false
+    world.listener[TestEvent](listener): (_, _) =>
+      emitted = true
+
+    world.system(s1):
+      query all: e =>
+        e >> TestEvent()
+        ()
+
+    world loop once
+    emitted should be(true)
+
+  it should "correctly unregister listeners" in:
+    given world: World = World()
+    world.entity withComponents C1()
+    var emitted = false
+    world.listener[TestEvent](listener): (_, _) =>
+      emitted = true
+
+    world.eventBus unsubscribe (listener, TestEvent)
+
+    world.system(s1):
+      query all: e =>
+        e >> TestEvent()
+        ()
+
+    world loop once
+    emitted should be(false)

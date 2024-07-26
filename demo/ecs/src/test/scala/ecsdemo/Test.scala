@@ -3,17 +3,13 @@ package ecsdemo
 import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
-
 import ecsdemo.model.*
 import ecsdemo.components.*
-import ecsdemo.view.View
-
 import demoutil.transform.Vector2
 import demoutil.Color
-
 import ecscalibur.core.*
 
-import ecsutil.shouldNotBeExecuted
+import scala.reflect.ClassTag
 
 inline val singleValidator = "singleValidator"
 inline val validatorAdd = "validatorAdd"
@@ -30,11 +26,13 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
+    world.entity withComponents (StopMovementIntention(
+      Velocity(Vector2.zero)
+    ) :: fixture.baseComponents)
     world system StopSystem(modelPriority)
 
     world.system(validatorAdd):
-      query all: (_: Entity, _: StoppedEvent, _: ResumeMovementIntention) =>
+      query all: (_: Entity, _: ResumeMovementIntention) =>
         fixture.markAsSuccessfullyAdded()
     world.system(validatorRemove):
       query none StopMovementIntention all: _ =>
@@ -46,11 +44,13 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (ResumeMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents) 
+    world.entity withComponents (ResumeMovementIntention(
+      Velocity(Vector2.zero)
+    ) :: fixture.baseComponents)
     world system ResumeSystem(modelPriority)
 
     world.system(validatorAdd):
-      query all: (_: Entity, _: ResumedMovementEvent, _: StopMovementIntention) =>
+      query all: (_: Entity, _: StopMovementIntention) =>
         fixture.markAsSuccessfullyAdded()
     world.system(validatorRemove):
       query none ResumeMovementIntention all: _ =>
@@ -65,99 +65,96 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     world.entity withComponents (ChangeVelocityIntention() :: fixture.baseComponents)
     world system ChangeVelocitySystem(modelPriority)
 
-    world.system(validatorAdd):
-      query all: (_: Entity, _: ChangedVelocityEvent) =>
-        fixture.markAsSuccessfullyAdded()
-    world loop producersIterations
-    fixture.markAsSuccessfullyRemoved()
-    fixture.wasTestSuccessful should be(true)
+    var currentVelocity = Velocity(Vector2.zero)
+    world.system(validatorAdd, modelPriority + 1):
+      query all: (_: Entity, v: Velocity) =>
+        currentVelocity = v
+    world loop once
+    val prevVelocity = Velocity(currentVelocity.vec)
+    world loop once
+    currentVelocity shouldNot be(prevVelocity)
 
   "ChangeColorSystem" should "work correctly" in:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (Colorful(Color.White) :: ChangeColorIntention() :: fixture.baseComponents)
+    world.entity withComponents (Colorful(
+      Color.White
+    ) :: ChangeColorIntention() :: fixture.baseComponents)
     world system ChangeColorSystem(modelPriority)
 
-    world.system(validatorAdd):
-      query all: (_: Entity, _: ChangedColorEvent) =>
-        fixture.markAsSuccessfullyAdded()
-    world loop producersIterations
-    fixture.markAsSuccessfullyRemoved()
-    fixture.wasTestSuccessful should be(true)
-
-  import ecsdemo.controller.*
+    var currentColor = Color.Red
+    world.system(validatorAdd, modelPriority + 1):
+      query all: (_: Entity, c: Colorful) =>
+        currentColor = c.c
+    world loop once
+    val prevColor = currentColor
+    world loop once
+    currentColor shouldNot be(prevColor)
 
   "StopSystem and RemoveSystem" should "work together successfully" in:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
+    world.entity withComponents (StopMovementIntention(
+      Velocity(Vector2.zero)
+    ) :: fixture.baseComponents)
     world system StopSystem(modelPriority)
     world system ResumeSystem(modelPriority)
 
     world.system(singleValidator):
-      query any (StoppedEvent, ResumedMovementEvent) all: (e: Entity) =>
-        if e ?> StoppedEvent then fixture.markAsSuccessfullyAdded()
-        if e ?> ResumedMovementEvent then fixture.markAsSuccessfullyRemoved()
+      query all: (e: Entity) =>
+        if e ?> ResumeMovementIntention then fixture.markAsSuccessfullyRemoved()
+        else fixture.markAsSuccessfullyAdded()
     world loop consumersIterations
     fixture.wasTestSuccessful should be(true)
 
-  "ConsumeParameterlessEventsSystem" should "work correctly" in:
-    val fixture = Fixture()
-    given world: World = fixture.world
-    given View = fixture.view
+  val listenerName = "listener"
 
-    world.entity withComponents (StopMovementIntention(Velocity(Vector2.zero)) :: fixture.baseComponents)
-    world system StopSystem(modelPriority)
-    world system ResumeSystem(modelPriority)
-    world system ConsumeParameterlessEventsSystem(controllerPriority)
-    world.system(singleValidator):
-      query all: (_, _: StoppedEvent, _: ResumedMovementEvent) =>
-        shouldNotBeExecuted
-
-    world loop consumersIterations
-
-  def testConsumeEventSystem(
-      intention: Component,
-      eventType: ComponentType,
-      producer: System,
-      consumer: System
-  )(using Fixture): Unit =
+  def testConsumeEventSystem[E <: Event: ClassTag](intention: Component, producer: System)(using
+      Fixture
+  ): Assertion =
     val fixture: Fixture = summon[Fixture]
+
     given world: World = fixture.world
 
     world.entity withComponents (intention :: fixture.baseComponents)
     world system producer
-    world system consumer
+    world.listener(listenerName): (e: Entity, event: E) =>
+      fixture.markAsSuccessfullyAdded()
+      fixture.markAsSuccessfullyRemoved()
+      ()
     world loop once
+    fixture.wasTestSuccessful should be(true)
 
-    world.mutator doImmediately ImmediateRequest.pause(producer.name)
-    world loop once
-
-    world.system(singleValidator):
-      query any eventType all: _ =>
-        shouldNotBeExecuted
-    world loop once
-
-  "ConsumeChangedVelocityEvent" should "work correctly" in:
+  "StoppedEvent" should "be emitted correctly" in:
     given fixture: Fixture = Fixture()
     given world: World = fixture.world
-    given View = fixture.view
-    testConsumeEventSystem(
-      intention = ChangeVelocityIntention(),
-      eventType = ChangedVelocityEvent,
-      producer = ChangeVelocitySystem(modelPriority),
-      consumer = ConsumeChangedVelocityEventSystem(controllerPriority)
+    testConsumeEventSystem[StoppedEvent](
+      StopMovementIntention(Velocity(Vector2.zero)),
+      StopSystem(modelPriority)
     )
 
-  "ConsumeChangedColorEvent" should "work correctly" in:
+  "ResumedMovementEvent" should "be emitted correctly" in:
     given fixture: Fixture = Fixture()
     given world: World = fixture.world
-    given View = fixture.view
-    testConsumeEventSystem(
+    testConsumeEventSystem[ResumedMovementEvent](
+      ResumeMovementIntention(Velocity(Vector2.zero)),
+      ResumeSystem(modelPriority)
+    )
+
+  "ChangedVelocityEvent" should "be emitted correctly" in:
+    given fixture: Fixture = Fixture()
+    given world: World = fixture.world
+    testConsumeEventSystem[ChangedVelocityEvent](
+      intention = ChangeVelocityIntention(),
+      producer = ChangeVelocitySystem(modelPriority)
+    )
+
+  "ChangedColorEvent" should "be emitted correctly" in:
+    given fixture: Fixture = Fixture(extraComponents = Colorful(Color.Black))
+    given world: World = fixture.world
+    testConsumeEventSystem[ChangedColorEvent](
       intention = ChangeColorIntention(),
-      eventType = ChangedColorEvent,
-      producer = ChangeColorSystem(modelPriority),
-      consumer = ConsumeChangedColorEventSystem(controllerPriority)
+      producer = ChangeColorSystem(modelPriority)
     )

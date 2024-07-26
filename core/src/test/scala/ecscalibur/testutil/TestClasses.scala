@@ -53,3 +53,7 @@ object testclasses:
     override protected val process: Query =
       routine:
         logic()
+
+  @component
+  class TestEvent extends Event
+  object TestEvent extends EventType

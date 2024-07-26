@@ -48,7 +48,6 @@ object model:
           )
         do world.system(s)
 
-
   private[ecsdemo] final class MovementSystem(priority: Int)(using world: World)
       extends System("movement", priority):
     override protected val process: Query =
@@ -75,8 +74,8 @@ object model:
           timed(t):
             v.vec = Vector2.zero
             e -= StopMovementIntention
-              += StoppedEvent()
               += ResumeMovementIntention(w.originalVelocity)
+            e >> StoppedEvent()
             ()
 
   private[ecsdemo] final class ResumeSystem(priority: Int)(using World) 
@@ -87,8 +86,8 @@ object model:
           timed(t):
             v.vec = w.originalVelocity.vec
             e -= ResumeMovementIntention
-              += ResumedMovementEvent()
               += StopMovementIntention(w.originalVelocity)
+            e >> ResumedMovementEvent()
             ()
 
   private[ecsdemo] final class ChangeVelocitySystem(priority: Int)(using World)
@@ -97,7 +96,7 @@ object model:
       query any ChangeVelocityIntention all: (e: Entity, v: Velocity, t: Timer) =>
         timed(t):
           v.vec = v.vec.opposite
-          e += ChangedVelocityEvent(Velocity(v.vec))
+          e >> ChangedVelocityEvent(Velocity(v.vec))
           ()
 
   private[ecsdemo] final class ChangeColorSystem(priority: Int)(using World)
@@ -109,5 +108,5 @@ object model:
         timed(t):
           val newColor = Color.random
           e <== Colorful(newColor)
-            += ChangedColorEvent(newColor)
+          e >> ChangedColorEvent(newColor)
           ()

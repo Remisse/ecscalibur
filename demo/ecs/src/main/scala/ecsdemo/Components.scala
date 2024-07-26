@@ -57,21 +57,18 @@ object components:
     object ChangeColorIntention extends ComponentType
 
   object events:
-    // Scalable alternative: events with a 'consumedBy' parameter. Systems interested in a certain event
-    // can check if their name is present in consumedBy: if it isn't, the systems will consume the event 
-    // and add themselves to consumedBy. Conversely, if their name is present, they will ignore the event.
     @component
-    class StoppedEvent extends Component
-    object StoppedEvent extends ComponentType
+    class StoppedEvent extends Event
+    object StoppedEvent extends EventType
 
     @component
-    class ResumedMovementEvent extends Component
-    object ResumedMovementEvent extends ComponentType
+    class ResumedMovementEvent extends Event
+    object ResumedMovementEvent extends EventType
 
     @component
-    class ChangedVelocityEvent(val newVelocity: Velocity) extends Component
-    object ChangedVelocityEvent extends ComponentType
+    class ChangedVelocityEvent(val newVelocity: Velocity) extends Event
+    object ChangedVelocityEvent extends EventType
 
     @component
-    class ChangedColorEvent(val newColor: Color) extends Component
-    object ChangedColorEvent extends ComponentType
+    class ChangedColorEvent(val newColor: Color) extends Event
+    object ChangedColorEvent extends EventType

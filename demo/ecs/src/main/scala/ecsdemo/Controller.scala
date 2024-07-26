@@ -5,45 +5,24 @@ import ecsdemo.components.events.*
 import ecsdemo.view.View
 
 object controller:
-  trait Controller extends SystemHolder
+  trait Controller:
+    infix def bindListenersTo(world: World): Unit
 
   object Controller:
-
     private[ecsdemo] inline val controllerPriority = 0
 
-    def apply()(using View): Controller = (world: World) =>
-      given World = world
+    def apply()(using View): Controller = new Controller:
+      private val view = summon[View]
 
-      for s <- Seq(
-        ConsumeParameterlessEventsSystem(controllerPriority),
-        ConsumeChangedVelocityEventSystem(controllerPriority),
-        ConsumeChangedColorEventSystem(controllerPriority)
-      )
-      do world.system(s)
+      override def bindListenersTo(world: World): Unit =
+        world.listener("StoppedEventListener"): (e: Entity, _: StoppedEvent) =>
+          view.handleStoppedEvent(e)
 
-  private[ecsdemo] final class ConsumeParameterlessEventsSystem(priority: Int)(using World, View)
-      extends System("viewNoParameters", priority):
-    override protected val process: Query =
-      query any (StoppedEvent, ResumedMovementEvent) all: (e: Entity) =>
-        if e ?> StoppedEvent then
-          e -= StoppedEvent
-          summon[View].handleStoppedEvent(e)
-        else if e ?> ResumedMovementEvent then
-          e -= ResumedMovementEvent
-          summon[View].handleResumedEvent(e)
+        world.listener("ResumedMovementEventListener"): (e: Entity, _: ResumedMovementEvent) =>
+          view.handleResumedEvent(e)
 
-  private[ecsdemo] final class ConsumeChangedVelocityEventSystem(priority: Int)(using World, View)
-      extends System("viewChangedVelocity", priority):
-    override protected val process: Query =
-      query all: (e: Entity, event: ChangedVelocityEvent) =>
-        e -= ChangedVelocityEvent
-        summon[View].handleChangedVelocityEvent(e, event)
-        ()
+        world.listener("ChangedVelocityEventListener"): (e: Entity, event: ChangedVelocityEvent) =>
+          view.handleChangedVelocityEvent(e, event)
 
-  private[ecsdemo] final class ConsumeChangedColorEventSystem(priority: Int)(using World, View)
-      extends System("viewChangedColor", priority):
-    override protected val process: Query =
-      query all: (e: Entity, event: ChangedColorEvent) =>
-        e -= ChangedColorEvent
-        summon[View].handleChangedColorEvent(e, event)
-        ()
+        world.listener("ChangedColorEventListener"): (e: Entity, event: ChangedColorEvent) =>
+          view.handleChangedColorEvent(e, event)

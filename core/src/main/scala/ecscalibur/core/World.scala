@@ -4,6 +4,7 @@ import ecscalibur.core.archetype.ArchetypeManager
 import ecscalibur.core.components.Component
 import ecscalibur.core.components.ComponentType
 import ecscalibur.core.context.MetaContext
+import scala.reflect.ClassTag
 
 export world.*
 export world.Loop.once
@@ -32,6 +33,12 @@ object world:
       *   this World's Mutator instance.
       */
     given mutator: Mutator
+
+    /** Reference to this World's [[EventBus]] instance.
+      * @return
+      *   this World's EventBus instance
+      */
+    given eventBus: EventBus
 
     private[ecscalibur] given archetypeManager: ArchetypeManager
 
@@ -76,6 +83,20 @@ object world:
       *   if a System with the same name already exists
       */
     infix def system(s: System): Unit
+
+    /** Subscribes a new listener to this World's EventBus.
+      *
+      * @param listenerName
+      *   the name of the specified listener
+      * @param callback
+      *   the method this World's EventBus instance will execute when an event of type `E` is
+      *   emitted
+      * @tparam E
+      *   the type of event to subscribe to
+      */
+    infix def listener[E <: Event: ClassTag](listenerName: String)(
+        callback: (Entity, E) => Unit
+    ): Unit
 
     /** Checks whether the [[System]] identified by the given name is currently running.
       *
@@ -143,9 +164,9 @@ object world:
       *   a new World instance
       */
     def apply(iterationsPerSecond: Int = 0): World =
-      WorldImpl(iterationsPerSecond)(using ArchetypeManager(), MetaContext())
+      WorldImpl(iterationsPerSecond)(using ArchetypeManager(), MetaContext(), EventBus())
 
-    private class WorldImpl(frameCap: Int)(using ArchetypeManager, MetaContext)
+    private class WorldImpl(frameCap: Int)(using ArchetypeManager, MetaContext, EventBus)
         extends World,
           Mutator:
       import scala.collection.mutable
@@ -153,6 +174,7 @@ object world:
       override given archetypeManager: ArchetypeManager = summon[ArchetypeManager]
       override given mutator: Mutator = this
       override given context: MetaContext = summon[MetaContext]
+      override given eventBus: EventBus = summon[EventBus]
 
       import ecsutil.FramePacer
       private val pacer = FramePacer(frameCap)
@@ -186,6 +208,11 @@ object world:
         )
         pendingSystems = pendingSystems :+ s
 
+      override def listener[E <: Event: ClassTag](listenerName: String)(
+          callback: (Entity, E) => Unit
+      ): Unit =
+        eventBus.subscribe(listenerName)(callback)
+
       override def loop(loopType: Loop): Unit =
         inline def _loop(): Unit =
           context.setDeltaTime(
@@ -218,8 +245,7 @@ object world:
           else archetypeManager.addComponents(e, comps*)
         entityAddComps.clear
 
-        for (e, types) <- entityRemoveComps do
-          archetypeManager.removeComponents(e, types*)
+        for (e, types) <- entityRemoveComps do archetypeManager.removeComponents(e, types*)
         entityRemoveComps.clear
 
       private inline def processPendingSystems(): Unit =
@@ -230,31 +256,31 @@ object world:
           ()
 
       override def defer(q: DeferredRequest): Boolean = q match
-          case DeferredRequest.createEntity(components*) =>
-            entityCreate += (Entity(entityIdGenerator.next) -> components)
+        case DeferredRequest.createEntity(components*) =>
+          entityCreate += (Entity(entityIdGenerator.next) -> components)
+          areBuffersDirty = true
+          true
+        case DeferredRequest.deleteEntity(e) =>
+          if isEntityValid(e) && !entityDelete.contains(e) then
+            entityDelete = e +: entityDelete
             areBuffersDirty = true
-            true
-          case DeferredRequest.deleteEntity(e) =>
-            if isEntityValid(e) && !entityDelete.contains(e) then
-              entityDelete = e +: entityDelete
-              areBuffersDirty = true
-              return true
-            false
-          case DeferredRequest.addComponent(e, component) =>
-            val res = tryScheduleAddOrRemoveComponent(entityAddComps, e, component)
-            areBuffersDirty = res
-            res
-          case DeferredRequest.removeComponent(e, cType) =>
-            val res = tryScheduleAddOrRemoveComponent(entityRemoveComps, e, cType)
-            areBuffersDirty = res
-            res
+            return true
+          false
+        case DeferredRequest.addComponent(e, component) =>
+          val res = tryScheduleAddOrRemoveComponent(entityAddComps, e, component)
+          areBuffersDirty = res
+          res
+        case DeferredRequest.removeComponent(e, cType) =>
+          val res = tryScheduleAddOrRemoveComponent(entityRemoveComps, e, cType)
+          areBuffersDirty = res
+          res
 
       override def doImmediately(q: ImmediateRequest): Boolean = q match
         case ImmediateRequest.pause(systemName) =>
           tryForwardCommandToSystem(systemName, _.pause())
         case ImmediateRequest.resume(systemName) =>
           tryForwardCommandToSystem(systemName, _.resume())
-        case ImmediateRequest.update(e, c) => 
+        case ImmediateRequest.update(e, c) =>
           archetypeManager.update(e, c)
           true
 
@@ -291,7 +317,7 @@ object world:
         if isEntityValid(e) then
           val l: List[T] = buffer.getOrElseUpdate(e, List.empty)
           if !l.exists(_.typeId == comp.typeId) then
-            buffer(e) = comp :: l
+            buffer(e) = comp +: l
             res = true
         res
 
