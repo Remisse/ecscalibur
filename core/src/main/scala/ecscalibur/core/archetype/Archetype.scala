@@ -9,8 +9,6 @@ import scala.collection.immutable.*
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
-import ecscalibur.core.entity
-
 private[ecscalibur] object archetypes:
   /** A collection of Entities all featuring a specific combination of [[Component]]s.
     *
@@ -87,7 +85,7 @@ private[ecscalibur] object archetypes:
     // TODO Make this parameter configurable
     /** Default maximum size of a [[Fragment]].
       */
-    inline val DefaultFragmentSize = 100
+    inline val DefaultFragmentSize = 32
 
     /** Creates an [[Aggregate]] archetype with the given [[Signature]].
       *
@@ -154,11 +152,7 @@ private[ecscalibur] object archetypes:
 
       override def add(e: Entity, components: Component*) =
         val fr =
-          if _fragments.isEmpty || lastFragment.isFull then
-            _fragments.find(!_.isFull) match
-              case Some(fr) => fr
-              case _        => appendNewFragment()
-          else lastFragment
+          if _fragments.isEmpty || lastFragment.isFull then appendNewFragment() else lastFragment
         fr.add(e, components*)
         fragmentsByEntity += e -> fr
 
@@ -226,37 +220,56 @@ private[ecscalibur] object archetypes:
         maxEntities: Int
     ) extends Archetype(inSignature),
           Fragment:
-      private val entityIndexes: ProgressiveMap[Entity] = ProgressiveMap()
+      private val entities: Array[Entity] = Array.fill[Entity](maxEntities)(Entity.Nil)
       private val components: Array[Array[Component]] =
         Array.fill[Array[Component]](maxEntities)(
           Array.ofDim[Component](inSignature.length)
         )
+      private var effectiveSize = 0
 
-      override inline def isFull: Boolean = entityIndexes.size == maxEntities
+      override inline def isFull: Boolean = effectiveSize == maxEntities
 
-      override def isEmpty: Boolean = entityIndexes.isEmpty
+      override def isEmpty: Boolean = effectiveSize == 0
+
+      import ecsutil.array.*
 
       override def update(e: Entity, c: Component): Unit =
-        setComponent(entityIndexes(e), c)
+        setComponent(entityIndex(e), c)
 
       override def add(e: Entity, entityComponents: Component*): Unit =
-        val idx = entityIndexes += e
+        val idx = entities.aIndexWhere(_ == Entity.Nil)
+        entities(idx) = e
         for c <- entityComponents do setComponent(idx, c)
+        effectiveSize += 1
 
       private inline def setComponent(entityIndex: Int, c: Component): Unit =
-        components(entityIndex)(componentMappings(c.typeId)) = c
+        components(entityIndex)(componentIndex(c)) = c
 
       override inline def contains(e: Entity): Boolean =
-        entityIndexes.contains(e)
+        entityIndex(e) != -1
 
       override def remove(e: Entity): Array[Component] =
-        components(removeEntityFromMap(e))
+        components(removeEntityFromList(e))
 
       override def softRemove(e: Entity): Unit =
-        val _ = removeEntityFromMap(e)
-
-      private inline def removeEntityFromMap(e: Entity): Int =
-        entityIndexes -= e
+        val _ = removeEntityFromList(e)
 
       override def iterate(f: (Entity, Array[Component]) => Unit): Unit =
-        for (e, entityIdx) <- entityIndexes do f(e, components(entityIdx))
+        @annotation.tailrec
+        def _iterate(i: Int): Unit = i match
+          case i if i == maxEntities => ()
+          case i =>
+            if entities(i) != Entity.Nil then f(entities(i), components(i))
+            _iterate(i + 1)
+
+        _iterate(0)
+
+      private inline def removeEntityFromList(e: Entity): Int =
+        val eIndex = entityIndex(e)
+        entities(eIndex) = Entity.Nil
+        effectiveSize -= 1
+        eIndex
+
+      private inline def entityIndex(e: Entity): Int = entities.aIndexOf(e)
+
+      private inline def componentIndex(c: Component): Int = componentMappings(c.typeId)

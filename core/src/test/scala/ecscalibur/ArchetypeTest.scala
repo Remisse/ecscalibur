@@ -46,7 +46,9 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val components = Seq(testValue, C1(), C2())
     val fixture = fixtures.StandardArchetypeFixture(components*)(nEntities = 1)
     val entity = fixture.entities(0)
-    fixture.archetype.remove(entity).forall(components.contains) shouldBe true
+
+    val removed = fixture.archetype.remove(entity)
+    components.forall(removed.contains) shouldBe true
 
   it should "not throw when adding an entity that was previously removed" in:
     val fixture = fixtures.StandardArchetypeFixture(C1())(nEntities = 1)

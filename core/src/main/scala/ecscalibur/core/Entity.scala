@@ -62,9 +62,11 @@ object entity:
       case e: Entity => id == e.id
       case _ => false
 
-    override def hashCode(): Int = id.##
+    override def hashCode(): Int = id
 
     override def toString(): String = s"Entity $id"
 
   object Entity:
+    val Nil = Entity(-1)
+
     private[ecscalibur] def apply(id: Int) = new Entity(id) {}
