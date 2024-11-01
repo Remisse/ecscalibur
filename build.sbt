@@ -1,6 +1,6 @@
 ThisBuild / version := "1.2.0"
 
-ThisBuild / scalaVersion := "3.5.0-RC5"
+ThisBuild / scalaVersion := "3.5.2"
 
 ThisBuild / scalacOptions ++= Seq(
   "-deprecation",
