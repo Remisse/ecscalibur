@@ -268,11 +268,11 @@ object world:
           false
         case DeferredRequest.addComponent(e, component) =>
           val res = tryScheduleAddOrRemoveComponent(entityAddComps, e, component)
-          areBuffersDirty = res
+          areBuffersDirty |= res
           res
         case DeferredRequest.removeComponent(e, cType) =>
           val res = tryScheduleAddOrRemoveComponent(entityRemoveComps, e, cType)
-          areBuffersDirty = res
+          areBuffersDirty |= res
           res
 
       override def doImmediately(q: ImmediateRequest): Boolean = q match
