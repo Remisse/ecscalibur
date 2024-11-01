@@ -12,9 +12,8 @@ import archetype.archetypes.Aggregate
 class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   import ecscalibur.testutil.testclasses.*
 
-  val DefaultFragmentSize: Int = archetype.archetypes.Archetype.DefaultFragmentSize
-  inline val KindaSmallFragmentSize = 10
-  inline val ExtremelySmallFragmentSize = 1
+  private val DefaultFragmentSize: Int = archetype.archetypes.Archetype.DefaultFragmentSize
+  private inline val KindaSmallFragmentSize = 10
 
   val testValue: Value = Value(1)
 
@@ -54,7 +53,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val fixture = fixtures.StandardArchetypeFixture(C1())(nEntities = 1)
     val entity = fixture.entities(0)
     val components = fixture.archetype.remove(entity)
-    noException should be thrownBy(fixture.archetype.add(entity, components*))
+    noException should be thrownBy fixture.archetype.add(entity, components*)
 
   it should "correctly soft-remove entities" in:
     val fixture = fixtures.StandardArchetypeFixture(C1())(nEntities = 1)
@@ -67,7 +66,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
     val fixture = fixtures.StandardArchetypeFixture(components.toArray*)(nEntities = 1)
     val entity = fixture.entities(0)
     fixture.archetype.softRemove(entity)
-    noException should be thrownBy(fixture.archetype.add(entity, components*))
+    noException should be thrownBy fixture.archetype.add(entity, components*)
 
   inline val nEntities = 1000
 
@@ -82,7 +81,7 @@ class ArchetypeTest extends AnyFlatSpec with should.Matchers:
   it should "correctly perform load balancing when fragments reach their limit" in:
     noException shouldBe thrownBy(fixtures.StandardArchetypeFixture(Value(0))(nEntities = DefaultFragmentSize * 1000))
 
-  val defaultComponent = C1()
+  private val defaultComponent: C1 = C1()
 
   it should "correctly return its Fragments" in:
     val fixture =

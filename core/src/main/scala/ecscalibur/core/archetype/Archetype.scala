@@ -150,7 +150,7 @@ private[ecscalibur] object archetypes:
 
       override def fragments: Iterator[Fragment] = _fragments.iterator
 
-      override def add(e: Entity, components: Component*) =
+      override def add(e: Entity, components: Component*): Unit =
         val fr =
           if _fragments.isEmpty || lastFragment.isFull then appendNewFragment() else lastFragment
         fr.add(e, components*)
@@ -234,16 +234,16 @@ private[ecscalibur] object archetypes:
       import ecsutil.array.*
 
       override def update(e: Entity, c: Component): Unit =
-        setComponent(entityIndex(e), c)
+        updateInline(e, c)
 
       override def add(e: Entity, entityComponents: Component*): Unit =
-        val idx = entities.aIndexWhere(_ == Entity.Nil)
-        entities(idx) = e
-        for c <- entityComponents do setComponent(idx, c)
+        val firstAvailableIdx = entities.aIndexWhere(_ == Entity.Nil)
+        entities(firstAvailableIdx) = e
+        for c <- entityComponents do updateInline(e, c)
         effectiveSize += 1
 
-      private inline def setComponent(entityIndex: Int, c: Component): Unit =
-        components(entityIndex)(componentIndex(c)) = c
+      private inline def updateInline(e: Entity, c: Component): Unit =
+        components(entityIndex(e))(componentIndex(c)) = c
 
       override inline def contains(e: Entity): Boolean =
         entityIndex(e) != -1
