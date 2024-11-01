@@ -41,9 +41,9 @@ scalacOptions ++= Seq(
 )
 ```
 
-## Using the framework
+## Using this framework
 
-If you're not sure about what Entity Component System is, you should read up on it before continuing on ([here](https://github.com/SanderMertens/ecs-faq), for instance). Otherwise, the following section will just be a very confusing read.
+If you're not familiar with the Entity Component System pattern, I recommend you read up on it before continuing on ([here](https://github.com/SanderMertens/ecs-faq), for instance).
 
 ### World
 
@@ -52,22 +52,22 @@ First, create a new World instance as a contextual parameter:
 given world: World = World()
 ```
 
-Optionally, you can specify the number of iterations per second your program should run at (or frames per second, depending on how you want to see them):
+You can optionally specify the number of iterations per second your program should run at (or frames per second, depending on how you want to see it):
 ```scala 3
 World(iterationsPerSecond = 60)
 ```
 
 ### Components
 
-Declaring components requires a little bit of boilerplate code:
+Declare components like so:
 ```scala 3
 @component
 class MyComponent extends Component
 object MyComponent extends ComponentType
 ```
 
-The component class *must* extend `Component` and its companion object *must* extend `ComponentType`.  
-Forgetting to annotate component classes with `@component` will result in a runtime error.
+Component classes *must* extend `Component` and its companion object *must* extend `ComponentType`.  
+Forgetting to annotate such classes with `@component` will result in a runtime error.
 
 ### Entities
 
@@ -97,7 +97,7 @@ class MySystem(priority: Int)(using World) extends System("my_system", priority)
   override protected val process: Query = ???
   override protected val onPause: Query = ???
 
-// Somewhere else in your code...
+// Somewhere else in your code
 world.system(MySystem())
 ```
 
@@ -111,7 +111,8 @@ query none (C1, C2) any (C3, C4) all: (e: Entity, c5: C5) =>
 Let's break this down bit by bit:
 - `none`: entities with **at least one** component type among those passed to `none` will be excluded from the selection
 - `any`: entities with **at least one** component type among those passed to `any` will be included in the selection
-  - you won't be able to read the contents of those components directly, but you can delete them with the `-=` Entity operator or replace their references with the `<==` Entity operator
+  - you won't be able to read the contents of those components
+  - however, you can delete the components using the `-=` (remove) Entity operator or replace their references with the `<==` (update) Entity operator
 - `all`: entities with **all** the components specified as lambda parameters will be included in the selection
   - the first parameter is always the Entity itself
   - the contents of these components can be read and updated
@@ -123,7 +124,7 @@ query all: (e: Entity) =>
   ()
 ```
 
-Lastly, if you want to create a system that doesn't iterate over any entities and executes once per World loop, you can create a special Query with the `routine` factory method:
+If you want to create a system that doesn't iterate over any entities but executes once per World loop, use the `routine` factory method:
 ```scala 3
 routine:
   ()
@@ -157,7 +158,7 @@ world.hasComponents(e, C1, C2) // Does the entity have these components?
 e ?> (C1, C2)
 ```
 
-It also allows you to modify the state of a System:
+`Mutator` also allows you to modify the state of a System:
 
 ```scala 3
 if world.isSystemRunning("my_system") then
@@ -166,13 +167,12 @@ if world.isSystemPaused("my_system") then
   mutator doImmediately ImmediateRequest.resume("my_system") // Resumes a system
 ```
 
+#### Rationale
+
 If the above `DeferredRequest` operations were to be executed instantly, they would affect performance quite heavily because of the archetype-based nature of this framework.
 
-For instance, adding one single component to an entity would result in that entity being removed from the archetype it is stored in and moved to another. If the destination archetype does not exist, it has
-to be created on the spot along with all of its internal data structures.  
+For instance, adding one single component to an entity would result in that entity being removed from the archetype it is stored in and moved to another. If the destination archetype does not exist, it has to be created on the spot along with all of its internal data structures.  
 This also means that adding multiple components to the same entity during the same world loop could lead to a lot of unnecessary back-and-forth between archetypes.
-
-That is why all operations which would cause similar structural changes are batched, combined and then executed on the next world loop.
 
 ### Events
 
@@ -184,7 +184,7 @@ class MyEvent extends Event
 object MyEvent extends EventType
 ```
 
-You can easily emit events via the following syntax:
+You can emit events via the following syntax:
 
 ```scala 3
 // From within a Query
@@ -200,7 +200,7 @@ world.listener("myListener"): (e: Entity, event: MyEvent) =>
 world.eventBus unsubscribe ("myListener", MyEvent)
 ```
 
-When adding listeners from within a System, it's good practice to remove them when the system gets paused:
+When adding listeners from within a System, it's good practice to remove them when the system pauses:
 
 ```scala 3
 private val listenerName = "myListener"
