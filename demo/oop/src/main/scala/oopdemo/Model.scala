@@ -69,7 +69,9 @@ object model:
     private val colorExtension = Colorful(this, color)
     override val repeatedAction: RepeatedAction = new RepeatedAction(intervalSeconds) with Extender(this):
       override def execute(): Unit =
-        colorExtension.color = Color.random
+        val prevColor = colorExtension.color
+        while colorExtension.color == prevColor do
+          colorExtension.color = Color.random
         movement.velocity = movement.velocity.opposite
 
       override def makeEvent(): Event =

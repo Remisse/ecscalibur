@@ -106,7 +106,9 @@ object model:
     override protected val process: Query =
       query any ChangeColorIntention all: (e: Entity, c: Colorful, t: Timer) =>
         timed(t):
-          val newColor = Color.random
+          var newColor = c.c
+          while newColor == c.c do
+            newColor = Color.random
           e <== Colorful(newColor)
           e >> ChangedColorEvent(newColor)
           ()
