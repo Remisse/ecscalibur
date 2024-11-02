@@ -11,7 +11,7 @@ import ecscalibur.core.*
 
 @main def main(): Unit =
   given world: World = World()
-  world.entity withComponents (Position(12, 6), Velocity(4, 2))
+  world += (Position(12, 6), Velocity(4, 2))
   world.system("movement"):
     query all: (e: Entity, p: Position, v: Velocity) =>
       e <== Position(
@@ -71,12 +71,32 @@ Forgetting to annotate such classes with `@component` will result in a runtime e
 
 ### Entities
 
-Create new entities with the `World.entity` method:
+Create a new entity with the `World.+=` method or delete one with `World.-=`:
 ```scala 3
-world.entity withComponents (MyComponent(), MyComponent2())
+world += (MyComponent1(), MyComponent2())
+// From within a System
+world -= e
 ```
 
-Entities are stored within the World instance they are created with.
+Entities are stored within the World instance they are created with and can be accessed through *Systems* (explained further below).
+
+#### Useful entity methods
+
+```scala 3
+e += C2()     // Adds components to an entity
+e -= C2       // Removes components from an entity
+e <== C1()    // Updates an entity's component with a new instance of the same type
+e ?> (C1, C2) // Checks if an entity has the given components
+```
+
+**Do note that the execution of these methods** (except for `<==` and `?>`) **will be delayed until the next world loop.**
+
+#### Why? 
+
+For performance reasons related to archetypes.
+
+For instance, adding one single component to an entity would result in that entity being removed from the archetype it is stored in and moved to another. If the destination archetype does not exist, it has to be created on the spot along with all of its internal data structures.  
+This means that adding multiple components to the same entity during the same world loop could lead to a lot of unnecessary back-and-forth between archetypes.
 
 ### Systems
 
@@ -99,6 +119,13 @@ class MySystem(priority: Int)(using World) extends System("my_system", priority)
 
 // Somewhere else in your code
 world.system(MySystem())
+```
+
+You can pause and resume the execution of your systems at any moment:
+
+```scala 3
+world.pause("my_system")
+world.resume("my_system")
 ```
 
 ### Queries
@@ -124,55 +151,11 @@ query all: (e: Entity) =>
   ()
 ```
 
-If you want to create a system that doesn't iterate over any entities but executes once per World loop, use the `routine` factory method:
+If you want a system that doesn't iterate over any entities but executes once per World loop, use the `routine` factory method:
 ```scala 3
 routine:
   ()
 ```
-
-### Mutator
-
-The `Mutator` instance accessible through `World` allows you to schedule modifications to entities for processing at the start of the next world loop:
-
-```scala 3
-val mutator: Mutator = world.mutator
-
-mutator defer DeferredRequest.createEntity(C1(), C2()) // Creates an entity with the specified components
-mutator defer DeferredRequest.deleteEntity(e)          // Deletes an entity
-// Both options are equivalent
-mutator defer DeferredRequest.addComponent(e, C3())  // Adds a component to an entity
-e += C3()
-// Both options are equivalent
-mutator defer DeferredRequest.removeComponent(e, C3) // Removes a component from  an entity
-e -= C3
-```
-
-Requests to update the reference to an Entity's component are, instead, processed immediately:
-
-```scala 3
-// Both options are equivalent
-mutator doImmediately ImmediateRequest.update(e, C1())
-e <== C1()
-// Both options are equivalent
-world.hasComponents(e, C1, C2) // Does the entity have these components?
-e ?> (C1, C2)
-```
-
-`Mutator` also allows you to modify the state of a System:
-
-```scala 3
-if world.isSystemRunning("my_system") then
-  mutator doImmediately ImmediateRequest.pause("my_system")  // Pauses a system
-if world.isSystemPaused("my_system") then
-  mutator doImmediately ImmediateRequest.resume("my_system") // Resumes a system
-```
-
-#### Rationale
-
-If the above `DeferredRequest` operations were to be executed instantly, they would affect performance quite heavily because of the archetype-based nature of this framework.
-
-For instance, adding one single component to an entity would result in that entity being removed from the archetype it is stored in and moved to another. If the destination archetype does not exist, it has to be created on the spot along with all of its internal data structures.  
-This also means that adding multiple components to the same entity during the same world loop could lead to a lot of unnecessary back-and-forth between archetypes.
 
 ### Events
 
@@ -194,10 +177,10 @@ entity >> MyEvent()
 Subscribe to specific event types or unsubscribe from them:
 
 ```scala 3
-world.listener("myListener"): (e: Entity, event: MyEvent) =>
+world.subscribe("myListener"): (e: Entity, event: MyEvent) =>
   ()
 
-world.eventBus unsubscribe ("myListener", MyEvent)
+world.unsubscribe("myListener", MyEvent)
 ```
 
 When adding listeners from within a System, it's good practice to remove them when the system pauses:
@@ -206,11 +189,11 @@ When adding listeners from within a System, it's good practice to remove them wh
 private val listenerName = "myListener"
 override protected val onStart() =
   routine:
-    summon[World].listener(listenerName): (e: Entity, event: MyEvent) =>
+    summon[World].subscribe(listenerName): (e: Entity, event: MyEvent) =>
       ()
 override protected val onPause() =
   routine:
-    summon[World].eventBus unsubscribe(listenerName, MyEvent)
+    summon[World].unsubscribe(listenerName, MyEvent)
     ()
 ```
 

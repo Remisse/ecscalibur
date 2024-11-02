@@ -12,8 +12,6 @@ export world.Loop.forever
 export world.Loop.ext.times
 
 object world:
-  import builders.*
-
   /** A World is the main entry point into an ECS application. It lets the user create Entities, add
     * Components to them and define Systems to iterate over the created Entities.
     *
@@ -42,13 +40,29 @@ object world:
 
     private[ecscalibur] given archetypeManager: ArchetypeManager
 
-    /** Starts the creation of a new [[Entity]]. Call [[EntityBuilder.withComponents]] after this to
-      * define which Components this Entity should have.
-      *
-      * @return
-      *   an [[EntityBuilder]] instance
+    /** Creates a new [[Entity]] with the given components. 
+      * Calls `Mutator.defer DeferredRequest.createEntity(components)`; thus, execution 
+      * will be delayed until the next world loop.
+      * 
+      * @param components
+      *   components the new entity will have
       */
-    def entity: EntityBuilder
+    def +=(components: Component*): Unit
+
+    /** Creates a new [[Entity]] with the given components. 
+      * Calls `Mutator.defer DeferredRequest.createEntity(components)`; thus, execution 
+      * will be delayed until the next world loop.
+      * 
+      * @param components
+      *   components the new entity will have
+      */
+    def +=(components: List[Component]): Unit
+
+    /** Deletes the given [[Entity]].
+      * Calls `Mutator.defer DeferredRequest.deleteEntity(e)`; thus, execution 
+      * will be delayed until the next world loop.
+      */
+    def -=(e: Entity): Unit
 
     /** Checks whether the given Entity has all of the given Components.
       *
@@ -87,16 +101,45 @@ object world:
     /** Subscribes a new listener to this World's EventBus.
       *
       * @param listenerName
-      *   the name of the specified listener
+      *   name of the new listener
       * @param callback
       *   the method this World's EventBus instance will execute when an event of type `E` is
       *   emitted
       * @tparam E
       *   the type of event to subscribe to
       */
-    infix def listener[E <: Event: ClassTag](listenerName: String)(
+    infix def subscribe[E <: Event: ClassTag](listenerName: String)(
         callback: (Entity, E) => Unit
     ): Unit
+
+    /** Removes an existing listener from this World's EventBus.
+      *
+      * @param listenerName
+      *   name of the listener to be removed
+      * @param eventType
+      *   type of event to unsubscribe from
+      */
+    infix def unsubscribe(listenerName: String, eventType: EventType): Unit
+
+    /**
+      * Pauses the execution of a system.
+      *
+      * @param system
+      *   name of the system to pause
+      * @return
+      *   `true` if the system was succesfully paused, `false` otherwise.
+      */
+    infix def pauseSystem(system: String): Boolean
+
+    /**
+      * Resumes the execution of a system.
+      *
+      * @param system
+      *   name of the system to resume
+      * @return
+      *   `true` if the system was succesfully resumed, `false` otherwise.
+      */
+    infix def resumeSystem(system: String): Boolean
 
     /** Checks whether the [[System]] identified by the given name is currently running.
       *
@@ -191,7 +234,17 @@ object world:
       private val entityRemoveComps: mutable.Map[Entity, List[ComponentType]] = mutable.Map.empty
       private var areBuffersDirty = false
 
-      override def entity: EntityBuilder = EntityBuilder()(using this)
+      override def +=(components: Component*) = 
+        summon[Mutator].defer(DeferredRequest.createEntity(components*))
+        ()
+
+      override def +=(components: List[Component]) = 
+        summon[Mutator].defer(DeferredRequest.createEntity(components*))
+        ()
+
+      override def -=(e: Entity) = 
+        summon[Mutator].defer(DeferredRequest.deleteEntity(e))
+        ()
 
       override def hasComponents(e: Entity, types: ComponentType*): Boolean =
         archetypeManager.hasComponents(e, types*)
@@ -208,10 +261,13 @@ object world:
         )
         pendingSystems = pendingSystems :+ s
 
-      override def listener[E <: Event: ClassTag](listenerName: String)(
+      override def subscribe[E <: Event: ClassTag](listenerName: String)(
           callback: (Entity, E) => Unit
       ): Unit =
         eventBus.subscribe(listenerName)(callback)
+
+      override def unsubscribe(listenerName: String, eventType: EventType): Unit =
+        eventBus.unsubscribe(listenerName, eventType)
 
       override def loop(loopType: Loop): Unit =
         inline def _loop(): Unit =
@@ -284,6 +340,10 @@ object world:
           archetypeManager.update(e, c)
           true
 
+      override def pauseSystem(system: String): Boolean = doImmediately(ImmediateRequest.pause(system))
+
+      override def resumeSystem(system: String): Boolean = doImmediately(ImmediateRequest.resume(system))
+
       override def isSystemRunning(name: String): Boolean =
         val idx = activeSystems.indexWhere(_.name == name)
         if idx != -1 then return activeSystems(idx).isRunning
@@ -320,19 +380,3 @@ object world:
             buffer(e) = comp +: l
             res = true
         res
-
-  private[world] object builders:
-    trait EntityBuilder:
-      infix def withComponents(components: Component*): Unit
-
-      infix def withComponents(components: List[Component]): Unit
-
-    object EntityBuilder:
-      def apply()(using Mutator): EntityBuilder = EntityBuilderImpl()
-
-      private class EntityBuilderImpl(using Mutator) extends EntityBuilder:
-        override def withComponents(components: Component*): Unit =
-          val _ = summon[Mutator] defer DeferredRequest.createEntity(components*)
-
-        override def withComponents(components: List[Component]): Unit =
-          val _ = summon[Mutator] defer DeferredRequest.createEntity(components*)

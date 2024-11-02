@@ -15,21 +15,21 @@ object model:
     def apply(interval: Float)(using World): Model = new Model:
       override def bindEntitiesTo(world: World): Unit =
         val originalVelocity = Velocity(Vector2(5, 0))
-        world.entity withComponents (
+        world += (
           Position(Vector2(-50, 0)),
           originalVelocity,
           StopMovementIntention(originalVelocity),
           Timer(interval)
         )
 
-        world.entity withComponents (
+        world += (
           Position(Vector2(50, 0)),
           Velocity(Vector2(-5, 0)),
           ChangeVelocityIntention(),
           Timer(interval)
         )
 
-        world.entity withComponents (
+        world += (
           Position(Vector2(0, -50)),
           Velocity(Vector2(0, 7.5)),
           Colorful(Color.White),

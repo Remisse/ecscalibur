@@ -15,14 +15,14 @@ object controller:
       private val view = summon[View]
 
       override def bindListenersTo(world: World): Unit =
-        world.listener("StoppedEventListener"): (e: Entity, _: StoppedEvent) =>
+        world.subscribe("StoppedEventListener"): (e: Entity, _: StoppedEvent) =>
           view.handleStoppedEvent(e)
 
-        world.listener("ResumedMovementEventListener"): (e: Entity, _: ResumedMovementEvent) =>
+        world.subscribe("ResumedMovementEventListener"): (e: Entity, _: ResumedMovementEvent) =>
           view.handleResumedEvent(e)
 
-        world.listener("ChangedVelocityEventListener"): (e: Entity, event: ChangedVelocityEvent) =>
+        world.subscribe("ChangedVelocityEventListener"): (e: Entity, event: ChangedVelocityEvent) =>
           view.handleChangedVelocityEvent(e, event)
 
-        world.listener("ChangedColorEventListener"): (e: Entity, event: ChangedColorEvent) =>
+        world.subscribe("ChangedColorEventListener"): (e: Entity, event: ChangedColorEvent) =>
           view.handleChangedColorEvent(e, event)

@@ -39,7 +39,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "correctly create an entity with the supplied components" in:
     given world: World = World()
-    world.entity withComponents testValue
+    world += testValue
     var test = Value(0)
     world.system(s1):
       query all: (e: Entity, v: Value) =>
@@ -55,7 +55,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
     val pos = Position(Vec2D(10, 20))
     val vel = Velocity(Vec2D(1, 2))
-    world.entity withComponents (pos, vel)
+    world += (pos, vel)
 
     world.system(s1):
       query all: (e: Entity, v: Velocity, p: Position) =>
@@ -70,7 +70,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     world loop once
 
   def hasComponentsTest(action: (Entity, Seq[ComponentType]) => Boolean)(using world: World): Unit =
-    world.entity withComponents (testValue, C1())
+    world += (testValue, C1())
     world.system(s1):
       query any Value all: (e: Entity) =>
         action(e, Seq(Value, C1)) should be(true)
@@ -113,7 +113,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       routine:
         sum += 1
         if world isSystemRunning s1 then
-          val success = world.mutator doImmediately pause(s1)
+          val success = world.pauseSystem(s1)
           if !success then shouldNotBeExecuted
 
     world loop once
@@ -129,13 +129,13 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       routine:
         sum += 1
         if world isSystemRunning s1 then
-          (world.mutator doImmediately pause(s1)) shouldNot be(false)
+          (world.pauseSystem(s1)) shouldNot be(false)
           ()
 
     world.system(s2):
       routine:
         if world isSystemPaused s1 then
-          (world.mutator doImmediately resume(s1)) shouldNot be(false)
+          (world.resumeSystem(s1)) shouldNot be(false)
           ()
 
     world loop 2.times
@@ -149,7 +149,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     given world: World = World()
     world.system(s1, priority = 0):
       routine:
-        world.mutator defer createEntity(testValue)
+        world += testValue
         world.mutator doImmediately pause(s1)
         ()
 
@@ -165,11 +165,11 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "correctly defer deleting an entity" in:
     given world: World = World()
-    world.entity withComponents C1()
+    world += C1()
     var sum = 0
     world.system(s1):
       query all: (e: Entity, _: C1) =>
-        world.mutator defer deleteEntity(e)
+        world -= e
         sum += 1
     world.system(s2):
       query all: (_, _: C1) =>
@@ -179,7 +179,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     sum shouldBe 2
 
   def addComponentTest(action: (Entity, Component) => Unit)(using world: World): Assertion =
-    world.entity withComponents C1()
+    world += C1()
     world.system(s1):
       query all: (e: Entity, _: C1) =>
         action(e, testValue)
@@ -208,12 +208,12 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
       ()
 
   def removeComponentTest(action: (Entity, ComponentType) => Unit)(using world: World): Assertion =
-    world.entity withComponents C1()
+    world += C1()
 
     world.system(s1):
       query all: (e: Entity, _: C1) =>
         action(e, C1)
-        val _ = world.mutator doImmediately pause(s1)
+        val _ = world.pauseSystem(s1)
 
     var sum = 0
     world.system(s2):
@@ -244,7 +244,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "only execute the first of many 'addComponent' requests if they do the same thing" in:
     given world: World = World()
-    world.entity withComponents C1()
+    world += C1()
     world.system(s1):
       query all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer addComponent(e, C2())
@@ -253,7 +253,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "only execute the first of many 'removeComponent' requests if they do the same thing" in:
     given world: World = World()
-    world.entity withComponents C1()
+    world += C1()
     world.system(s1):
       query all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer removeComponent(e, C1)
@@ -262,7 +262,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "only execute the first of many 'delete' requests if they refer to the same Entity" in:
     given world: World = World()
-    world.entity withComponents C1()
+    world += C1()
     world.system(s1):
       query all: (e: Entity, _: C1) =>
         for _ <- 0 until defersCount do world.mutator defer deleteEntity(e)
@@ -309,11 +309,11 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "correctly register listeners" in:
     given world: World = World()
-    world.entity withComponents C1()
-    var emitted = false
-    world.listener[TestEvent](listener): (_, _) =>
-      emitted = true
 
+    world += C1()
+    var emitted = false
+    world.subscribe(listener): (_, _: TestEvent) =>
+      emitted = true
     world.system(s1):
       query all: e =>
         e >> TestEvent()
@@ -324,13 +324,12 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
 
   it should "correctly unregister listeners" in:
     given world: World = World()
-    world.entity withComponents C1()
+
+    world += C1()
     var emitted = false
-    world.listener[TestEvent](listener): (_, _) =>
+    world.subscribe(listener): (_, _: TestEvent) =>
       emitted = true
-
-    world.eventBus unsubscribe (listener, TestEvent)
-
+    world.unsubscribe(listener, TestEvent)
     world.system(s1):
       query all: e =>
         e >> TestEvent()

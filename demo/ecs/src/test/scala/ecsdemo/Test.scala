@@ -26,7 +26,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (StopMovementIntention(
+    world += (StopMovementIntention(
       Velocity(Vector2.zero)
     ) :: fixture.baseComponents)
     world system StopSystem(modelPriority)
@@ -44,7 +44,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (ResumeMovementIntention(
+    world += (ResumeMovementIntention(
       Velocity(Vector2.zero)
     ) :: fixture.baseComponents)
     world system ResumeSystem(modelPriority)
@@ -62,7 +62,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (ChangeVelocityIntention() :: fixture.baseComponents)
+    world += (ChangeVelocityIntention() :: fixture.baseComponents)
     world system ChangeVelocitySystem(modelPriority)
 
     var currentVelocity = Velocity(Vector2.zero)
@@ -78,7 +78,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (Colorful(
+    world += (Colorful(
       Color.White
     ) :: ChangeColorIntention() :: fixture.baseComponents)
     world system ChangeColorSystem(modelPriority)
@@ -96,7 +96,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     val fixture = Fixture()
     given world: World = fixture.world
 
-    world.entity withComponents (StopMovementIntention(
+    world += (StopMovementIntention(
       Velocity(Vector2.zero)
     ) :: fixture.baseComponents)
     world system StopSystem(modelPriority)
@@ -118,9 +118,9 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
 
     given world: World = fixture.world
 
-    world.entity withComponents (intention :: fixture.baseComponents)
+    world += (intention :: fixture.baseComponents)
     world system producer
-    world.listener(listenerName): (e: Entity, event: E) =>
+    world.subscribe(listenerName): (e: Entity, event: E) =>
       fixture.markAsSuccessfullyAdded()
       fixture.markAsSuccessfullyRemoved()
       ()
