@@ -49,7 +49,7 @@ object testclasses:
   object Velocity extends ComponentType
 
   class TestSystem(logic: () => Unit)(using World)
-      extends ecscalibur.core.systems.System("test", 0):
+      extends ecscalibur.core.systems.System("test"):
     override protected val process: Query =
       routine:
         logic()

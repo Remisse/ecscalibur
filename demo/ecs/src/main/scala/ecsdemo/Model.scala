@@ -39,73 +39,67 @@ object model:
 
       override def bindSystemsTo(world: World): Unit =
         for s <- Seq(
-            MovementSystem(modelPriority),
-            StopSystem(modelPriority),
-            ResumeSystem(modelPriority),
-            ChangeVelocitySystem(modelPriority),
-            ChangeColorSystem(modelPriority),
-            UpdateTimerSystem(modelPriority)
+            MovementSystem(),
+            StopSystem(),
+            ResumeSystem(),
+            ChangeVelocitySystem(),
+            ChangeColorSystem(),
+            UpdateTimerSystem()
           )
-        do world.system(s)
+        do world.system(s, modelPriority)
 
-  private[ecsdemo] final class MovementSystem(priority: Int)(using world: World)
-      extends System("movement", priority):
+  private[ecsdemo] final class MovementSystem(using world: World) extends System("movement"):
     override protected val process: Query =
       query all: (e: Entity, p: Position, v: Velocity) =>
         p += v.vec * world.context.deltaTime
         ()
 
-  private[ecsdemo] final class UpdateTimerSystem(priority: Int)(using world: World) 
-      extends System("updateTimer", priority):
+  private[ecsdemo] final class UpdateTimerSystem(using world: World) extends System("updateTimer"):
     override protected val process: Query =
       query all: (e: Entity, t: Timer) =>
         if t.isReady then t.reset()
         else t.tick(world.context.deltaTime)
         ()
 
-  private inline def timed(t: Timer)(inline f: => Unit): Unit =
+  private inline def whenReady(t: Timer)(inline f: => Unit): Unit =
     if t.isReady then f
 
-  private[ecsdemo] final class StopSystem(priority: Int)(using World) 
-      extends System("stop", priority):
+  private[ecsdemo] final class StopSystem(using World) extends System("stop"):
     override protected val process: Query =
       query none ResumeMovementIntention all:
         (e: Entity, v: Velocity, w: StopMovementIntention, t: Timer) =>
-          timed(t):
+          whenReady(t):
             v.vec = Vector2.zero
             e -= StopMovementIntention
               += ResumeMovementIntention(w.originalVelocity)
             e >> StoppedEvent()
             ()
 
-  private[ecsdemo] final class ResumeSystem(priority: Int)(using World) 
-      extends System("resume", priority):
+  private[ecsdemo] final class ResumeSystem(using World) extends System("resume"):
     override protected val process: Query =
       query none StopMovementIntention any Velocity all:
         (e: Entity, v: Velocity, w: ResumeMovementIntention, t: Timer) =>
-          timed(t):
+          whenReady(t):
             v.vec = w.originalVelocity.vec
             e -= ResumeMovementIntention
               += StopMovementIntention(w.originalVelocity)
             e >> ResumedMovementEvent()
             ()
 
-  private[ecsdemo] final class ChangeVelocitySystem(priority: Int)(using World)
-      extends System("changeVelocity", priority):
+  private[ecsdemo] final class ChangeVelocitySystem(using World) extends System("changeVelocity"):
     override protected val process: Query =
       query any ChangeVelocityIntention all: (e: Entity, v: Velocity, t: Timer) =>
-        timed(t):
+        whenReady(t):
           v.vec = v.vec.opposite
           e >> ChangedVelocityEvent(Velocity(v.vec))
           ()
 
-  private[ecsdemo] final class ChangeColorSystem(priority: Int)(using World)
-      extends System("changeColor", priority):
+  private[ecsdemo] final class ChangeColorSystem(using World) extends System("changeColor"):
     import scala.util.Random
 
     override protected val process: Query =
       query any ChangeColorIntention all: (e: Entity, c: Colorful, t: Timer) =>
-        timed(t):
+        whenReady(t):
           var newColor = c.c
           while newColor == c.c do
             newColor = Color.random

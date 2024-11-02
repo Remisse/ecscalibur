@@ -87,16 +87,32 @@ object world:
       * @throws IllegalArgumentException
       *   if a System with the same name already exists
       */
-    infix def system(name: String, priority: Int = 0)(q: Query): Unit
+    infix def system(name: String, priority: Int)(q: Query): Unit
+
+    /** Creates a new System with [[System.process]] overridden by the given [[Query]]. Both
+      * [[System.onResume]] and [[System.onPause]] do not contain any logic.
+      * 
+      * The priority of this newly created system will default to 0.
+      *
+      * @param name
+      *   a unique name for this System
+      * @param q
+      *   a query
+      * @throws IllegalArgumentException
+      *   if a System with the same name already exists
+      */
+    infix def system(name: String)(q: Query): Unit
 
     /** Adds a [[System]] instance to this World.
       *
       * @param s
       *   the System to be added.
+      * @param priority
+      *   its priority value relative to the other Systems in the World
       * @throws IllegalArgumentException
       *   if a System with the same name already exists
       */
-    infix def system(s: System): Unit
+    infix def system(s: System, priority: Int = 0): Unit
 
     /** Subscribes a new listener to this World's EventBus.
       *
@@ -225,8 +241,8 @@ object world:
       import ecsutil.IdGenerator
       private val entityIdGenerator = IdGenerator()
 
-      private var activeSystems: Vector[System] = Vector.empty
-      private var pendingSystems: Vector[System] = Vector.empty
+      private var activeSystems: Vector[(System, Int)] = Vector.empty
+      private var pendingSystems: Vector[(System, Int)] = Vector.empty
 
       private val entityCreate: mutable.Map[Entity, Seq[Component]] = mutable.Map.empty
       private var entityDelete: List[Entity] = List.empty
@@ -249,17 +265,22 @@ object world:
       override def hasComponents(e: Entity, types: ComponentType*): Boolean =
         archetypeManager.hasComponents(e, types*)
 
-      override def system(name: String, priority: Int)(q: Query): Unit =
-        system:
-          new System(name, priority):
-            override protected val process: Query = q
+      private def makeSimpleSystem(name: String, priority: Int = 0)(q: Query): Unit =
+        val newSystem = new System(name):
+          override protected val process: Query = q
 
-      override def system(s: System): Unit =
+        system(newSystem, priority)
+
+      override def system(name: String, priority: Int)(q: Query): Unit = makeSimpleSystem(name, priority)(q)
+
+      override def system(name: String)(q: Query): Unit = makeSimpleSystem(name)(q)
+
+      override def system(s: System, priority: Int): Unit =
         require(
-          !(activeSystems.contains(s) || pendingSystems.contains(s)),
+          !(activeSystems.exists(_._1 == s) || pendingSystems.exists(_._1 == s)),
           s"System \"${s.name}\" already exists."
         )
-        pendingSystems = pendingSystems :+ s
+        pendingSystems = pendingSystems :+ (s, priority)
 
       override def subscribe[E <: Event: ClassTag](listenerName: String)(
           callback: (Entity, E) => Unit
@@ -277,7 +298,7 @@ object world:
                 areBuffersDirty = false
                 processPendingEntityOperations()
               processPendingSystems()
-              for s <- activeSystems do s.update()
+              for s <- activeSystems do s._1.update()
           )
         loopType match
           case Loop.Forever      => while true do _loop()
@@ -308,7 +329,7 @@ object world:
         if pendingSystems.nonEmpty then
           for s <- pendingSystems do activeSystems = activeSystems :+ s
           pendingSystems = Vector.empty
-          activeSystems = activeSystems.sortBy(_.priority)
+          activeSystems = activeSystems.sortBy(_._2)
           ()
 
       override def defer(q: DeferredRequest): Boolean = q match
@@ -340,19 +361,23 @@ object world:
           archetypeManager.update(e, c)
           true
 
-      override def pauseSystem(system: String): Boolean = doImmediately(ImmediateRequest.pause(system))
-
-      override def resumeSystem(system: String): Boolean = doImmediately(ImmediateRequest.resume(system))
-
-      override def isSystemRunning(name: String): Boolean =
-        val idx = activeSystems.indexWhere(_.name == name)
-        if idx != -1 then return activeSystems(idx).isRunning
+      override def pauseSystem(system: String): Boolean = 
+        if isSystemRunning(system) then return doImmediately(ImmediateRequest.pause(system))
         false
 
-      override def isSystemPaused(name: String): Boolean =
-        val idx = activeSystems.indexWhere(_.name == name)
-        if idx != -1 then return activeSystems(idx).isPaused
+      override def resumeSystem(system: String): Boolean = 
+        if isSystemPaused(system) then return doImmediately(ImmediateRequest.resume(system))
         false
+
+      private inline def checkSystemExecutionStatus(name: String, inline p: System => Boolean): Boolean =
+        var res = false
+        val idx = activeSystems.indexWhere(_._1.name == name)
+        if idx != -1 then res = p(activeSystems(idx)._1)
+        res
+
+      override def isSystemRunning(name: String): Boolean = checkSystemExecutionStatus(name, s => s.isRunning)
+
+      override def isSystemPaused(name: String): Boolean = checkSystemExecutionStatus(name, s => s.isPaused)
 
       private inline def isEntityValid(e: Entity) = entityIdGenerator.isValid(e.id)
 
@@ -360,9 +385,9 @@ object world:
           systemName: String,
           inline command: System => Unit
       ): Boolean =
-        activeSystems.find(_.name == systemName) match
+        activeSystems.find(_._1.name == systemName) match
           case Some(s) =>
-            command(s)
+            command(s._1)
             true
           case _ => false
 

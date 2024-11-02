@@ -85,7 +85,7 @@ Entities are stored within the World instance they are created with and can be a
 ```scala 3
 e += C2()     // Adds components to an entity
 e -= C2       // Removes components from an entity
-e <== C1()    // Updates an entity's component with a new instance of the same type
+e <== C1()    // Replaces an entity's component with a new instance of the same type
 e ?> (C1, C2) // Checks if an entity has the given components
 ```
 
@@ -104,7 +104,7 @@ There are two ways to create a System:
 
 1. By passing a **query** (explained further below) to `World.system`:
 ```scala 3
-world.system("my_system", priority = 0): // Priority can be omitted, defaults to 0
+world.system("my_system", priority = 0): // Priority defaults to 0 if omitted 
   query all: (e: Entity, c: MyComponent) =>
     // do something with 'c'
     ()
@@ -112,13 +112,13 @@ world.system("my_system", priority = 0): // Priority can be omitted, defaults to
 2. By extending the `System` trait and overriding its fields:
 ```scala 3
 // It has to have World as a contextual parameter
-class MySystem(priority: Int)(using World) extends System("my_system", priority):
+class MySystem(using World) extends System("my_system"):
   override protected val onStart: Query = ???
   override protected val process: Query = ???
   override protected val onPause: Query = ???
 
 // Somewhere else in your code
-world.system(MySystem())
+world.system(MySystem(), priority = 0) // Priority defaults to 0 if omitted
 ```
 
 You can pause and resume the execution of your systems at any moment:

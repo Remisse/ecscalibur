@@ -18,7 +18,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     given World = fixture.world
 
     var sum = Int.MinValue
-    val s = new System(name = s1, priority = 0):
+    val s = new System(s1):
       override protected val onStart: Query =
         routine:
           sum = 0
@@ -37,7 +37,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     given World = fixture.world
 
     var sum = Int.MinValue
-    val s = new System(name = s1, priority = 0):
+    val s = new System(name = s1):
       override protected val process =
         query all: (e, v: Value) =>
           sum = 0
@@ -58,7 +58,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     given World = fixture.world
 
     var sum = Int.MinValue
-    val s = new System(name = s1, priority = 0):
+    val s = new System(name = s1):
       override protected val onStart: Query =
         routine:
           sum = 0
@@ -78,7 +78,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     sum shouldBe fixture.defaultValue.x
 
   it should "correctly report whether it is running" in:
-    val s = new System(name = s1, priority = 0):
+    val s = new System(name = s1):
       override protected val process =
         routine:
           ()
@@ -90,7 +90,7 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     s.isRunning should be(false)
 
   it should "correctly report whether it is paused" in:
-    val s = new System(name = s1, priority = 0):
+    val s = new System(name = s1):
       override protected val process =
         routine:
           ()
@@ -103,11 +103,11 @@ class SystemTest extends AnyFlatSpec with should.Matchers:
     s.isPaused should be(true)
 
   it should "be equal to another System with the same name" in:
-    val system1 = new System(name = s1, priority = 0):
+    val system1 = new System(name = s1):
       override protected val process =
         routine:
           ()
-    val system2 = new System(name = s1, priority = 0):
+    val system2 = new System(name = s1):
       override protected val process =
         routine:
           ()

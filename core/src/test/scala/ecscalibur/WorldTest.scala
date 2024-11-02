@@ -32,7 +32,7 @@ class WorldTest extends AnyFlatSpec with should.Matchers:
     val s = TestSystem(() => res = true)
     world.system(s)
     world loop once
-    (world isSystemRunning s.name) shouldBe true
+    world.isSystemRunning(s.name) shouldBe true
     res should be(true)
 
   val testValue: Value = Value(1)

@@ -21,7 +21,7 @@ val consumersIterations = 3.times
 inline val controllerPriority = controller.Controller.controllerPriority
 inline val modelPriority = model.Model.modelPriority
 
-class FramePacerTest extends AnyFlatSpec with should.Matchers:
+class DemoTest extends AnyFlatSpec with should.Matchers:
   "StopSystem" should "work correctly" in:
     val fixture = Fixture()
     given world: World = fixture.world
@@ -29,7 +29,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     world += (StopMovementIntention(
       Velocity(Vector2.zero)
     ) :: fixture.baseComponents)
-    world system StopSystem(modelPriority)
+    world.system(StopSystem(), modelPriority)
 
     world.system(validatorAdd):
       query all: (_: Entity, _: ResumeMovementIntention) =>
@@ -47,7 +47,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     world += (ResumeMovementIntention(
       Velocity(Vector2.zero)
     ) :: fixture.baseComponents)
-    world system ResumeSystem(modelPriority)
+    world.system(ResumeSystem(), modelPriority)
 
     world.system(validatorAdd):
       query all: (_: Entity, _: StopMovementIntention) =>
@@ -63,7 +63,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world += (ChangeVelocityIntention() :: fixture.baseComponents)
-    world system ChangeVelocitySystem(modelPriority)
+    world.system(ChangeVelocitySystem(), modelPriority)
 
     var currentVelocity = Velocity(Vector2.zero)
     world.system(validatorAdd, modelPriority + 1):
@@ -81,7 +81,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     world += (Colorful(
       Color.White
     ) :: ChangeColorIntention() :: fixture.baseComponents)
-    world system ChangeColorSystem(modelPriority)
+    world.system(ChangeColorSystem(), modelPriority)
 
     var currentColor = Color.Red
     world.system(validatorAdd, modelPriority + 1):
@@ -99,8 +99,8 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     world += (StopMovementIntention(
       Velocity(Vector2.zero)
     ) :: fixture.baseComponents)
-    world system StopSystem(modelPriority)
-    world system ResumeSystem(modelPriority)
+    world.system(StopSystem(), modelPriority)
+    world.system(ResumeSystem(), modelPriority)
 
     world.system(singleValidator):
       query all: (e: Entity) =>
@@ -119,7 +119,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
 
     world += (intention :: fixture.baseComponents)
-    world system producer
+    world.system(producer, modelPriority)
     world.subscribe(listenerName): (e: Entity, event: E) =>
       fixture.markAsSuccessfullyAdded()
       fixture.markAsSuccessfullyRemoved()
@@ -132,7 +132,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
     testConsumeEventSystem[StoppedEvent](
       StopMovementIntention(Velocity(Vector2.zero)),
-      StopSystem(modelPriority)
+      StopSystem()
     )
 
   "ResumedMovementEvent" should "be emitted correctly" in:
@@ -140,7 +140,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
     testConsumeEventSystem[ResumedMovementEvent](
       ResumeMovementIntention(Velocity(Vector2.zero)),
-      ResumeSystem(modelPriority)
+      ResumeSystem()
     )
 
   "ChangedVelocityEvent" should "be emitted correctly" in:
@@ -148,7 +148,7 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
     testConsumeEventSystem[ChangedVelocityEvent](
       intention = ChangeVelocityIntention(),
-      producer = ChangeVelocitySystem(modelPriority)
+      producer = ChangeVelocitySystem()
     )
 
   "ChangedColorEvent" should "be emitted correctly" in:
@@ -156,5 +156,5 @@ class FramePacerTest extends AnyFlatSpec with should.Matchers:
     given world: World = fixture.world
     testConsumeEventSystem[ChangedColorEvent](
       intention = ChangeColorIntention(),
-      producer = ChangeColorSystem(modelPriority)
+      producer = ChangeColorSystem()
     )
