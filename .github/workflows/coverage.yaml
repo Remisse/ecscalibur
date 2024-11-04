@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        scala: [3.5.0-RC4]
+        scala: [3.5.2]
 
     steps:
     - uses: actions/checkout@v4
