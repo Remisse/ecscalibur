@@ -2,7 +2,7 @@
 
 [![coverage](https://codecov.io/github/Remisse/ecscalibur/graph/badge.svg?token=KH1U71TV5V)](https://codecov.io/github/Remisse/ecscalibur) [![CI Status](https://github.com/Remisse/ecscalibur/actions/workflows/ci.yaml/badge.svg)](https://github.com/Remisse/ecscalibur/actions/workflows/ci.yaml)
 
-An archetype-based ECS framework for Scala projects inspired by [flecs](https://github.com/SanderMertens/flecs) and [Unity DOTS](https://unity.com/dots).
+An archetype-based ECS framework for Scala projects focusing on ease of use and minimization of boilerplate code.
 
 ## Show me an example!
 
@@ -14,11 +14,11 @@ import ecscalibur.core.*
   world += (Position(12, 6), Velocity(4, 2))
   world.system("movement"):
     query all: (e: Entity, p: Position, v: Velocity) =>
+      val dt = world.context.deltaTime
       e <== Position(
-        p.x + v.x * world.context.deltaTime,
-        p.y + v.y * world.context.deltaTime,
+        p.x + v.x * dt,
+        p.y + v.y * dt,
       )
-      ()
   world loop 10.times
 
 @component
@@ -89,11 +89,9 @@ e <== C1()    // Replaces an entity's component with a new instance of the same 
 e ?> (C1, C2) // Checks if an entity has the given components
 ```
 
-**Do note that the execution of these methods** (except for `<==` and `?>`) **will be delayed until the next world loop.**
+#### Delayed execution
 
-#### Why? 
-
-For performance reasons related to archetypes.
+Do note that the execution of the aforementioned methods (except for `<==` and `?>`) will be delayed until the next world loop. The reason for this has to do with how archetypes work.  
 
 For instance, adding one single component to an entity would result in that entity being removed from the archetype it is stored in and moved to another. If the destination archetype does not exist, it has to be created on the spot along with all of its internal data structures.  
 This means that adding multiple components to the same entity during the same world loop could lead to a lot of unnecessary back-and-forth between archetypes.
@@ -113,11 +111,13 @@ world.system("my_system", priority = 0): // Priority defaults to 0 if omitted
 ```scala 3
 // It has to have World as a contextual parameter
 class MySystem(using World) extends System("my_system"):
+  // Executes the first time the system is run or whenever it is asked to resume after being paused
   override protected val onStart: Query = ???
-  override protected val process: Query = ???
-  override protected val onPause: Query = ???
+  // Executes once per world loop
+  override protected val process: Query = ??? 
+  // Executes when the system is paused
+  override protected val onPause: Query = ??? 
 
-// Somewhere else in your code
 world.system(MySystem(), priority = 0) // Priority defaults to 0 if omitted
 ```
 
@@ -194,7 +194,6 @@ override protected val onStart() =
 override protected val onPause() =
   routine:
     summon[World].unsubscribe(listenerName, MyEvent)
-    ()
 ```
 
 ### Context
